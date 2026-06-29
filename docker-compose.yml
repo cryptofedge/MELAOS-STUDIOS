@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: melaos
+      POSTGRES_USER: melaos
+      POSTGRES_PASSWORD: melaos123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./apps/api
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://melaos:melaos123@postgres:5432/melaos
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: melaos-secret-key
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
