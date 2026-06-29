@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   SkipBack, Play, Pause, Square, Circle, Repeat,
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
-  Zap, Activity, Cpu, Radio, Layers, Sliders
+  Zap, Activity, Cpu, Layers
 } from 'lucide-react';
 
 const TRACKS = [
@@ -125,11 +125,15 @@ export default function StudioPage() {
   const [generating,   setGenerating]   = useState(false);
   const [genProgress,  setGenProgress]  = useState(0);
   const [genDone,      setGenDone]      = useState(false);
+  const [genError,     setGenError]     = useState<string | null>(null);
+  const [audioUrl,     setAudioUrl]     = useState<string | null>(null);
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [tick,         setTick]         = useState(0);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef   = useRef<NodeJS.Timeout | null>(null);
+  const audioRef      = useRef<HTMLAudioElement | null>(null);
+  const progressTimer = useRef<NodeJS.Timeout | null>(null);
   const TOTAL_MS = 214000;
 
   // Playback timer
@@ -156,17 +160,72 @@ export default function StudioPage() {
     return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}:${String(Math.floor((ms % 1000) / 10)).padStart(2,'0')}`;
   };
 
-  const handleGenerate = useCallback(() => {
-    setGenerating(true); setGenProgress(0); setGenDone(false);
+  const handleGenerate = useCallback(async () => {
+    setGenerating(true);
+    setGenProgress(0);
+    setGenDone(false);
+    setGenError(null);
+    setAudioUrl(null);
+    setIsPlaying(false);
+
+    // Animate progress bar while waiting for API (~20-30s)
     let p = 0;
-    const iv = setInterval(() => {
-      p += Math.floor(Math.random() * 12) + 5;
-      if (p >= 100) {
-        clearInterval(iv); setGenProgress(100);
-        setTimeout(() => { setGenerating(false); setGenDone(true); }, 400);
-      } else { setGenProgress(p); }
-    }, 300);
-  }, []);
+    progressTimer.current = setInterval(() => {
+      p = Math.min(p + Math.random() * 2 + 0.5, 88); // cap at 88% until real response
+      setGenProgress(Math.round(p));
+    }, 400);
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, genre, mood, bpm: genBpm, vocals: vocalGender }),
+      });
+
+      clearInterval(progressTimer.current!);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      setGenProgress(100);
+
+      // Load the returned audio URL
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      audioRef.current = new Audio(data.audioUrl);
+      audioRef.current.preload = 'auto';
+      audioRef.current.volume = 0.9;
+
+      // Sync playhead from real audio
+      audioRef.current.ontimeupdate = () => {
+        const a = audioRef.current!;
+        if (a.duration) setPlayheadPct((a.currentTime / a.duration) * 100);
+        setTimeMs(Math.floor(a.currentTime * 1000));
+      };
+      audioRef.current.onended = () => { setIsPlaying(false); setPlayheadPct(0); setTimeMs(0); };
+
+      setAudioUrl(data.audioUrl);
+      setTimeout(() => { setGenerating(false); setGenDone(true); }, 300);
+
+    } catch (err: any) {
+      clearInterval(progressTimer.current!);
+      setGenerating(false);
+      setGenError(err.message || 'Generation failed');
+    }
+  }, [prompt, genre, mood, genBpm, vocalGender]);
+
+  // Sync play/pause with real audio when available
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !audioUrl) return;
+    if (isPlaying) { a.play().catch(() => setIsPlaying(false)); }
+    else { a.pause(); }
+  }, [isPlaying, audioUrl]);
 
   const toggleMute = (id: string) => setMuted(m => ({ ...m, [id]: !m[id] }));
   const toggleSolo = (id: string) => setSolo(s => ({ ...s, [id]: !s[id] }));
@@ -286,16 +345,23 @@ export default function StudioPage() {
         )}
       </button>
 
+      {/* Error */}
+      {genError && (
+        <div className="rounded-lg border border-[#FF2D78]/40 bg-[#FF2D78]/05 p-3">
+          <p className="text-[10px] font-mono text-[#FF2D78] tracking-wider">◈ ERROR: {genError}</p>
+        </div>
+      )}
+
       {/* Progress bar */}
       {(generating || genDone) && (
-        <div>
-          <div className="flex justify-between text-[9px] font-mono mb-1.5"
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[9px] font-mono"
             style={{ color: genDone ? '#00FFD1' : '#AE06ED' }}>
-            <span>{genDone ? '◈ COMPLETE' : '◈ PROCESSING'}</span>
+            <span>{genDone ? '◈ TRACK READY' : '◈ SYNTHESIZING'}</span>
             <span>{genProgress}%</span>
           </div>
           <div className="h-1 bg-[#0A0A14] rounded-full overflow-hidden border border-[#1a1a3a]">
-            <div className="h-full rounded-full transition-all duration-300"
+            <div className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${genProgress}%`,
                 background: genDone
@@ -304,10 +370,27 @@ export default function StudioPage() {
                 boxShadow: genDone ? '0 0 8px #00FFD1' : '0 0 8px #AE06ED',
               }} />
           </div>
-          {genDone && (
-            <p className="text-[10px] font-mono mt-2 tracking-wider" style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD1' }}>
-              ◈ TRACK LOADED · PRESS PLAY
-            </p>
+
+          {genDone && audioUrl && (
+            <div className="flex flex-col gap-2 mt-1">
+              <button
+                onClick={() => setIsPlaying(p => !p)}
+                style={{ boxShadow: '0 0 14px #00FFD144', minHeight: '42px' }}
+                className="w-full py-2 rounded-xl font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-all"
+              >
+                {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause</> : <><Play className="w-3.5 h-3.5 ml-0.5" /> Play Track</>}
+              </button>
+              <a
+                href={audioUrl}
+                download="melaos-track.mp3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[9px] font-mono text-center tracking-wider hover:underline transition-colors"
+                style={{ color: '#007AFF' }}
+              >
+                ◈ Download MP3
+              </a>
+            </div>
           )}
         </div>
       )}
@@ -344,7 +427,10 @@ export default function StudioPage() {
           : <Play className="w-4 h-4 text-[#AE06ED] ml-0.5" />}
       </button>
 
-      <button onClick={() => { setIsPlaying(false); setTimeMs(0); setPlayheadPct(0); }}
+      <button onClick={() => {
+          setIsPlaying(false); setTimeMs(0); setPlayheadPct(0);
+          if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+        }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
         className="flex items-center justify-center text-[#333366] hover:text-[#FF2D78] transition-colors">
         <Square className="w-4 h-4" />
