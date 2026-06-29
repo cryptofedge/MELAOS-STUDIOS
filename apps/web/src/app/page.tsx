@@ -115,7 +115,7 @@ export default function HomePage() {
       <section className="py-16 sm:py-20 px-4">
         <div className="max-w-3xl mx-auto text-center bg-gradient-to-br from-[#1A1A1A] to-[#111] border border-[#333] rounded-3xl p-8 sm:p-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">Ready to start creating?</h2>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base">Join 500,000+ creators making music with MELAOS STUDIOS.</p>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">Join 500,000+ artists making music with MELAOS STUDIOS · Eclat Universe.</p>
           <Link href="/studio" className="btn-orange text-white font-bold text-base px-8 py-3 rounded-full hover:scale-105 transition-transform inline-block">
             Start for Free
           </Link>
@@ -124,8 +124,8 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[#1A1A1A] py-8 px-4 text-center text-gray-600 text-sm">
-        <p>© 2026 MELAOS STUDIOS · FEDGE 2.O / Eclat Universe · Rafael Fellito Rodriguez</p>
-        <p className="mt-2">Where Sound Meets Soul</p>
+        <p>© 2026 <span className="text-[#F28C28]">MELAOS STUDIOS</span> · An <span className="text-[#AE06ED]">Eclat Universe</span> Brand · FEDGE 2.O</p>
+        <p className="mt-2 text-gray-700">Where Sound Meets Soul</p>
       </footer>
     </div>
   );

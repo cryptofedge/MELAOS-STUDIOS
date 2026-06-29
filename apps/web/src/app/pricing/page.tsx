@@ -25,7 +25,7 @@ const tiers = [
   {
     name: 'Pro',
     price: { monthly: 10, annual: 8 },
-    description: 'For serious creators ready to go professional',
+    description: 'For serious Eclat Universe artists ready to go professional',
     highlight: true,
     badge: 'Most Popular',
     cta: 'Start Pro',

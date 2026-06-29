@@ -11,7 +11,7 @@ const MELAO_RESPONSES: Record<string, string> = {
   default: "Yo, I'm Melao — the mind behind MELAOS STUDIOS. Ask me about beats, production, the sound we're building, anything.",
   greet: "Wassup! Melao here. Ready to talk music, creation, or whatever's on your mind.",
   beat: "Every beat I make starts with a feeling. You gotta feel it before you can build it. What kind of energy are you going for?",
-  studio: "The studio is where magic happens. MELAOS STUDIOS is built for creators who take their sound seriously — every tool you need, right here.",
+  studio: "The studio is where magic happens. MELAOS STUDIOS — powered by Eclat Universe — is built for artists who take their sound seriously. Every tool you need, right here.",
   collab: "Collaboration is everything in music. The best tracks come from two energies meeting in the right space. You trying to create something?",
   genre: "I don't box myself in. Afrobeats, Drill, R&B, Trap — if it hits, it hits. What's your lane?",
   help: "I got you. Whether it's production tips, navigating the studio, or just vibing on ideas — I'm here. What do you need?",
@@ -33,7 +33,7 @@ function getMelaoResponse(input: string): string {
 export default function MelaoAgent() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'melao', text: "Yo, I'm Melao — creator of MELAOS STUDIOS. Powered by FEDGE 2.O. What's on your mind?" }
+    { role: 'melao', text: "Yo, I'm Melao — MELAOS STUDIOS, powered by Eclat Universe. What's on your mind?" }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -103,7 +103,7 @@ export default function MelaoAgent() {
               <p className="text-white font-bold text-sm leading-none">Melao</p>
               <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block" />
-                FEDGE 2.O · Creator
+                Eclat Universe · FEDGE 2.O
               </p>
             </div>
             <div className="flex items-center gap-1">

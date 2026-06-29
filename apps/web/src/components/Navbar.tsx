@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Search, Menu, X, Music2 } from 'lucide-react';
+import { Search, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,9 +14,19 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#F28C28] to-[#E91E8C] flex items-center justify-center">
-              <Music2 className="w-4 h-4 text-white" />
-            </div>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#F28C28"/>
+                  <stop offset="50%" stopColor="#AE06ED"/>
+                  <stop offset="100%" stopColor="#007AFF"/>
+                </linearGradient>
+              </defs>
+              {/* Orbital ring */}
+              <ellipse cx="18" cy="18" rx="16" ry="6" stroke="url(#logoGrad)" strokeWidth="1.5" fill="none" opacity="0.7" transform="rotate(-30 18 18)"/>
+              {/* M letterform */}
+              <text x="9" y="23" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="16" fill="url(#logoGrad)">M</text>
+            </svg>
             <span className="font-bold text-white text-sm md:text-base hidden xs:block">
               MELAOS <span className="text-[#F28C28]">STUDIOS</span>
             </span>
