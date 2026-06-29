@@ -124,7 +124,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[#1A1A1A] py-8 px-4 text-center text-gray-600 text-sm">
-        <p>© 2026 MELAOS STUDIOS · FEDGE 2.O / Eclat Universe · Rafael Fellito Rodriguez · cryptofedge@gmail.com</p>
+        <p>© 2026 MELAOS STUDIOS · FEDGE 2.O / Eclat Universe · Rafael Fellito Rodriguez</p>
         <p className="mt-2">Where Sound Meets Soul</p>
       </footer>
     </div>

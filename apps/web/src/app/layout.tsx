@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
+import MelaoAgent from '@/components/MelaoAgent';
 
 export const metadata: Metadata = {
   title: 'MELAOS STUDIOS — Where Sound Meets Soul',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <AudioPlayer />
+        <MelaoAgent />
       </body>
     </html>
   );

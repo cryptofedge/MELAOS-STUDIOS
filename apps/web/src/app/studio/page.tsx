@@ -54,14 +54,16 @@ From the studio to you — this is proof
 [Outro]
 Where sound meets soul...`;
 
+const VIEWBOX_W = 600;
 function WaveformSVG({ color, height = 40 }: { color: string; height?: number }) {
   const points = Array.from({ length: 60 }, (_, i) => {
+    const x = (i / 59) * VIEWBOX_W;
     const y = height / 2 + Math.sin(i * 0.4) * (height * 0.3) + Math.sin(i * 0.9) * (height * 0.15);
-    return `${(i / 59) * 100}%,${y}`;
+    return `${x},${y}`;
   }).join(' ');
   return (
-    <svg width="100%" height={height} className="opacity-70">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" />
+    <svg viewBox={`0 0 ${VIEWBOX_W} ${height}`} width="100%" height={height} preserveAspectRatio="none" className="opacity-70">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" />
     </svg>
   );
 }

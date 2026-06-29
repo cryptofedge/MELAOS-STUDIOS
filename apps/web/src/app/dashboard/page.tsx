@@ -147,7 +147,7 @@ export default function DashboardPage() {
           {[
             { label: 'Display Name', value: mockUser.displayName },
             { label: 'Username', value: '@' + mockUser.username },
-            { label: 'Email', value: 'cryptofedge@gmail.com' },
+            { label: 'Email', value: 'your@email.com' },
           ].map(field => (
             <div key={field.label}>
               <label className="text-xs text-gray-500 font-medium mb-1 block">{field.label}</label>
