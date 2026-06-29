@@ -1,87 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const REPLICATE_API = 'https://api.replicate.com/v1';
-// MusicGen stereo-large — best quality for music generation
-const MODEL_VERSION = '671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb';
+const SUNO_API = 'https://studio-api.suno.ai/api';
 
-function buildPrompt(params: {
-  prompt: string;
-  genre: string;
-  mood: string;
-  bpm: number;
-  vocals: string;
-}) {
-  const { prompt, genre, mood, bpm, vocals } = params;
-  const vocalStr = vocals === 'none' ? 'instrumental, no vocals' : `${vocals} vocals`;
-  const base = prompt.trim()
-    ? prompt.trim()
-    : `${genre} music, ${mood.toLowerCase()} mood`;
-  return `${base}, ${genre}, ${mood.toLowerCase()}, ${bpm} BPM, ${vocalStr}, high quality, professional studio recording`;
+// In-memory token store — updated by /api/suno-token endpoint
+let runtimeToken: string | null = null;
+
+function getToken(): string | null {
+  return runtimeToken || process.env.SUNO_JWT || null;
+}
+
+function buildTags(genre: string, mood: string, vocals: string): string {
+  const parts = [genre, mood.toLowerCase()];
+  if (vocals === 'none') parts.push('instrumental');
+  else parts.push(`${vocals} vocals`);
+  return parts.join(', ');
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.REPLICATE_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'REPLICATE_API_KEY not configured' }, { status: 500 });
-  }
-
   let body: any;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male' } = body;
-  const finalPrompt = buildPrompt({ prompt, genre, mood, bpm, vocals });
+  const token = getToken();
+  if (!token) {
+    return NextResponse.json({ error: 'No Suno token configured. Set SUNO_JWT env var on Render.' }, { status: 503 });
+  }
 
-  // 1. Create prediction
-  const createRes = await fetch(`${REPLICATE_API}/predictions`, {
+  const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male' } = body;
+
+  const tags = buildTags(genre, mood, vocals);
+  const finalPrompt = prompt.trim()
+    ? `${prompt.trim()}, ${bpm} BPM`
+    : `${genre} music, ${mood.toLowerCase()} mood, ${bpm} BPM`;
+
+  // 1. Submit generation request to Suno
+  const genRes = await fetch(`${SUNO_API}/generate/v2/`, {
     method: 'POST',
     headers: {
-      Authorization: `Token ${apiKey}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
     body: JSON.stringify({
-      version: MODEL_VERSION,
-      input: {
-        prompt: finalPrompt,
-        duration: 30,
-        model_version: 'stereo-large',
-        output_format: 'mp3',
-        normalization_strategy: 'peak',
-      },
+      prompt: finalPrompt,
+      mv: 'chirp-v3-5',
+      title: '',
+      tags,
+      make_instrumental: vocals === 'none',
+      generation_type: 'TEXT',
     }),
   });
 
-  if (!createRes.ok) {
-    const err = await createRes.text();
-    return NextResponse.json({ error: `Replicate create failed: ${err}` }, { status: 502 });
+  if (!genRes.ok) {
+    const err = await genRes.text();
+    // If token expired, clear runtime token so next call uses env var refresh
+    if (genRes.status === 401) runtimeToken = null;
+    return NextResponse.json({ error: `Suno error (${genRes.status}): ${err}` }, { status: 502 });
   }
 
-  const prediction = await createRes.json();
-  const id = prediction.id;
+  const genData = await genRes.json();
+  const clips: any[] = genData.clips || [];
+  if (!clips.length) {
+    return NextResponse.json({ error: 'No clips returned from Suno' }, { status: 502 });
+  }
+  const ids = clips.map((c: any) => c.id).join(',');
 
-  // 2. Poll until complete (max 90 seconds)
-  const deadline = Date.now() + 90_000;
+  // 2. Poll feed until complete (max 120s)
+  const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 4000));
 
-    const pollRes = await fetch(`${REPLICATE_API}/predictions/${id}`, {
-      headers: { Authorization: `Token ${apiKey}` },
+    const feedRes = await fetch(`${SUNO_API}/feed/?ids=${ids}`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
     });
 
-    if (!pollRes.ok) continue;
-    const result = await pollRes.json();
+    if (!feedRes.ok) continue;
+    const feed: any[] = await feedRes.json();
 
-    if (result.status === 'succeeded') {
-      const audioUrl = Array.isArray(result.output) ? result.output[0] : result.output;
-      return NextResponse.json({ audioUrl, prompt: finalPrompt });
+    const done = feed.filter((c: any) => c.status === 'complete' && c.audio_url);
+    if (done.length > 0) {
+      const clip = done[0];
+      return NextResponse.json({
+        audioUrl: clip.audio_url,
+        title: clip.title || finalPrompt.substring(0, 40),
+        imageUrl: clip.image_url || null,
+        duration: clip.metadata?.duration || 60,
+        clipId: clip.id,
+      });
     }
 
-    if (result.status === 'failed' || result.status === 'canceled') {
-      return NextResponse.json({ error: `Generation ${result.status}: ${result.error}` }, { status: 502 });
+    const failed = feed.filter((c: any) => c.status === 'error');
+    if (failed.length === feed.length) {
+      return NextResponse.json({ error: 'Suno generation failed' }, { status: 502 });
     }
-    // still processing — keep polling
   }
 
-  return NextResponse.json({ error: 'Generation timed out after 90s' }, { status: 504 });
+  return NextResponse.json({ error: 'Generation timed out after 120s' }, { status: 504 });
 }
