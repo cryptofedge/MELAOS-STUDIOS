@@ -1,72 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SUNO_API = 'https://studio-api.suno.ai/api';
-const CLERK_API = 'https://auth.suno.com/v1/client/sessions';
+// Hugging Face free Inference API — MusicGen stereo
+const HF_API = 'https://api-inference.huggingface.co/models/facebook/musicgen-stereo-medium';
+const HF_TOKEN = process.env.HF_TOKEN || '';
 
-// In-process JWT cache — refreshed automatically
-let cachedJwt: string | null = null;
-let jwtExpiresAt = 0;
-
-async function getFreshJwt(): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-
-  // Return cached JWT if still valid (with 2-min buffer)
-  if (cachedJwt && jwtExpiresAt - now > 120) return cachedJwt;
-
-  // Try to refresh via Clerk using stored cookie
-  const cookie = process.env.SUNO_COOKIE;
-  const sessionId = process.env.SUNO_SESSION_ID || 'session_2c632f487407704d569ae2';
-
-  if (cookie) {
-    try {
-      const res = await fetch(`${CLERK_API}/${sessionId}/tokens`, {
-        method: 'POST',
-        headers: {
-          'Cookie': cookie,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Origin': 'https://suno.com',
-          'Referer': 'https://suno.com/',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const token: string = data.jwt || data.token || '';
-        if (token) {
-          cachedJwt = token;
-          try {
-            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-            jwtExpiresAt = payload.exp;
-          } catch { jwtExpiresAt = now + 3600; }
-          // Persist so next cold start has it
-          process.env.SUNO_JWT = token;
-          return token;
-        }
-      }
-    } catch (e) {
-      console.error('Clerk refresh failed:', e);
-    }
-  }
-
-  // Fall back to stored JWT
-  const stored = process.env.SUNO_JWT;
-  if (stored) {
-    cachedJwt = stored;
-    try {
-      const payload = JSON.parse(Buffer.from(stored.split('.')[1], 'base64').toString());
-      jwtExpiresAt = payload.exp;
-    } catch { jwtExpiresAt = now + 3600; }
-    return stored;
-  }
-
-  throw new Error('No Suno token available. Set SUNO_COOKIE + SUNO_SESSION_ID on Render.');
-}
-
-function buildTags(genre: string, mood: string, vocals: string): string {
-  const parts = [genre, mood.toLowerCase()];
-  if (vocals === 'none') parts.push('instrumental');
+function buildPrompt(prompt: string, genre: string, mood: string, bpm: number, vocals: string): string {
+  const base = prompt.trim() || `${genre} music, ${mood.toLowerCase()} mood`;
+  const parts = [base, `${bpm} BPM`];
+  if (vocals === 'none') parts.push('instrumental, no vocals');
   else parts.push(`${vocals} vocals`);
+  parts.push('high quality, professional studio recording');
   return parts.join(', ');
 }
 
@@ -76,78 +19,70 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  let token: string;
-  try { token = await getFreshJwt(); }
-  catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 503 });
+  if (!HF_TOKEN) {
+    return NextResponse.json(
+      { error: 'No HF_TOKEN set. Add your free Hugging Face token to Render env vars.' },
+      { status: 503 }
+    );
   }
 
   const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male' } = body;
-  const tags = buildTags(genre, mood, vocals);
-  const finalPrompt = prompt.trim()
-    ? `${prompt.trim()}, ${bpm} BPM`
-    : `${genre} music, ${mood.toLowerCase()} mood, ${bpm} BPM`;
+  const finalPrompt = buildPrompt(prompt, genre, mood, bpm, vocals);
 
-  // 1. Submit to Suno
-  const genRes = await fetch(`${SUNO_API}/generate/v2/`, {
+  // Call HF Inference API — returns raw audio bytes (WAV/MP3 depending on model)
+  const res = await fetch(HF_API, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${HF_TOKEN}`,
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      'Accept': 'audio/wav',
     },
     body: JSON.stringify({
-      prompt: finalPrompt,
-      mv: 'chirp-v3-5',
-      title: '',
-      tags,
-      make_instrumental: vocals === 'none',
-      generation_type: 'TEXT',
+      inputs: finalPrompt,
+      parameters: {
+        max_new_tokens: 1500,   // ~30 seconds of audio
+        do_sample: true,
+        guidance_scale: 3.0,
+      },
     }),
   });
 
-  if (!genRes.ok) {
-    const err = await genRes.text();
-    // Invalidate cached JWT on auth failure so next request refreshes
-    if (genRes.status === 401) { cachedJwt = null; jwtExpiresAt = 0; }
-    return NextResponse.json({ error: `Suno error (${genRes.status}): ${err}` }, { status: 502 });
-  }
-
-  const genData = await genRes.json();
-  const clips: any[] = genData.clips || [];
-  if (!clips.length) {
-    return NextResponse.json({ error: 'No clips returned from Suno' }, { status: 502 });
-  }
-  const ids = clips.map((c: any) => c.id).join(',');
-
-  // 2. Poll until complete (max 120s)
-  const deadline = Date.now() + 120_000;
-  while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 4000));
-
-    const feedRes = await fetch(`${SUNO_API}/feed/?ids=${ids}`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+  // HF returns 503 with estimated_time when model is loading
+  if (res.status === 503) {
+    const data = await res.json().catch(() => ({}));
+    const wait = (data as any).estimated_time || 20;
+    // Retry once after the model warms up
+    await new Promise(r => setTimeout(r, Math.min(wait, 30) * 1000));
+    const retry = await fetch(HF_API, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HF_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/wav',
+      },
+      body: JSON.stringify({
+        inputs: finalPrompt,
+        parameters: { max_new_tokens: 1500, do_sample: true, guidance_scale: 3.0 },
+      }),
     });
-    if (!feedRes.ok) continue;
-
-    const feed: any[] = await feedRes.json();
-    const done = feed.filter((c: any) => c.status === 'complete' && c.audio_url);
-    if (done.length > 0) {
-      const clip = done[0];
-      return NextResponse.json({
-        audioUrl: clip.audio_url,
-        title: clip.title || finalPrompt.substring(0, 40),
-        imageUrl: clip.image_url || null,
-        duration: clip.metadata?.duration || 60,
-        clipId: clip.id,
-      });
+    if (!retry.ok) {
+      const err = await retry.text();
+      return NextResponse.json({ error: `HF error after retry (${retry.status}): ${err.substring(0, 200)}` }, { status: 502 });
     }
-
-    const failed = feed.filter((c: any) => c.status === 'error');
-    if (failed.length === feed.length) {
-      return NextResponse.json({ error: 'Suno generation failed' }, { status: 502 });
-    }
+    const audioBuffer = await retry.arrayBuffer();
+    const b64 = Buffer.from(audioBuffer).toString('base64');
+    const audioUrl = `data:audio/wav;base64,${b64}`;
+    return NextResponse.json({ audioUrl, title: finalPrompt.substring(0, 50), duration: 30 });
   }
 
-  return NextResponse.json({ error: 'Generation timed out after 120s' }, { status: 504 });
+  if (!res.ok) {
+    const err = await res.text();
+    return NextResponse.json({ error: `HF error (${res.status}): ${err.substring(0, 200)}` }, { status: 502 });
+  }
+
+  // Success — stream back as data URL so the browser can play it
+  const audioBuffer = await res.arrayBuffer();
+  const b64 = Buffer.from(audioBuffer).toString('base64');
+  const audioUrl = `data:audio/wav;base64,${b64}`;
+  return NextResponse.json({ audioUrl, title: finalPrompt.substring(0, 50), duration: 30 });
 }
