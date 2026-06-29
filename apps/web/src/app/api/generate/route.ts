@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// HF Inference API — works anonymously for public models (lower rate limits)
-// Set HF_TOKEN env var on Render for higher limits
-const HF_API = 'https://api-inference.huggingface.co/models/facebook/musicgen-stereo-medium';
+// New HF inference router URL (api-inference.huggingface.co DNS fails on Render free tier)
+// Set HF_TOKEN env var on Render for auth; anonymous works with lower rate limits
+const HF_API = 'https://router.huggingface.co/hf-inference/models/facebook/musicgen-stereo-medium';
 const HF_TOKEN = process.env.HF_TOKEN || '';
 
 function hfHeaders() {

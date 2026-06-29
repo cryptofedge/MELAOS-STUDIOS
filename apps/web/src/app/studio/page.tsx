@@ -183,53 +183,20 @@ export default function StudioPage() {
     }, 400);
 
     try {
-      // Build prompt and call HF Inference API directly from the browser
-      // (Render free tier blocks outbound DNS to api-inference.huggingface.co)
-      const base = prompt.trim() || `${genre} music, ${mood.toLowerCase()} mood`;
-      const parts = [base, `${genBpm} BPM`];
-      if (vocalGender === 'none') parts.push('instrumental, no vocals');
-      else parts.push(`${vocalGender} vocals`);
-      parts.push('high quality, professional studio recording');
-      const finalPrompt = parts.join(', ');
-
-      const HF_API = 'https://api-inference.huggingface.co/models/facebook/musicgen-stereo-medium';
-      let res = await fetch(HF_API, {
+      const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'audio/wav' },
-        body: JSON.stringify({
-          inputs: finalPrompt,
-          parameters: { max_new_tokens: 1500, do_sample: true, guidance_scale: 3.0 },
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, genre, mood, bpm: genBpm, vocals: vocalGender }),
       });
-
-      // 503 = model warming up — wait then retry
-      if (res.status === 503) {
-        const info = await res.json().catch(() => ({}));
-        const wait = Math.min((info as any).estimated_time || 20, 40) * 1000;
-        await new Promise(r => setTimeout(r, wait));
-        res = await fetch(HF_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'audio/wav' },
-          body: JSON.stringify({
-            inputs: finalPrompt,
-            parameters: { max_new_tokens: 1500, do_sample: true, guidance_scale: 3.0 },
-          }),
-        });
-      }
 
       clearInterval(progressTimer.current!);
 
       if (!res.ok) {
-        const errText = await res.text().catch(() => res.statusText);
-        throw new Error(`HF error (${res.status}): ${errText.substring(0, 200)}`);
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Server error ${res.status}`);
       }
 
-      // Convert WAV bytes → blob URL (faster than base64 data URL)
-      const audioBlob = await res.arrayBuffer();
-      const blobUrl = URL.createObjectURL(new Blob([audioBlob], { type: 'audio/wav' }));
-
-      // Wrap as expected shape
-      const data = { audioUrl: blobUrl, title: finalPrompt.substring(0, 50), duration: 30 };
+      const data = await res.json();
       setGenProgress(100);
 
       // Load the returned audio URL
