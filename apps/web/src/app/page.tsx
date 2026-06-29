@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
 
 const features = [
-  { icon: Music2, title: '10 free songs, daily', desc: 'Generate up to 10 tracks every day at no cost. Full quality, no strings attached.' },
+  { icon: Music2, title: '1 free song, daily', desc: 'Generate 1 track every day at no cost. Full quality, no strings attached.' },
   { icon: Sparkles, title: 'Free AI music generator', desc: 'Powered by MELAOS v5 — our most advanced generation model to date.' },
   { icon: Share2, title: 'Share it with the world', desc: 'Publish instantly to your profile. Let fans discover your sound from anywhere.' },
   { icon: SlidersHorizontal, title: 'Granular creation controls', desc: 'Dial in BPM, genre, mood, vocal style, and more with our pro parameter suite.' },
@@ -63,7 +63,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <p className="text-gray-600 text-sm mt-4">No credit card required · 10 free songs daily</p>
+          <p className="text-gray-600 text-sm mt-4">No credit card required · 1 free song daily</p>
         </div>
 
         {/* Floating song cards */}

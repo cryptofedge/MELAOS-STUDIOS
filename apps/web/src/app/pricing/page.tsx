@@ -13,7 +13,7 @@ const tiers = [
     cta: 'Get Started Free',
     ctaHref: '/auth',
     features: [
-      '10 songs per day',
+      '1 song per day',
       'Standard quality (128kbps)',
       'Watermarked tracks',
       'No commercial rights',
