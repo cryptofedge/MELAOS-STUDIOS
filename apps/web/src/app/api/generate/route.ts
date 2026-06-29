@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male' } = body;
+  const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male', duration = 30 } = body;
+  // ~50 tokens per second of audio; cap at 150s to stay within server limits
+  const maxTokens = Math.min(Math.max(Math.round(duration * 50), 750), 7500);
   const finalPrompt = buildPrompt(prompt, genre, mood, bpm, vocals);
 
   // Call HF Inference API — returns raw audio bytes (WAV/MP3 depending on model)
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({
       inputs: finalPrompt,
       parameters: {
-        max_new_tokens: 1500,   // ~30 seconds of audio
+        max_new_tokens: maxTokens,
         do_sample: true,
         guidance_scale: 3.0,
       },
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         inputs: finalPrompt,
-        parameters: { max_new_tokens: 1500, do_sample: true, guidance_scale: 3.0 },
+        parameters: { max_new_tokens: maxTokens, do_sample: true, guidance_scale: 3.0 },
       }),
     });
     if (!retry.ok) {
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
     const audioBuffer = await retry.arrayBuffer();
     const b64 = Buffer.from(audioBuffer).toString('base64');
     const audioUrl = `data:audio/wav;base64,${b64}`;
-    return NextResponse.json({ audioUrl, title: finalPrompt.substring(0, 50), duration: 30 });
+    return NextResponse.json({ audioUrl, title: finalPrompt.substring(0, 50), duration });
   }
 
   if (!res.ok) {
