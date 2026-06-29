@@ -102,7 +102,7 @@ function DotGrid() {
   );
 }
 
-type MobileTab = 'timeline' | 'ai' | 'lyrics';
+type MobileTab = 'timeline' | 'ai' | 'mix';
 
 export default function StudioPage() {
   const [isPlaying,    setIsPlaying]    = useState(false);
@@ -130,6 +130,13 @@ export default function StudioPage() {
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [tick,         setTick]         = useState(0);
+  const [pan,          setPan]          = useState<Record<string, number>>(
+    Object.fromEntries(TRACKS.map(t => [t.id, 50]))
+  );
+  const [eq,           setEq]           = useState<Record<string, [number,number,number]>>(
+    Object.fromEntries(TRACKS.map(t => [t.id, [50, 50, 50] as [number,number,number]]))
+  );
+  const [masterVol,    setMasterVol]    = useState(85);
 
   const intervalRef   = useRef<NodeJS.Timeout | null>(null);
   const audioRef      = useRef<HTMLAudioElement | null>(null);
@@ -578,6 +585,225 @@ export default function StudioPage() {
     );
   };
 
+  /* ── Knob helper ──────────────────────────────────────── */
+  const Knob = ({ value, onChange, color, size = 32 }: { value: number; onChange: (v: number) => void; color: string; size?: number }) => {
+    const angle = -135 + (value / 100) * 270;
+    return (
+      <div className="relative flex items-center justify-center cursor-pointer select-none"
+        style={{ width: size, height: size }}
+        onMouseDown={e => {
+          const startY = e.clientY, startVal = value;
+          const move = (ev: MouseEvent) => onChange(Math.max(0, Math.min(100, startVal - (ev.clientY - startY) * 0.8)));
+          const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+          window.addEventListener('mousemove', move);
+          window.addEventListener('mouseup', up);
+        }}>
+        <svg width={size} height={size} viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="12" fill="#0A0A18" stroke={`${color}33`} strokeWidth="1.5" />
+          <circle cx="16" cy="16" r="10" fill={`${color}10`} />
+          <line x1="16" y1="16"
+            x2={16 + 8 * Math.sin((angle * Math.PI) / 180)}
+            y2={16 - 8 * Math.cos((angle * Math.PI) / 180)}
+            stroke={color} strokeWidth="2" strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 3px ${color})` }} />
+          <circle cx="16" cy="16" r="2.5" fill={color} style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+        </svg>
+      </div>
+    );
+  };
+
+  /* ── Mixing board ──────────────────────────────────────── */
+  const MixingBoard = () => (
+    <div className="border-t shrink-0 overflow-x-auto"
+      style={{
+        background: 'linear-gradient(180deg, #02020C, #050514)',
+        borderColor: '#AE06ED33',
+        boxShadow: '0 -2px 20px rgba(174,6,237,0.1)',
+      }}>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b shrink-0"
+        style={{ borderColor: '#0D0D20', background: '#030310' }}>
+        <Cpu className="w-3 h-3" style={{ color: '#F28C28', filter: 'drop-shadow(0 0 3px #F28C28)' }} />
+        <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#F28C28' }}>Mixing Board</span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-[8px] font-mono" style={{ color: '#333366' }}>EQ · PAN · FADER</span>
+        </div>
+      </div>
+
+      {/* Channel strips */}
+      <div className="flex gap-0 py-2 px-1 min-w-max">
+        {TRACKS.map(track => {
+          const [bass, mid, treble] = eq[track.id] || [50, 50, 50];
+          const vol = volumes[track.id] ?? 80;
+          const panVal = pan[track.id] ?? 50;
+          const isActive = activeTrack === track.id;
+          return (
+            <div key={track.id}
+              onClick={() => setActiveTrack(track.id)}
+              className="flex flex-col items-center gap-1 cursor-pointer transition-all"
+              style={{
+                width: '72px',
+                padding: '6px 4px',
+                background: isActive ? `${track.color}08` : 'transparent',
+                borderRight: '1px solid #0D0D20',
+                boxShadow: isActive ? `inset 0 0 12px ${track.color}11` : 'none',
+              }}>
+              {/* Track name */}
+              <div className="w-full flex items-center justify-center gap-1 mb-0.5">
+                <div className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: track.color, boxShadow: isActive ? `0 0 5px ${track.color}` : 'none' }} />
+                <span className="text-[8px] font-black tracking-wider uppercase truncate"
+                  style={{ color: isActive ? track.color : '#334455' }}>{track.name}</span>
+              </div>
+
+              {/* EQ knobs: Bass / Mid / Treble */}
+              <div className="flex gap-0.5 items-end">
+                {([bass, mid, treble] as number[]).map((v, i) => (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <Knob value={v} color={i === 0 ? '#F28C28' : i === 1 ? '#00FFD1' : '#007AFF'} size={20}
+                      onChange={val => setEq(prev => {
+                        const cur = [...(prev[track.id] || [50,50,50])] as [number,number,number];
+                        cur[i] = val;
+                        return { ...prev, [track.id]: cur };
+                      })} />
+                    <span className="text-[6px] font-mono" style={{ color: '#222244' }}>
+                      {i === 0 ? 'B' : i === 1 ? 'M' : 'T'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pan knob */}
+              <div className="flex flex-col items-center gap-0.5">
+                <Knob value={panVal} color="#AE06ED" size={22}
+                  onChange={val => setPan(p => ({ ...p, [track.id]: val }))} />
+                <span className="text-[6px] font-mono" style={{ color: '#222244' }}>
+                  {panVal < 45 ? `L${Math.round((50-panVal)*2)}` : panVal > 55 ? `R${Math.round((panVal-50)*2)}` : 'C'}
+                </span>
+              </div>
+
+              {/* Level meter + fader */}
+              <div className="flex gap-1 items-end" style={{ height: '64px' }}>
+                {/* Level meter */}
+                <div className="flex gap-0.5 items-end h-full">
+                  {[0,1].map(ch => {
+                    const lvl = isPlaying && !muted[track.id] ? Math.random() * (vol / 100) : 0;
+                    return (
+                      <div key={ch} className="w-1.5 h-full flex flex-col-reverse gap-px">
+                        {Array.from({length: 12}, (_, i) => (
+                          <div key={i} className="w-full rounded-sm transition-all duration-75"
+                            style={{
+                              height: '4px',
+                              background: lvl * 12 > i
+                                ? i > 9 ? '#FF2D78' : i > 7 ? '#F28C28' : '#00FFD1'
+                                : '#0D0D20',
+                              boxShadow: lvl * 12 > i && i > 9 ? '0 0 3px #FF2D78' : 'none',
+                            }} />
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Fader */}
+                <div className="relative flex flex-col items-center h-full" style={{ width: '16px' }}>
+                  <div className="flex-1 w-1 rounded-full mx-auto"
+                    style={{ background: '#0D0D1A', border: '1px solid #1a1a3a' }} />
+                  <div
+                    className="absolute w-4 h-3 rounded cursor-ns-resize"
+                    style={{
+                      bottom: `calc(${vol}% - 6px)`,
+                      background: `linear-gradient(180deg, ${track.color}CC, ${track.color}66)`,
+                      boxShadow: `0 0 6px ${track.color}66`,
+                      border: `1px solid ${track.color}`,
+                    }}
+                    onMouseDown={e => {
+                      e.stopPropagation();
+                      const el = e.currentTarget.parentElement!;
+                      const rect = el.getBoundingClientRect();
+                      const startY = e.clientY, startVol = vol;
+                      const move = (ev: MouseEvent) => {
+                        const delta = ((startY - ev.clientY) / rect.height) * 100;
+                        setVolumes(v => ({ ...v, [track.id]: Math.max(0, Math.min(100, Math.round(startVol + delta))) }));
+                      };
+                      const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                      window.addEventListener('mousemove', move);
+                      window.addEventListener('mouseup', up);
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Volume % */}
+              <span className="text-[8px] font-mono" style={{ color: track.color, textShadow: isActive ? `0 0 4px ${track.color}` : 'none' }}>{vol}%</span>
+
+              {/* M / S buttons */}
+              <div className="flex gap-1">
+                <button onClick={e => { e.stopPropagation(); toggleMute(track.id); }}
+                  className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
+                  style={{ background: muted[track.id] ? '#F28C2820' : 'transparent', borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a', color: muted[track.id] ? '#F28C28' : '#333355' }}>M</button>
+                <button onClick={e => { e.stopPropagation(); toggleSolo(track.id); }}
+                  className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
+                  style={{ background: solo[track.id] ? '#007AFF20' : 'transparent', borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a', color: solo[track.id] ? '#007AFF' : '#333355' }}>S</button>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Master bus */}
+        <div className="flex flex-col items-center gap-1 ml-1" style={{ width: '72px', padding: '6px 4px', borderLeft: '1px solid #AE06ED33' }}>
+          <span className="text-[8px] font-black tracking-wider uppercase" style={{ color: '#AE06ED' }}>MASTER</span>
+
+          {/* Stereo meter */}
+          <div className="flex gap-0.5 items-end" style={{ height: '64px', marginTop: '28px' }}>
+            {[0,1].map(ch => {
+              const lvl = isPlaying ? 0.6 + Math.random() * 0.3 : 0;
+              return (
+                <div key={ch} className="w-2 h-full flex flex-col-reverse gap-px">
+                  {Array.from({length:12}, (_, i) => (
+                    <div key={i} className="w-full rounded-sm transition-all duration-75"
+                      style={{
+                        height:'4px',
+                        background: lvl*12>i ? i>9?'#FF2D78':i>7?'#F28C28':'#AE06ED' : '#0D0D20',
+                        boxShadow: lvl*12>i&&i>9?'0 0 3px #FF2D78':'none',
+                      }} />
+                  ))}
+                </div>
+              );
+            })}
+
+            {/* Master fader */}
+            <div className="relative flex flex-col items-center h-full ml-1" style={{width:'16px'}}>
+              <div className="flex-1 w-1 rounded-full mx-auto" style={{background:'#0D0D1A',border:'1px solid #1a1a3a'}} />
+              <div className="absolute w-4 h-3 rounded cursor-ns-resize"
+                style={{
+                  bottom:`calc(${masterVol}% - 6px)`,
+                  background:'linear-gradient(180deg,#AE06EDCC,#AE06ED66)',
+                  boxShadow:'0 0 8px #AE06ED66',
+                  border:'1px solid #AE06ED',
+                }}
+                onMouseDown={e => {
+                  const el = e.currentTarget.parentElement!;
+                  const rect = el.getBoundingClientRect();
+                  const startY = e.clientY, startVol = masterVol;
+                  const move = (ev: MouseEvent) => {
+                    const delta = ((startY - ev.clientY) / rect.height) * 100;
+                    setMasterVol(Math.max(0, Math.min(100, Math.round(startVol + delta))));
+                  };
+                  const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                  window.addEventListener('mousemove', move);
+                  window.addEventListener('mouseup', up);
+                }} />
+            </div>
+          </div>
+
+          <span className="text-[8px] font-mono" style={{ color: '#AE06ED', textShadow: '0 0 4px #AE06ED' }}>{masterVol}%</span>
+          <span className="text-[6px] font-mono mt-1" style={{ color: '#333355' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
+        </div>
+      </div>
+    </div>
+  );
+
   /* ─────────────────────────────────────────────────────── */
   return (
     <div className="h-[calc(100vh-9rem)] flex flex-col overflow-hidden relative"
@@ -610,7 +836,7 @@ export default function StudioPage() {
         {/* Tab bar */}
         <div className="flex border-b shrink-0"
           style={{ background: '#050510', borderColor: '#AE06ED22' }}>
-          {(['timeline', 'ai', 'lyrics'] as const).map(tab => (
+          {(['timeline', 'ai', 'mix'] as const).map(tab => (
             <button key={tab} onClick={() => setMobileTab(tab)}
               style={{ minHeight: '44px', touchAction: 'manipulation' }}
               className="flex-1 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative">
@@ -618,7 +844,7 @@ export default function StudioPage() {
                 color: mobileTab === tab ? '#AE06ED' : '#333366',
                 textShadow: mobileTab === tab ? '0 0 8px #AE06ED' : 'none',
               }}>
-                {tab === 'ai' ? 'AI Generate' : tab === 'lyrics' ? 'Lyrics' : 'Timeline'}
+                {tab === 'ai' ? 'AI Generate' : tab === 'mix' ? 'Mixer' : 'Timeline'}
               </span>
               {mobileTab === tab && (
                 <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full"
@@ -670,17 +896,8 @@ export default function StudioPage() {
             <div className="overflow-y-auto">{AIPanel()}</div>
           )}
 
-          {mobileTab === 'lyrics' && (
-            <div className="p-3 h-full flex flex-col">
-              <div className="flex items-center gap-2 mb-2">
-                <Mic2 className="w-3.5 h-3.5" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 3px #AE06ED)' }} />
-                <span className="text-[10px] font-black tracking-[0.2em] uppercase" style={{ color: '#AE06ED' }}>Lyrics Editor</span>
-              </div>
-              <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
-                style={{ fontSize: '13px', background: 'transparent', color: '#7788AA', letterSpacing: '0.03em' }}
-                className="flex-1 font-mono text-xs resize-none focus:outline-none leading-relaxed"
-                spellCheck={false} />
-            </div>
+          {mobileTab === 'mix' && (
+            <div className="overflow-x-auto overflow-y-hidden p-2">{MixingBoard()}</div>
           )}
         </div>
 
@@ -690,15 +907,32 @@ export default function StudioPage() {
       {/* ── DESKTOP (lg+) ──────────────────────────────────── */}
       <div className="hidden lg:flex relative z-10 flex-1 overflow-hidden">
 
-        {/* Track sidebar */}
-        <div className="w-52 border-r flex flex-col shrink-0 overflow-y-auto"
+        {/* Left sidebar — tracks + lyrics */}
+        <div className="w-52 border-r flex flex-col shrink-0"
           style={{ background: '#030310', borderColor: '#AE06ED22' }}>
+          {/* Tracks header */}
           <div className="h-9 border-b flex items-center px-3 gap-2 shrink-0"
             style={{ background: '#050510', borderColor: '#0D0D20' }}>
             <Layers className="w-3 h-3" style={{ color: '#AE06ED' }} />
             <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#AE06ED' }}>Tracks</span>
           </div>
-          {TRACKS.map(track => <TrackRow key={track.id} track={track} />)}
+          {/* Track list */}
+          <div className="overflow-y-auto" style={{ flex: '0 0 auto' }}>
+            {TRACKS.map(track => <TrackRow key={track.id} track={track} />)}
+          </div>
+          {/* Lyrics editor */}
+          <div className="flex-1 border-t flex flex-col min-h-0"
+            style={{ borderColor: '#AE06ED22', background: 'linear-gradient(180deg, #030310, #050512)' }}>
+            <div className="h-7 border-b flex items-center px-3 gap-2 shrink-0"
+              style={{ background: '#050510', borderColor: '#0D0D20' }}>
+              <Mic2 className="w-3 h-3" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 3px #AE06ED)' }} />
+              <span className="text-[9px] font-black tracking-[0.2em] uppercase" style={{ color: '#AE06ED' }}>Lyrics</span>
+            </div>
+            <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
+              style={{ fontSize: '11px', background: 'transparent', color: '#445566', letterSpacing: '0.03em', resize: 'none' }}
+              className="flex-1 font-mono p-2 focus:outline-none leading-relaxed min-h-0"
+              spellCheck={false} />
+          </div>
         </div>
 
         {/* Center — timeline + transport + lyrics */}
@@ -732,22 +966,7 @@ export default function StudioPage() {
           </div>
 
           <TransportBar />
-
-          {/* Lyrics editor */}
-          <div className="h-44 border-t p-3 overflow-hidden shrink-0"
-            style={{
-              background: 'linear-gradient(180deg, #030310, #050512)',
-              borderColor: '#AE06ED22',
-            }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Mic2 className="w-3.5 h-3.5" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 3px #AE06ED)' }} />
-              <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#AE06ED' }}>Lyrics Editor</span>
-            </div>
-            <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
-              style={{ fontSize: '12px', background: 'transparent', color: '#556677', letterSpacing: '0.03em' }}
-              className="w-full h-32 font-mono resize-none focus:outline-none leading-relaxed"
-              spellCheck={false} />
-          </div>
+          {MixingBoard()}
         </div>
 
         {/* Right panel — AI */}
