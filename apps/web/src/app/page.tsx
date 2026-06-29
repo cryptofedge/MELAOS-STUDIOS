@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
-import MelaosLogo from '@/components/MelaosLogo';
 
 const features = [
   { icon: Music2, title: '10 free songs, daily', desc: 'Generate up to 10 tracks every day at no cost. Full quality, no strings attached.' },
@@ -32,7 +31,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-4xl mx-auto w-full">
           {/* Hero logo */}
           <div className="flex justify-center mb-6">
-            <MelaosLogo size={120} showText={true} textLayout="stacked" />
+            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-40 w-auto drop-shadow-2xl" />
           </div>
 
           <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>

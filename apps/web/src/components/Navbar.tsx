@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Search, Menu, X } from 'lucide-react';
-import MelaosLogo from './MelaosLogo';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +14,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0">
-            <MelaosLogo size={40} showText={true} textLayout="horizontal" />
+            <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop search */}
@@ -85,7 +84,7 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 top-16 bg-[#0A0A0A] z-40 overflow-y-auto">
           <div className="flex flex-col p-6 gap-6">
             <div className="flex justify-center py-2">
-              <MelaosLogo size={80} showText={true} textLayout="stacked" />
+              <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-24 w-auto" />
             </div>
             {[
               ['Explore', '/explore'],
