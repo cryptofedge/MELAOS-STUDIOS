@@ -244,7 +244,6 @@ export default function StudioPage() {
             onChange={e => setPrompt(e.target.value)}
             rows={3}
             placeholder="A dark trap banger with 808s, auto-tune vocals, and a haunting piano melody..."
-            style={{ fontSize: '16px' }}
             className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
             style={{
               fontSize: '14px',
