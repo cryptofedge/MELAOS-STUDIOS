@@ -508,9 +508,8 @@ export default function StudioPage() {
           boxShadow: '0 1px 0 #AE06ED11',
         }}>
         <div className="flex items-center gap-2">
-          <Cpu className="w-3.5 h-3.5" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 4px #AE06ED)' }} />
-          <span className="text-[11px] font-black tracking-[0.25em] uppercase"
-            style={{ color: '#AE06ED', textShadow: '0 0 10px #AE06ED' }}>MELAOS STUDIO</span>
+          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-7 w-auto"
+            style={{ filter: 'drop-shadow(0 0 6px #AE06ED88)' }} />
         </div>
         <div className="w-px h-4 shrink-0" style={{ background: '#AE06ED33' }} />
         <span className="text-[11px] font-mono text-[#333366] tracking-wider truncate">Untitled Project</span>
