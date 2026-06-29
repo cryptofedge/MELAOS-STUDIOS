@@ -15,6 +15,7 @@ export interface Song {
   isPublic: boolean;
   createdAt: string;
   tags: string[];
+  audioUrl?: string;
 }
 
 export const mockSongs: Song[] = [
