@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Search, Menu, X } from 'lucide-react';
+import MelaosLogo from './MelaosLogo';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,23 +14,8 @@ export default function Navbar() {
         {/* Main nav row */}
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#F28C28"/>
-                  <stop offset="50%" stopColor="#AE06ED"/>
-                  <stop offset="100%" stopColor="#007AFF"/>
-                </linearGradient>
-              </defs>
-              {/* Orbital ring */}
-              <ellipse cx="18" cy="18" rx="16" ry="6" stroke="url(#logoGrad)" strokeWidth="1.5" fill="none" opacity="0.7" transform="rotate(-30 18 18)"/>
-              {/* M letterform */}
-              <text x="9" y="23" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="16" fill="url(#logoGrad)">M</text>
-            </svg>
-            <span className="font-bold text-white text-sm md:text-base hidden xs:block">
-              MELAOS <span className="text-[#F28C28]">STUDIOS</span>
-            </span>
+          <Link href="/" className="shrink-0">
+            <MelaosLogo size={40} showText={true} textLayout="horizontal" />
           </Link>
 
           {/* Desktop search */}
@@ -98,6 +84,9 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden fixed inset-0 top-16 bg-[#0A0A0A] z-40 overflow-y-auto">
           <div className="flex flex-col p-6 gap-6">
+            <div className="flex justify-center py-2">
+              <MelaosLogo size={80} showText={true} textLayout="stacked" />
+            </div>
             {[
               ['Explore', '/explore'],
               ['Pricing', '/pricing'],
