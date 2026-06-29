@@ -31,7 +31,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-4xl mx-auto w-full">
           {/* Hero logo */}
           <div className="flex justify-center mb-6">
-            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-40 w-auto drop-shadow-2xl" />
+            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-32 sm:h-40 w-auto max-w-[180px] sm:max-w-[240px] object-contain drop-shadow-2xl" />
           </div>
 
           <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
