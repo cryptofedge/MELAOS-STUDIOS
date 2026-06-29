@@ -14,7 +14,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0">
-            <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-10 w-auto" />
+            <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop search */}
