@@ -24,26 +24,30 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Profile header */}
-      <div className="flex items-start gap-6 mb-8 p-6 bg-[#1A1A1A] border border-[#333] rounded-2xl">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#F28C28] to-[#E91E8C] flex items-center justify-center text-white text-2xl font-black shrink-0">
+      {/* Profile header — stacks on mobile */}
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-8 p-4 sm:p-6 bg-[#1A1A1A] border border-[#333] rounded-2xl">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[#F28C28] to-[#E91E8C] flex items-center justify-center text-white text-xl sm:text-2xl font-black shrink-0">
           FR
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full">
           <div className="flex items-center gap-3 flex-wrap mb-1">
-            <h1 className="text-2xl font-black text-white">{mockUser.displayName}</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-white">{mockUser.displayName}</h1>
             <span className="bg-[#F28C28]/20 text-[#F28C28] text-xs font-bold px-2 py-0.5 rounded-full border border-[#F28C28]/30">
               {mockUser.tier}
             </span>
           </div>
           <p className="text-gray-500 text-sm mb-3">@{mockUser.username}</p>
-          <div className="flex gap-6 text-sm">
+          <div className="flex flex-wrap gap-4 text-sm">
             <span><strong className="text-white">{mockUser.followerCount.toLocaleString()}</strong> <span className="text-gray-500">Followers</span></span>
             <span><strong className="text-white">{mockUser.followingCount}</strong> <span className="text-gray-500">Following</span></span>
             <span><strong className="text-white">{userSongs.length}</strong> <span className="text-gray-500">Songs</span></span>
           </div>
         </div>
-        <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full flex items-center gap-2 shrink-0 hover:scale-105 transition-transform">
+        <Link
+          href="/studio"
+          style={{ minHeight: '44px', touchAction: 'manipulation' }}
+          className="btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full flex items-center gap-2 shrink-0 hover:scale-105 transition-transform self-start sm:self-auto"
+        >
           <Plus className="w-4 h-4" /> New Song
         </Link>
       </div>
@@ -63,21 +67,24 @@ export default function DashboardPage() {
         <p className="text-xs text-gray-600 mt-1.5">{mockUser.monthlyLimit - mockUser.songsGenerated} songs remaining this month</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-[#1A1A1A] pb-4">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-              activeTab === tab
-                ? 'bg-[#F28C28] text-white'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-[#1A1A1A]'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      {/* Tabs — horizontally scrollable on mobile */}
+      <div className="overflow-x-auto scrollbar-hide mb-6 border-b border-[#1A1A1A] pb-4">
+        <div className="flex gap-2 whitespace-nowrap min-w-max sm:min-w-0">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{ minHeight: '44px', touchAction: 'manipulation' }}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeTab === tab
+                  ? 'bg-[#F28C28] text-white'
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-[#1A1A1A]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* My Songs tab */}
@@ -86,9 +93,9 @@ export default function DashboardPage() {
           {userSongs.map((song, i) => (
             <div
               key={song.id}
-              className="group flex items-center gap-4 p-3 bg-[#1A1A1A] border border-[#222] rounded-xl hover:border-[#333] transition-all"
+              className="group flex items-center gap-3 sm:gap-4 p-3 bg-[#1A1A1A] border border-[#222] rounded-xl hover:border-[#333] transition-all"
             >
-              <span className="text-gray-700 text-sm w-5 text-right shrink-0">{i + 1}</span>
+              <span className="text-gray-700 text-sm w-5 text-right shrink-0 hidden xs:block">{i + 1}</span>
               <div
                 className="w-10 h-10 rounded-lg shrink-0 cursor-pointer relative overflow-hidden hover:scale-105 transition-transform"
                 style={{ background: song.coverGradient }}
@@ -102,15 +109,33 @@ export default function DashboardPage() {
                 <p className="text-white text-sm font-semibold truncate">{song.title}</p>
                 <p className="text-gray-600 text-xs">{song.genre} · {song.durationFormatted}</p>
               </div>
+              {/* Play count and likes: hidden on small mobile */}
               <div className="hidden md:flex items-center gap-4 text-xs text-gray-600">
                 <span className="flex items-center gap-1"><Play className="w-3 h-3" />{formatPlays(song.plays)}</span>
                 <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{formatPlays(song.likes)}</span>
                 <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" />Analytics</span>
               </div>
+              {/* Duration always visible on mobile */}
+              <span className="text-xs text-gray-600 md:hidden shrink-0">{song.durationFormatted}</span>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="p-1.5 text-gray-600 hover:text-blue-400 rounded transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
-                <button className="p-1.5 text-gray-600 hover:text-red-400 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                <button className="p-1.5 text-gray-600 hover:text-white rounded transition-colors"><MoreHorizontal className="w-3.5 h-3.5" /></button>
+                <button
+                  style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
+                  className="flex items-center justify-center text-gray-600 hover:text-blue-400 rounded transition-colors"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
+                  className="flex items-center justify-center text-gray-600 hover:text-red-400 rounded transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
+                  className="flex items-center justify-center text-gray-600 hover:text-white rounded transition-colors"
+                >
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}
@@ -153,11 +178,15 @@ export default function DashboardPage() {
               <label className="text-xs text-gray-500 font-medium mb-1 block">{field.label}</label>
               <input
                 defaultValue={field.value}
-                className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg px-4 py-2.5 text-gray-300 text-sm focus:outline-none focus:border-[#F28C28] transition-colors"
+                style={{ fontSize: '16px' }}
+                className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg px-4 py-3 text-gray-300 text-sm focus:outline-none focus:border-[#F28C28] transition-colors"
               />
             </div>
           ))}
-          <button className="btn-orange text-white text-sm font-bold px-6 py-2.5 rounded-full hover:scale-105 transition-transform">
+          <button
+            style={{ minHeight: '48px', touchAction: 'manipulation' }}
+            className="btn-orange text-white text-sm font-bold px-6 py-2.5 rounded-full hover:scale-105 transition-transform"
+          >
             Save Changes
           </button>
         </div>

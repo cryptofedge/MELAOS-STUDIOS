@@ -4,6 +4,59 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* ── Cross-browser base resets ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333 #0A0A0A;
+}
+
+/* Webkit scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0A0A0A; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #F28C28; }
+
+/* Prevent iOS Safari bounce on fixed elements */
+.fixed-no-bounce {
+  position: fixed;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safari: min-height fix for flex children */
+.flex-child-min-h {
+  min-height: 0;
+}
+
+/* Safari: webkit backdrop-filter support */
+.backdrop-blur-md {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Input appearance reset for custom-styled inputs */
+input, select, textarea {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 :root {
   --bg-primary: #0A0A0A;
   --bg-secondary: #111111;
@@ -12,12 +65,6 @@
   --orange: #F28C28;
   --pink: #E91E8C;
   --purple: #7C3AED;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
 html,
@@ -29,24 +76,14 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: #111111;
-}
-::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #F28C28;
-}
-
 /* Hero gradient animation */
 @keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@-webkit-keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
@@ -57,12 +94,27 @@ body {
   50% { box-shadow: 0 0 50px rgba(242,140,40,0.9), 0 0 80px rgba(233,30,140,0.5); }
 }
 
+@-webkit-keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(242,140,40,0.4); }
+  50% { box-shadow: 0 0 50px rgba(242,140,40,0.9), 0 0 80px rgba(233,30,140,0.5); }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-12px); }
 }
 
+@-webkit-keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
 @keyframes waveformAnim {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.3); }
+}
+
+@-webkit-keyframes waveformAnim {
   0%, 100% { transform: scaleY(1); }
   50% { transform: scaleY(0.3); }
 }
@@ -75,11 +127,13 @@ body {
 .hero-gradient {
   background: linear-gradient(135deg, #0A0A0A 0%, #1a0a2e 25%, #2d0a1a 50%, #1a1a0a 75%, #0a1a2e 100%);
   background-size: 400% 400%;
+  -webkit-animation: gradientShift 10s ease infinite;
   animation: gradientShift 10s ease infinite;
 }
 
 .btn-orange {
   background: linear-gradient(135deg, #F28C28 0%, #E91E8C 100%);
+  -webkit-animation: pulseGlow 2.5s ease-in-out infinite;
   animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
@@ -93,10 +147,11 @@ body {
 }
 
 .float-card {
+  -webkit-animation: float 4s ease-in-out infinite;
   animation: float 4s ease-in-out infinite;
 }
-.float-card:nth-child(2) { animation-delay: 1.3s; }
-.float-card:nth-child(3) { animation-delay: 2.6s; }
+.float-card:nth-child(2) { -webkit-animation-delay: 1.3s; animation-delay: 1.3s; }
+.float-card:nth-child(3) { -webkit-animation-delay: 2.6s; animation-delay: 2.6s; }
 
 .waveform-bar {
   display: inline-block;
@@ -105,14 +160,14 @@ body {
   border-radius: 2px;
   transform-origin: bottom;
 }
-.waveform-bar:nth-child(1) { animation: waveformAnim 0.8s ease-in-out infinite; }
-.waveform-bar:nth-child(2) { animation: waveformAnim 0.8s ease-in-out 0.1s infinite; }
-.waveform-bar:nth-child(3) { animation: waveformAnim 0.8s ease-in-out 0.2s infinite; }
-.waveform-bar:nth-child(4) { animation: waveformAnim 0.8s ease-in-out 0.3s infinite; }
-.waveform-bar:nth-child(5) { animation: waveformAnim 0.8s ease-in-out 0.15s infinite; }
-.waveform-bar:nth-child(6) { animation: waveformAnim 0.8s ease-in-out 0.05s infinite; }
-.waveform-bar:nth-child(7) { animation: waveformAnim 0.8s ease-in-out 0.25s infinite; }
-.waveform-bar:nth-child(8) { animation: waveformAnim 0.8s ease-in-out 0.35s infinite; }
+.waveform-bar:nth-child(1) { -webkit-animation: waveformAnim 0.8s ease-in-out infinite; animation: waveformAnim 0.8s ease-in-out infinite; }
+.waveform-bar:nth-child(2) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.1s infinite; animation: waveformAnim 0.8s ease-in-out 0.1s infinite; }
+.waveform-bar:nth-child(3) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.2s infinite; animation: waveformAnim 0.8s ease-in-out 0.2s infinite; }
+.waveform-bar:nth-child(4) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.3s infinite; animation: waveformAnim 0.8s ease-in-out 0.3s infinite; }
+.waveform-bar:nth-child(5) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.15s infinite; animation: waveformAnim 0.8s ease-in-out 0.15s infinite; }
+.waveform-bar:nth-child(6) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.05s infinite; animation: waveformAnim 0.8s ease-in-out 0.05s infinite; }
+.waveform-bar:nth-child(7) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.25s infinite; animation: waveformAnim 0.8s ease-in-out 0.25s infinite; }
+.waveform-bar:nth-child(8) { -webkit-animation: waveformAnim 0.8s ease-in-out 0.35s infinite; animation: waveformAnim 0.8s ease-in-out 0.35s infinite; }
 
 .gradient-text {
   background: linear-gradient(135deg, #F28C28, #E91E8C, #7C3AED);
@@ -122,5 +177,20 @@ body {
 }
 
 .timeline-waveform {
+  -webkit-animation: waveformAnim 1.2s ease-in-out infinite;
   animation: waveformAnim 1.2s ease-in-out infinite;
+}
+
+/* Hide scrollbar utility (for overflow-x scroll rows) */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Touch targets */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

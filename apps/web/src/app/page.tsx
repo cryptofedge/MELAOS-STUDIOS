@@ -28,31 +28,31 @@ export default function HomePage() {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#7C3AED]/10 blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#E91E8C]/8 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400 backdrop-blur-sm">
+        <div className="relative z-10 max-w-4xl mx-auto w-full">
+          <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
             <Sparkles className="w-3.5 h-3.5 text-[#F28C28]" />
             Introducing MELAOS v5 — Our most powerful model
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-6 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 tracking-tight">
             Make any song<br />
             <span className="gradient-text">you can imagine</span>
           </h1>
 
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed px-2">
             Start with a simple prompt or dive into our pro editing tools. Your next track is just a step away.
           </p>
 
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <Link
               href="/studio"
-              className="btn-orange text-white font-bold text-lg px-10 py-4 rounded-full hover:scale-105 transition-transform inline-block"
+              className="btn-orange text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform inline-block w-full sm:w-auto text-center"
             >
               Create
             </Link>
             <Link
               href="/explore"
-              className="border border-[#333] text-gray-300 hover:text-white hover:border-[#555] font-semibold text-lg px-8 py-4 rounded-full transition-all"
+              className="border border-[#333] text-gray-300 hover:text-white hover:border-[#555] font-semibold text-base sm:text-lg px-8 py-3 sm:py-4 rounded-full transition-all w-full sm:w-auto text-center"
             >
               Explore Music
             </Link>
@@ -62,11 +62,11 @@ export default function HomePage() {
         </div>
 
         {/* Floating song cards */}
-        <div className="relative z-10 mt-20 flex gap-4 md:gap-6 justify-center flex-wrap md:flex-nowrap">
+        <div className="relative z-10 mt-16 sm:mt-20 w-full max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4">
           {heroSongs.map((song, i) => (
             <div
               key={i}
-              className={`float-card bg-[#1A1A1A] border border-[#333] rounded-2xl p-3 w-44 md:w-52 cursor-pointer hover:border-[#555] transition-all`}
+              className={`float-card bg-[#1A1A1A] border border-[#333] rounded-2xl p-3 cursor-pointer hover:border-[#555] transition-all mx-auto w-full max-w-[200px] sm:max-w-none`}
               style={{ animationDelay: song.delay }}
             >
               <div className={`h-32 rounded-xl bg-gradient-to-br ${song.gradient} mb-3 relative overflow-hidden`}>
@@ -84,38 +84,38 @@ export default function HomePage() {
       </section>
 
       {/* Features grid */}
-      <section className="py-24 px-4 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+      <section className="py-16 sm:py-24 px-4 max-w-7xl mx-auto">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4">
             Everything you need to make music{' '}
             <span className="gradient-text">your way</span>
           </h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
             From instant generation to professional-grade editing tools, MELAOS has it all.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {features.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
-              className="card-hover bg-[#1A1A1A] border border-[#333] rounded-2xl p-5 cursor-default"
+              className="card-hover bg-[#1A1A1A] border border-[#333] rounded-2xl p-4 sm:p-5 cursor-default"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F28C28]/20 to-[#E91E8C]/20 flex items-center justify-center mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F28C28]/20 to-[#E91E8C]/20 flex items-center justify-center mb-3 sm:mb-4">
                 <Icon className="w-5 h-5 text-[#F28C28]" />
               </div>
-              <h3 className="text-white font-bold text-sm md:text-base mb-2">{title}</h3>
-              <p className="text-gray-500 text-xs md:text-sm leading-relaxed">{desc}</p>
+              <h3 className="text-white font-bold text-xs sm:text-sm md:text-base mb-2">{title}</h3>
+              <p className="text-gray-500 text-xs leading-relaxed hidden sm:block">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* CTA strip */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center bg-gradient-to-br from-[#1A1A1A] to-[#111] border border-[#333] rounded-3xl p-12">
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Ready to start creating?</h2>
-          <p className="text-gray-400 mb-8">Join 500,000+ creators making music with MELAOS STUDIOS.</p>
+      <section className="py-16 sm:py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center bg-gradient-to-br from-[#1A1A1A] to-[#111] border border-[#333] rounded-3xl p-8 sm:p-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">Ready to start creating?</h2>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">Join 500,000+ creators making music with MELAOS STUDIOS.</p>
           <Link href="/studio" className="btn-orange text-white font-bold text-base px-8 py-3 rounded-full hover:scale-105 transition-transform inline-block">
             Start for Free
           </Link>

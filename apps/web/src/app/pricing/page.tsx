@@ -72,26 +72,28 @@ export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
 
   return (
-    <div className="min-h-screen px-4 py-16 max-w-6xl mx-auto">
+    <div className="min-h-screen px-4 py-12 sm:py-16 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-6xl font-black text-white mb-4">
+      <div className="text-center mb-10 sm:mb-12">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white mb-4">
           Simple, <span className="gradient-text">honest</span> pricing
         </h1>
-        <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8">
+        <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto mb-8">
           Start free, scale when you're ready. No hidden fees. Cancel anytime.
         </p>
 
         {/* Annual toggle */}
-        <div className="inline-flex items-center gap-3 bg-[#1A1A1A] border border-[#333] rounded-full p-1">
+        <div className="inline-flex items-center gap-2 bg-[#1A1A1A] border border-[#333] rounded-full p-1">
           <button
             onClick={() => setAnnual(false)}
+            style={{ minHeight: '44px', touchAction: 'manipulation' }}
             className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? 'bg-[#F28C28] text-white' : 'text-gray-500 hover:text-gray-300'}`}
           >
             Monthly
           </button>
           <button
             onClick={() => setAnnual(true)}
+            style={{ minHeight: '44px', touchAction: 'manipulation' }}
             className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${annual ? 'bg-[#F28C28] text-white' : 'text-gray-500 hover:text-gray-300'}`}
           >
             Annual <span className="text-xs font-normal opacity-80">save 20%</span>
@@ -99,12 +101,12 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Pricing cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Pricing cards — stacked on mobile, 3-col on md+ */}
+      <div className="flex flex-col md:flex-row gap-6">
         {tiers.map(tier => (
           <div
             key={tier.name}
-            className={`relative rounded-2xl p-7 flex flex-col transition-all ${
+            className={`relative rounded-2xl p-6 sm:p-7 flex flex-col transition-all flex-1 ${
               tier.highlight
                 ? 'border-2 border-[#F28C28] bg-gradient-to-b from-[#F28C28]/10 to-[#1A1A1A] shadow-[0_0_40px_rgba(242,140,40,0.2)]'
                 : 'border border-[#333] bg-[#1A1A1A]'
@@ -139,7 +141,8 @@ export default function PricingPage() {
 
             <Link
               href={tier.ctaHref}
-              className={`w-full py-3 rounded-xl font-bold text-sm text-center block mb-6 transition-all hover:scale-105 ${
+              style={{ minHeight: '48px', touchAction: 'manipulation' }}
+              className={`w-full py-3 rounded-xl font-bold text-sm text-center flex items-center justify-center mb-6 transition-all hover:scale-105 ${
                 tier.highlight
                   ? 'btn-orange text-white'
                   : 'border border-[#333] text-gray-300 hover:border-[#555] hover:text-white'
@@ -161,7 +164,7 @@ export default function PricingPage() {
       </div>
 
       {/* FAQ teaser */}
-      <div className="mt-16 text-center">
+      <div className="mt-12 sm:mt-16 text-center">
         <p className="text-gray-500 text-sm">
           All plans include access to MELAOS STUDIOS web DAW, community features, and public profile.{' '}
           <Link href="/auth" className="text-[#F28C28] hover:underline">Start for free today.</Link>
