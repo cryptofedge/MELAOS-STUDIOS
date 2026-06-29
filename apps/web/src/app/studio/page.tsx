@@ -386,7 +386,7 @@ export default function StudioPage() {
 
           {mobileTab === 'ai' && (
             <div className="overflow-y-auto">
-              <AIPanel />
+              {AIPanel()}
             </div>
           )}
 
@@ -506,7 +506,7 @@ export default function StudioPage() {
               <Zap className="w-3.5 h-3.5 text-[#F28C28]" />
               <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">AI Generate</span>
             </div>
-            <AIPanel />
+            {AIPanel()}
           </div>
         )}
       </div>
