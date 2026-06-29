@@ -1,12 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const SUNO_API = 'https://studio-api.suno.ai/api';
+const CLERK_API = 'https://auth.suno.com/v1/client/sessions';
 
-// In-memory token store — updated by /api/suno-token endpoint
-let runtimeToken: string | null = null;
+// In-process JWT cache — refreshed automatically
+let cachedJwt: string | null = null;
+let jwtExpiresAt = 0;
 
-function getToken(): string | null {
-  return runtimeToken || process.env.SUNO_JWT || null;
+async function getFreshJwt(): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+
+  // Return cached JWT if still valid (with 2-min buffer)
+  if (cachedJwt && jwtExpiresAt - now > 120) return cachedJwt;
+
+  // Try to refresh via Clerk using stored cookie
+  const cookie = process.env.SUNO_COOKIE;
+  const sessionId = process.env.SUNO_SESSION_ID || 'session_2c632f487407704d569ae2';
+
+  if (cookie) {
+    try {
+      const res = await fetch(`${CLERK_API}/${sessionId}/tokens`, {
+        method: 'POST',
+        headers: {
+          'Cookie': cookie,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Origin': 'https://suno.com',
+          'Referer': 'https://suno.com/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const token: string = data.jwt || data.token || '';
+        if (token) {
+          cachedJwt = token;
+          try {
+            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+            jwtExpiresAt = payload.exp;
+          } catch { jwtExpiresAt = now + 3600; }
+          // Persist so next cold start has it
+          process.env.SUNO_JWT = token;
+          return token;
+        }
+      }
+    } catch (e) {
+      console.error('Clerk refresh failed:', e);
+    }
+  }
+
+  // Fall back to stored JWT
+  const stored = process.env.SUNO_JWT;
+  if (stored) {
+    cachedJwt = stored;
+    try {
+      const payload = JSON.parse(Buffer.from(stored.split('.')[1], 'base64').toString());
+      jwtExpiresAt = payload.exp;
+    } catch { jwtExpiresAt = now + 3600; }
+    return stored;
+  }
+
+  throw new Error('No Suno token available. Set SUNO_COOKIE + SUNO_SESSION_ID on Render.');
 }
 
 function buildTags(genre: string, mood: string, vocals: string): string {
@@ -22,19 +76,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const token = getToken();
-  if (!token) {
-    return NextResponse.json({ error: 'No Suno token configured. Set SUNO_JWT env var on Render.' }, { status: 503 });
+  let token: string;
+  try { token = await getFreshJwt(); }
+  catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 503 });
   }
 
   const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male' } = body;
-
   const tags = buildTags(genre, mood, vocals);
   const finalPrompt = prompt.trim()
     ? `${prompt.trim()}, ${bpm} BPM`
     : `${genre} music, ${mood.toLowerCase()} mood, ${bpm} BPM`;
 
-  // 1. Submit generation request to Suno
+  // 1. Submit to Suno
   const genRes = await fetch(`${SUNO_API}/generate/v2/`, {
     method: 'POST',
     headers: {
@@ -54,8 +108,8 @@ export async function POST(req: NextRequest) {
 
   if (!genRes.ok) {
     const err = await genRes.text();
-    // If token expired, clear runtime token so next call uses env var refresh
-    if (genRes.status === 401) runtimeToken = null;
+    // Invalidate cached JWT on auth failure so next request refreshes
+    if (genRes.status === 401) { cachedJwt = null; jwtExpiresAt = 0; }
     return NextResponse.json({ error: `Suno error (${genRes.status}): ${err}` }, { status: 502 });
   }
 
@@ -66,7 +120,7 @@ export async function POST(req: NextRequest) {
   }
   const ids = clips.map((c: any) => c.id).join(',');
 
-  // 2. Poll feed until complete (max 120s)
+  // 2. Poll until complete (max 120s)
   const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 4000));
@@ -74,10 +128,9 @@ export async function POST(req: NextRequest) {
     const feedRes = await fetch(`${SUNO_API}/feed/?ids=${ids}`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
     });
-
     if (!feedRes.ok) continue;
-    const feed: any[] = await feedRes.json();
 
+    const feed: any[] = await feedRes.json();
     const done = feed.filter((c: any) => c.status === 'complete' && c.audio_url);
     if (done.length > 0) {
       const clip = done[0];
