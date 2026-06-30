@@ -1,11 +1,20 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const runSearch = () => {
+    if (!query.trim()) return;
+    router.push(`/explore?q=${encodeURIComponent(query.trim())}`);
+    setSearchOpen(false);
+  };
 
   return (
     <>
@@ -23,6 +32,9 @@ export default function Navbar() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') runSearch(); }}
                 placeholder="Search songs, artists..."
                 style={{ fontSize: '16px' }}
                 className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2 pl-10 pr-4 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"
@@ -74,6 +86,9 @@ export default function Navbar() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') runSearch(); }}
               placeholder="Search songs, artists..."
               style={{ fontSize: '16px' }}
               className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2 pl-10 pr-4 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"

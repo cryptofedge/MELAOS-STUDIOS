@@ -200,10 +200,29 @@ export default function StudioPage() {
     }, 400);
 
     try {
-      const blobUrl = await generateTrack(genre, mood, genBpm, vocalGender);
+      // Try the real AI generator first (HuggingFace MusicGen); fall back to the
+      // client-side synth if it's unavailable, slow, or the Space is busy.
+      let resolvedAudioUrl: string;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 25_000);
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, genre, mood, bpm: genBpm, vocals: vocalGender, duration: 15 }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('AI generator unavailable');
+        const json = await res.json();
+        if (!json.audioUrl) throw new Error('AI generator returned no audio');
+        resolvedAudioUrl = json.audioUrl;
+      } catch {
+        resolvedAudioUrl = await generateTrack(genre, mood, genBpm, vocalGender);
+      }
 
       clearInterval(progressTimer.current!);
-      const data = { audioUrl: blobUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 30 };
+      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 30 };
       setGenProgress(100);
 
       // Load the returned audio URL

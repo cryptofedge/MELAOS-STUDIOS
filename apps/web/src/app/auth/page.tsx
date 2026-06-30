@@ -1,14 +1,24 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Music2, Eye, EyeOff } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Music2, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [showPw, setShowPw] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+    setSubmitting(true);
+    setTimeout(() => router.push('/dashboard'), 600);
+  };
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
@@ -47,6 +57,7 @@ export default function AuthPage() {
           {/* Social buttons */}
           <div className="space-y-3 mb-6">
             <button
+              onClick={() => { setSubmitting(true); setTimeout(() => router.push('/dashboard'), 600); }}
               style={{ minHeight: '48px', touchAction: 'manipulation' }}
               className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 font-semibold text-sm py-3 rounded-xl hover:bg-gray-100 transition-colors"
             >
@@ -59,6 +70,7 @@ export default function AuthPage() {
               Continue with Google
             </button>
             <button
+              onClick={() => { setSubmitting(true); setTimeout(() => router.push('/dashboard'), 600); }}
               style={{ minHeight: '48px', touchAction: 'manipulation' }}
               className="w-full flex items-center justify-center gap-3 bg-black text-white border border-[#444] font-semibold text-sm py-3 rounded-xl hover:bg-[#111] transition-colors"
             >
@@ -78,7 +90,7 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <form onSubmit={e => e.preventDefault()} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div>
                 <label className="text-xs text-gray-500 font-medium mb-1.5 block">Display Name</label>
@@ -127,10 +139,12 @@ export default function AuthPage() {
 
             <button
               type="submit"
+              disabled={submitting}
               style={{ minHeight: '48px', touchAction: 'manipulation' }}
-              className="w-full btn-orange text-white font-bold py-3 rounded-xl hover:scale-105 transition-transform text-sm"
+              className="w-full btn-orange text-white font-bold py-3 rounded-xl hover:scale-105 transition-transform text-sm disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-2"
             >
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {submitting ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 

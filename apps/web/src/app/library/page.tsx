@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { Play, Pause, Heart, Share2, MoreHorizontal, Search, Plus, Music2, ListMusic, Tag, X, Download, RefreshCw, Image } from 'lucide-react';
-import { mockSongs, formatPlays } from '@/lib/mockData';
+import { mockSongs, formatPlays, mockPlaylists } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 
 /* ── Cover Art Modal ─────────────────────────────────────── */
@@ -102,12 +102,7 @@ function CoverArtModal({ song, onClose }: { song: { title: string; genre: string
 
 const TABS = ['Songs', 'Playlists', 'Liked', 'History', 'Styles'];
 
-const myPlaylists = [
-  { id: 'p1', name: 'Late Night Vibes', count: 12, gradient: 'linear-gradient(135deg,#3B82F6,#7C3AED)' },
-  { id: 'p2', name: 'Trap Essentials', count: 8, gradient: 'linear-gradient(135deg,#1F2937,#4C1D95)' },
-  { id: 'p3', name: 'Afrobeats Energy', count: 15, gradient: 'linear-gradient(135deg,#F28C28,#E91E8C)' },
-  { id: 'p4', name: 'Chill R&B Sessions', count: 6, gradient: 'linear-gradient(135deg,#7C3AED,#EC4899)' },
-];
+const myPlaylists = mockPlaylists;
 
 const myStyles = [
   { tag: 'dark trap', uses: 14 }, { tag: 'melodic drill', uses: 9 }, { tag: '808 bass heavy', uses: 22 },

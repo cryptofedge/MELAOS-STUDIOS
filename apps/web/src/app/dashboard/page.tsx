@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Play, Heart, MoreHorizontal, Plus, Trash2, Edit3, BarChart3 } from 'lucide-react';
-import { mockSongs, formatPlays } from '@/lib/mockData';
+import { mockSongs, formatPlays, mockPlaylists } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 
 const tabs = ['My Songs', 'Liked', 'Playlists', 'Settings'];
@@ -19,6 +19,7 @@ const mockUser = {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('My Songs');
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const { setCurrentSong, likedIds } = useAudioStore();
   const userSongs = mockSongs.slice(0, 8);
   const likedSongs = mockSongs.filter(s => likedIds.includes(s.id));
@@ -167,12 +168,24 @@ export default function DashboardPage() {
       )}
 
       {activeTab === 'Playlists' && (
-        <div className="text-center py-16 text-gray-600">
-          <p className="text-lg mb-4">No playlists yet.</p>
-          <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-6 py-2 rounded-full inline-block hover:scale-105 transition-transform">
-            Create your first song
-          </Link>
-        </div>
+        mockPlaylists.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {mockPlaylists.map(p => (
+              <Link href="/library" key={p.id} className="group">
+                <div className="aspect-square rounded-2xl mb-2" style={{ background: p.gradient }} />
+                <p className="text-white text-sm font-semibold truncate group-hover:text-[#F28C28] transition-colors">{p.name}</p>
+                <p className="text-gray-500 text-xs">{p.count} songs</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-600">
+            <p className="text-lg mb-4">No playlists yet.</p>
+            <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-6 py-2 rounded-full inline-block hover:scale-105 transition-transform">
+              Create your first song
+            </Link>
+          </div>
+        )
       )}
 
       {activeTab === 'Settings' && (
@@ -192,10 +205,11 @@ export default function DashboardPage() {
             </div>
           ))}
           <button
+            onClick={() => { setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
             style={{ minHeight: '48px', touchAction: 'manipulation' }}
             className="btn-orange text-white text-sm font-bold px-6 py-2.5 rounded-full hover:scale-105 transition-transform"
           >
-            Save Changes
+            {settingsSaved ? 'Saved ✓' : 'Save Changes'}
           </button>
         </div>
       )}

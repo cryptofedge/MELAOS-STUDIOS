@@ -33,6 +33,13 @@ export const mockSongs: Song[] = [
   { id: '12', title: 'Midnight Garden Walk', artist: 'MoonRoot', artistId: 'u12', coverColor: '#4F46E5', coverGradient: 'linear-gradient(135deg,#4F46E5,#7C3AED)', duration: 234, durationFormatted: '3:54', plays: 33900, likes: 3300, genre: 'Soul', mood: 'Chill', bpm: 80, isPublic: true, createdAt: '2026-06-21', tags: ['indie','soul'] },
 ];
 
+export const mockPlaylists = [
+  { id: 'p1', name: 'Late Night Vibes', count: 12, gradient: 'linear-gradient(135deg,#3B82F6,#7C3AED)' },
+  { id: 'p2', name: 'Trap Essentials', count: 8, gradient: 'linear-gradient(135deg,#1F2937,#4C1D95)' },
+  { id: 'p3', name: 'Afrobeats Energy', count: 15, gradient: 'linear-gradient(135deg,#F28C28,#E91E8C)' },
+  { id: 'p4', name: 'Chill R&B Sessions', count: 6, gradient: 'linear-gradient(135deg,#7C3AED,#EC4899)' },
+];
+
 export function formatPlays(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;

@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
-import { Play, Pause, Heart, MoreHorizontal, ChevronRight } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Play, Pause, Heart, MoreHorizontal, ChevronRight, Search } from 'lucide-react';
 import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 
@@ -93,9 +94,22 @@ function HorizontalRow({ title, songs, seeAll }: { title: string; songs: any[]; 
   );
 }
 
-export default function ExplorePage() {
+function ExploreContent() {
+  const searchParams = useSearchParams();
+  const queryParam = searchParams.get('q') || '';
   const [activeTab, setActiveTab] = useState('Trending');
   const [activeGenre, setActiveGenre] = useState('All');
+  const [searchInput, setSearchInput] = useState(queryParam);
+
+  useEffect(() => { setSearchInput(queryParam); }, [queryParam]);
+
+  const allCatalog = [...mockSongs, ...STAFF_PICKS];
+  const searchResults = searchInput.trim()
+    ? allCatalog.filter(s =>
+        s.title.toLowerCase().includes(searchInput.trim().toLowerCase()) ||
+        s.artist.toLowerCase().includes(searchInput.trim().toLowerCase())
+      )
+    : null;
 
   const filtered = mockSongs.filter(s => activeGenre === 'All' || s.genre === activeGenre);
   const sorted = activeTab === 'New'
@@ -112,6 +126,30 @@ export default function ExplorePage() {
         <p className="text-gray-500 text-sm sm:text-base">Discover the latest and trending music from Eclat Universe artists</p>
       </div>
 
+      {/* Inline search (mirrors navbar search, lets users refine on this page) */}
+      <div className="relative max-w-md mb-8">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder="Search songs, artists..."
+          style={{ fontSize: '16px' }}
+          className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2.5 pl-10 pr-4 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"
+        />
+      </div>
+
+      {searchResults ? (
+        <section>
+          <h2 className="text-white font-bold text-lg mb-4">
+            {searchResults.length > 0 ? `Results for "${searchInput}"` : `No results for "${searchInput}"`}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+            {searchResults.map(song => <SongArtCard key={song.id} song={song} />)}
+          </div>
+        </section>
+      ) : (
+      <>
       {/* Staff Picks — always shown at top */}
       <HorizontalRow title="⭐ Staff Picks" songs={STAFF_PICKS} seeAll="#" />
 
@@ -165,6 +203,16 @@ export default function ExplorePage() {
           </div>
         )}
       </section>
+      </>
+      )}
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={null}>
+      <ExploreContent />
+    </Suspense>
   );
 }
