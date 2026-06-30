@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronDown, Plus } from 'lucide-react';
 
 interface Lesson {
   id: string;
@@ -74,14 +75,20 @@ export default function LearnPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
-          📚 Learn
-        </h1>
-        <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-          Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
-          this is what you need to know to actually own and get paid for what you make.
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+            📚 Learn
+          </h1>
+          <p className="text-gray-500 text-sm mt-2 leading-relaxed">
+            Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
+            this is what you need to know to actually own and get paid for what you make.
+          </p>
+        </div>
+        <Link href="/studio"
+          className="hidden sm:flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform shrink-0">
+          <Plus className="w-4 h-4" /> Create
+        </Link>
       </div>
 
       <div className="space-y-3">

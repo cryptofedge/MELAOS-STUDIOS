@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Play, Pause, Heart, MoreHorizontal, ChevronRight, Search } from 'lucide-react';
+import { Play, Pause, Heart, MoreHorizontal, ChevronRight, Search, Plus } from 'lucide-react';
 import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 
@@ -124,9 +124,15 @@ function ExploreContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2">Explore</h1>
-        <p className="text-gray-500 text-sm sm:text-base">Discover the latest and trending music from Eclat Universe artists</p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2">Explore</h1>
+          <p className="text-gray-500 text-sm sm:text-base">Discover the latest and trending music from Eclat Universe artists</p>
+        </div>
+        <a href="/studio"
+          className="hidden sm:flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform shrink-0">
+          <Plus className="w-4 h-4" /> Create
+        </a>
       </div>
 
       {/* Inline search (mirrors navbar search, lets users refine on this page) */}

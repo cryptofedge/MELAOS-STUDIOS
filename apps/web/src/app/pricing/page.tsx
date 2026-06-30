@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 const tiers = [
@@ -75,6 +75,12 @@ export default function PricingPage() {
     <div className="min-h-screen px-4 py-12 sm:py-16 max-w-6xl mx-auto">
       {/* Header */}
       <div className="text-center mb-10 sm:mb-12">
+        <div className="flex justify-center mb-4">
+          <Link href="/studio"
+            className="hidden sm:inline-flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform">
+            <Plus className="w-4 h-4" /> Create
+          </Link>
+        </div>
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white mb-4">
           Simple, <span className="gradient-text">honest</span> pricing
         </h1>
