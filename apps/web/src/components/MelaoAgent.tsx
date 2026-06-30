@@ -50,15 +50,52 @@ export default function MelaoAgent() {
   const dragOffset = useRef({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // The trigger bubble itself is also draggable, independent of the panel,
+  // so it can be moved out of the way (e.g. off the audio player) even
+  // while closed.
+  const [btnPos, setBtnPos] = useState<{ x: number; y: number } | null>(null);
+  const btnDragging = useRef(false);
+  const btnDidDrag = useRef(false);
+  const btnDragStart = useRef({ x: 0, y: 0 });
+  const btnDragOffset = useRef({ x: 0, y: 0 });
+  const BTN_SIZE = 56;
+
   // Set initial position once window is available
   useEffect(() => {
     if (typeof window !== 'undefined' && pos === null) {
+      const anchorX = btnPos ? btnPos.x - PANEL_W + BTN_SIZE : window.innerWidth - PANEL_W - 16;
+      const anchorY = btnPos ? btnPos.y - PANEL_H - 12 : window.innerHeight - PANEL_H - 96;
       setPos({
-        x: window.innerWidth - PANEL_W - 16,
-        y: window.innerHeight - PANEL_H - 96,
+        x: Math.max(0, Math.min(window.innerWidth - PANEL_W, anchorX)),
+        y: Math.max(0, Math.min(window.innerHeight - PANEL_H, anchorY)),
       });
     }
   }, [open]);
+
+  const onBtnPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    btnDragging.current = true;
+    btnDidDrag.current = false;
+    const rect = e.currentTarget.getBoundingClientRect();
+    btnDragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    btnDragStart.current = { x: e.clientX, y: e.clientY };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* no-op: invalid/inactive pointer id */ }
+  }, []);
+
+  const onBtnPointerMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!btnDragging.current) return;
+    const dx = e.clientX - btnDragStart.current.x;
+    const dy = e.clientY - btnDragStart.current.y;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) btnDidDrag.current = true;
+    if (!btnDidDrag.current) return;
+    const newX = Math.max(0, Math.min(window.innerWidth - BTN_SIZE, e.clientX - btnDragOffset.current.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - BTN_SIZE, e.clientY - btnDragOffset.current.y));
+    setBtnPos({ x: newX, y: newY });
+  }, []);
+
+  const onBtnPointerUp = useCallback(() => {
+    btnDragging.current = false;
+    if (!btnDidDrag.current) setOpen(o => !o);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,16 +139,23 @@ export default function MelaoAgent() {
 
   return (
     <>
-      {/* Floating trigger button */}
+      {/* Floating trigger button — draggable; click (no drag) toggles the panel */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onPointerDown={onBtnPointerDown}
+        onPointerMove={onBtnPointerMove}
+        onPointerUp={onBtnPointerUp}
+        onPointerLeave={() => { btnDragging.current = false; }}
         style={{
           background: 'linear-gradient(135deg, #F28C28, #E91E8C)',
           minWidth: '56px',
           minHeight: '56px',
-          touchAction: 'manipulation',
+          touchAction: 'none',
+          cursor: 'grab',
+          ...(btnPos ? { left: btnPos.x, top: btnPos.y, right: 'auto', bottom: 'auto' } : {}),
         }}
-        className={`fixed right-4 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${currentSong ? 'bottom-40 sm:bottom-24' : 'bottom-24'}`}
+        className={`fixed z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 active:cursor-grabbing ${
+          btnPos ? '' : `right-4 ${currentSong ? 'bottom-40 sm:bottom-24' : 'bottom-24'}`
+        }`}
         aria-label="Chat with Melao"
       >
         <Music2 className="w-6 h-6 text-white" />
