@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
+import GradientText from '@/components/GradientText';
 
 const features = [
   { icon: Music2, title: '1 free song, daily', desc: 'Generate 1 track every day at no cost. Full quality, no strings attached.' },
@@ -41,7 +42,9 @@ export default function HomePage() {
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 tracking-tight">
             Make any song<br />
-            <span className="gradient-text">you can imagine</span>
+            <GradientText className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-none" animationSpeed={5}>
+              you can imagine
+            </GradientText>
           </h1>
 
           <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed px-2">
