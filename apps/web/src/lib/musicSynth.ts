@@ -187,7 +187,11 @@ export async function generateTrack(
   master.release.value = 0.25;
   master.connect(ctx.destination);
 
-  const genreKey = genre.toLowerCase().replace(/[^a-z]/g, '') as keyof typeof PROGRESSIONS;
+  // "R&B" sanitizes to "rb" once symbols are stripped, but the tables below are
+  // keyed "rnb" — alias it so R&B doesn't silently fall back to Hip-Hop.
+  const GENRE_ALIASES: Record<string, string> = { rb: 'rnb' };
+  const rawKey = genre.toLowerCase().replace(/[^a-z]/g, '');
+  const genreKey = (GENRE_ALIASES[rawKey] ?? rawKey) as keyof typeof PROGRESSIONS;
   const prog = PROGRESSIONS[genreKey] ?? PROGRESSIONS.hiphop;
   const bassRoots = BASS_ROOTS[genreKey] ?? BASS_ROOTS.hiphop;
   const melScale = MELODY_SCALES[genreKey] ?? MELODY_SCALES.hiphop;
