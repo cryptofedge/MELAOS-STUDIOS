@@ -138,6 +138,20 @@ export default function StudioPage() {
     Object.fromEntries(TRACKS.map(t => [t.id, [50, 50, 50] as [number,number,number]]))
   );
   const [masterVol,    setMasterVol]    = useState(85);
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [instrumental, setInstrumental] = useState(false);
+  const [customLyrics, setCustomLyrics] = useState('');
+
+  const STYLE_SUGGESTIONS: Record<string, string[]> = {
+    'Hip-Hop': ['boom bap', 'lofi', 'west coast', 'lyrical', 'boom bap drums'],
+    'Trap':    ['808 heavy', 'dark melody', 'skittering hats', 'triplet flow', 'drill'],
+    'R&B':     ['smooth vocals', 'neo soul', 'falsetto', 'jazzy chords', 'slow jam'],
+    'Afrobeats':['afropop', 'highlife', 'dancehall', 'percussion heavy', 'amapiano'],
+    'Electronic':['house', 'techno', 'synth wave', 'bass drop', 'euphoric build'],
+    'Pop':     ['catchy hook', 'bright synths', 'anthemic', 'upbeat', 'radio ready'],
+    'Soul':    ['gospel feel', 'vintage', 'warm bass', 'lush strings', 'blues'],
+    'Drill':   ['dark', 'sliding bass', 'off beat snares', 'aggressive', 'uk drill'],
+  };
 
   const intervalRef   = useRef<NodeJS.Timeout | null>(null);
   const audioRef      = useRef<HTMLAudioElement | null>(null);
@@ -231,10 +245,36 @@ export default function StudioPage() {
   /* ── Shared: AI panel ──────────────────────────────────── */
   const AIPanel = () => (
     <div className="p-4 flex flex-col gap-4">
+      {/* Simple / Advanced toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center bg-[#0A0A14] border border-[#1a1a3a] rounded-full p-0.5 gap-0.5">
+          {(['Simple', 'Advanced'] as const).map(m => (
+            <button key={m} onClick={() => setAdvancedMode(m === 'Advanced')}
+              style={{ minHeight: '32px', touchAction: 'manipulation' }}
+              className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
+                (m === 'Advanced') === advancedMode
+                  ? 'bg-[#AE06ED] text-white shadow-lg'
+                  : 'text-[#444466] hover:text-[#8888AA]'
+              }`}>
+              {m}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => setInstrumental(v => !v)}
+          style={{ minHeight: '32px', touchAction: 'manipulation' }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+            instrumental
+              ? 'border-[#00FFD1] bg-[#00FFD1]/10 text-[#00FFD1]'
+              : 'border-[#1a1a3a] text-[#444466] hover:border-[#333355]'
+          }`}>
+          ♪ Instrumental
+        </button>
+      </div>
+
       {/* Prompt */}
       <div>
         <label className="text-[10px] font-bold text-[#AE06ED] mb-1.5 block tracking-[0.15em] uppercase">
-          ◈ Describe Your Song
+          ◈ {advancedMode ? 'Song Style / Description' : 'Describe Your Song'}
         </label>
         <div className="relative">
           <textarea
@@ -251,7 +291,32 @@ export default function StudioPage() {
           />
           <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#444466]">{prompt.length}/500</div>
         </div>
+        {/* Style tag suggestions */}
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {(STYLE_SUGGESTIONS[genre] || STYLE_SUGGESTIONS['Hip-Hop']).map(tag => (
+            <button key={tag} onClick={() => setPrompt(p => p ? `${p}, ${tag}` : tag)}
+              style={{ touchAction: 'manipulation' }}
+              className="px-2 py-0.5 rounded-full bg-[#1a0a2a] border border-[#AE06ED]/30 text-[#AE06ED]/70 text-[10px] hover:border-[#AE06ED] hover:text-[#AE06ED] transition-all">
+              + {tag}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Advanced: Custom Lyrics */}
+      {advancedMode && (
+        <div>
+          <label className="text-[10px] font-bold text-[#F28C28] mb-1.5 block tracking-[0.15em] uppercase">◈ Custom Lyrics (optional)</label>
+          <textarea
+            value={customLyrics}
+            onChange={e => setCustomLyrics(e.target.value)}
+            rows={4}
+            placeholder={"[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n..."}
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
+            style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
+          />
+        </div>
+      )}
 
       {/* Genre + Mood */}
       <div className="grid grid-cols-2 gap-3">
@@ -297,8 +362,8 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* Vocals */}
-      <div>
+      {/* Vocals — hidden when instrumental */}
+      {!instrumental && <div>
         <label className="text-[10px] font-bold text-[#00FFD1] mb-1.5 block tracking-[0.15em] uppercase">◈ Vocals</label>
         <div className="flex gap-2">
           {(['male', 'female', 'none'] as const).map(v => (
@@ -317,7 +382,7 @@ export default function StudioPage() {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Generate button */}
       <button

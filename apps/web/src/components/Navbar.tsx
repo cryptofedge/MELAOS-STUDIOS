@@ -35,6 +35,9 @@ export default function Navbar() {
             <Link href="/explore" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
               Explore
             </Link>
+            <Link href="/library" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+              Library
+            </Link>
             <Link href="/pricing" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
               Pricing
             </Link>
@@ -88,6 +91,7 @@ export default function Navbar() {
             </div>
             {[
               ['Explore', '/explore'],
+              ['Library', '/library'],
               ['Pricing', '/pricing'],
               ['Dashboard', '/dashboard'],
               ['Sign In', '/auth'],
