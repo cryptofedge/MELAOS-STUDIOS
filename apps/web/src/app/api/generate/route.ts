@@ -28,12 +28,17 @@ export async function POST(req: NextRequest) {
   const sessionHash = randHash();
 
   // ── Step 1: join the Gradio queue ──────────────────────────────────────────
-  const joinRes = await fetch(`${SPACE}/queue/join`, {
+  // Gradio 5 moved every queue endpoint under /gradio_api, and this Space's
+  // live API only takes [prompt, melody] — duration/model/sampling params
+  // from the old Gradio 3 API are no longer accepted.
+  const joinRes = await fetch(`${SPACE}/gradio_api/queue/join`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       fn_index: 0,
-      data: [finalPrompt, null, dur, 'facebook/musicgen-melody', 250, 0, 1.0, 3.0],
+      trigger_id: 9,
+      data: [finalPrompt, null],
+      event_data: null,
       session_hash: sessionHash,
     }),
   }).catch(e => { throw new Error(`Queue join network error: ${e.message}`); });
@@ -47,7 +52,7 @@ export async function POST(req: NextRequest) {
   const MAX_WAIT_MS = 120_000;
   const started = Date.now();
 
-  const streamRes = await fetch(`${SPACE}/queue/data?session_hash=${sessionHash}`, {
+  const streamRes = await fetch(`${SPACE}/gradio_api/queue/data?session_hash=${sessionHash}`, {
     headers: { Accept: 'text/event-stream' },
     signal: AbortSignal.timeout(MAX_WAIT_MS),
   }).catch(e => { throw new Error(`Queue stream error: ${e.message}`); });
@@ -75,10 +80,15 @@ export async function POST(req: NextRequest) {
       try { evt = JSON.parse(line.slice(5)); } catch { continue; }
 
       if (evt.msg === 'process_completed') {
+        if (evt.success === false) {
+          const reason = evt.output?.error || evt.output?.title || 'Space returned an error';
+          return NextResponse.json({ error: `Generation failed: ${reason}` }, { status: 502 });
+        }
         const output = evt.output?.data?.[0];
         if (output?.url) { audioUrl = output.url; break outer; }
         if (output?.name) { audioUrl = `${SPACE}/file=${output.name}`; break outer; }
         if (typeof output === 'string' && output.startsWith('http')) { audioUrl = output; break outer; }
+        break outer;
       }
 
       if (evt.msg === 'process_generating') {
