@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Music2, Sparkles, GripHorizontal } from 'lucide-react';
+import { useAudioStore } from '@/lib/store';
 
 interface Message {
   role: 'user' | 'melao';
@@ -34,6 +35,7 @@ const PANEL_W = 320;
 const PANEL_H = 420;
 
 export default function MelaoAgent() {
+  const { currentSong } = useAudioStore();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'melao', text: "Yo, I'm Melao — MELAOS STUDIOS, powered by Eclat Universe. What's on your mind?" }
@@ -109,7 +111,7 @@ export default function MelaoAgent() {
           minHeight: '56px',
           touchAction: 'manipulation',
         }}
-        className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+        className={`fixed right-4 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${currentSong ? 'bottom-40 sm:bottom-24' : 'bottom-24'}`}
         aria-label="Chat with Melao"
       >
         <Music2 className="w-6 h-6 text-white" />
