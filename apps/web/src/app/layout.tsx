@@ -3,6 +3,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
 import MelaoAgent from '@/components/MelaoAgent';
+import OnboardingTour from '@/components/OnboardingTour';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <AudioPlayer />
         <MelaoAgent />
+        <OnboardingTour />
       </body>
     </html>
   );

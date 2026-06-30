@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   SkipBack, Play, Pause, Square, Circle, Repeat,
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
-  Zap, Activity, Cpu, Layers
+  Zap, Activity, Cpu, Layers, Clock3, Sparkles, SlidersHorizontal,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 
@@ -1063,24 +1063,28 @@ export default function StudioPage() {
       {/* ── MOBILE (< lg) ─────────────────────────────────── */}
       <div className="lg:hidden relative z-10 flex flex-col flex-1 overflow-hidden">
         {/* Tab bar */}
-        <div className="flex border-b shrink-0"
+        <div className="flex gap-1.5 p-1.5 border-b shrink-0"
           style={{ background: '#050510', borderColor: '#AE06ED22' }}>
-          {(['timeline', 'ai', 'mix'] as const).map(tab => (
-            <button key={tab} onClick={() => setMobileTab(tab)}
-              style={{ minHeight: '44px', touchAction: 'manipulation' }}
-              className="flex-1 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative">
-              <span style={{
-                color: mobileTab === tab ? '#AE06ED' : '#333366',
-                textShadow: mobileTab === tab ? '0 0 8px #AE06ED' : 'none',
-              }}>
-                {tab === 'ai' ? 'AI Generate' : tab === 'mix' ? 'Mixer' : 'Timeline'}
-              </span>
-              {mobileTab === tab && (
-                <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full"
-                  style={{ background: '#AE06ED', boxShadow: '0 0 6px #AE06ED' }} />
-              )}
-            </button>
-          ))}
+          {(['timeline', 'ai', 'mix'] as const).map(tab => {
+            const Icon = tab === 'ai' ? Sparkles : tab === 'mix' ? SlidersHorizontal : Clock3;
+            const active = mobileTab === tab;
+            return (
+              <button key={tab} onClick={() => setMobileTab(tab)}
+                style={{
+                  minHeight: '44px',
+                  touchAction: 'manipulation',
+                  background: active ? 'linear-gradient(135deg, #AE06ED, #6A0572)' : '#15152a',
+                  boxShadow: active ? '0 0 14px #AE06ED88' : 'none',
+                  border: active ? '1px solid #D946EF' : '1px solid #2a2a45',
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-black uppercase tracking-[0.12em] transition-all">
+                <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: active ? '#fff' : '#9999bb' }} />
+                <span style={{ color: active ? '#fff' : '#9999bb' }}>
+                  {tab === 'ai' ? 'AI Generate' : tab === 'mix' ? 'Mixer' : 'Timeline'}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
