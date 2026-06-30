@@ -13,9 +13,9 @@ const features = [
 ];
 
 const heroSongs = [
-  { title: 'Midnight Frequencies', artist: 'NovaSynth', gradient: 'from-blue-600 to-purple-800', delay: '0s' },
-  { title: 'Golden Hour Lagos', artist: 'AfroWave', gradient: 'from-orange-500 to-pink-600', delay: '1.3s' },
-  { title: 'Trap Cathedral', artist: 'DeepVault', gradient: 'from-gray-900 to-purple-900', delay: '2.6s' },
+  { title: 'Midnight Frequencies', artist: 'NovaSynth', gradient: 'from-blue-600 to-purple-800', coverArt: '/covers/1.jpg', delay: '0s' },
+  { title: 'Golden Hour Lagos', artist: 'AfroWave', gradient: 'from-orange-500 to-pink-600', coverArt: '/covers/2.jpg', delay: '1.3s' },
+  { title: 'Trap Cathedral', artist: 'DeepVault', gradient: 'from-gray-900 to-purple-900', coverArt: '/covers/6.jpg', delay: '2.6s' },
 ];
 
 export default function HomePage() {
@@ -75,6 +75,7 @@ export default function HomePage() {
               style={{ animationDelay: song.delay }}
             >
               <div className={`h-32 rounded-xl bg-gradient-to-br ${song.gradient} mb-3 relative overflow-hidden`}>
+                <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
                     <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1" />

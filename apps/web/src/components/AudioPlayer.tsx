@@ -217,8 +217,11 @@ export default function AudioPlayer() {
       {/* ── MOBILE layout (< md) ── */}
       <div className="md:hidden px-4 py-2 flex flex-col gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden" style={{ background: currentSong.coverGradient }}>
-            <div className="w-full h-full flex items-center justify-center opacity-60">
+          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden relative" style={{ background: currentSong.coverGradient }}>
+            {currentSong.coverArt && (
+              <img src={currentSong.coverArt} alt={currentSong.title} className="absolute inset-0 w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 flex items-center justify-center opacity-60">
               <div className="flex gap-0.5 items-end h-5">
                 {[3,5,4,6,3,5,4].map((h, i) => (
                   <div key={i} className={`waveform-bar${isPlaying ? '' : ''}`}
@@ -271,7 +274,11 @@ export default function AudioPlayer() {
       {/* ── DESKTOP layout (md+) ── */}
       <div className="hidden md:flex items-center px-6 h-20 gap-4">
         <div className="flex items-center gap-3 w-64 shrink-0">
-          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden" style={{ background: currentSong.coverGradient }} />
+          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden" style={{ background: currentSong.coverGradient }}>
+            {currentSong.coverArt && (
+              <img src={currentSong.coverArt} alt={currentSong.title} className="w-full h-full object-cover" />
+            )}
+          </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-semibold truncate">{currentSong.title}</p>
             <p className="text-gray-500 text-xs truncate">{currentSong.artist}</p>

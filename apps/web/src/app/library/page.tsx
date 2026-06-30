@@ -202,6 +202,9 @@ export default function LibraryPage() {
                 {/* Art */}
                 <div className="w-10 h-10 rounded-lg shrink-0 relative overflow-hidden"
                   style={{ background: song.coverGradient }}>
+                  {song.coverArt && (
+                    <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
+                  )}
                   <span className="absolute bottom-0.5 right-1 text-white text-[9px] font-bold opacity-80">
                     {song.durationFormatted}
                   </span>

@@ -101,8 +101,11 @@ export default function DashboardPage() {
               <div
                 className="w-10 h-10 rounded-lg shrink-0 cursor-pointer relative overflow-hidden hover:scale-105 transition-transform"
                 style={{ background: song.coverGradient }}
-                onClick={() => setCurrentSong(song as any)}
+                onClick={() => setCurrentSong(song)}
               >
+                {song.coverArt && (
+                  <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
+                )}
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Play className="w-3 h-3 text-white" fill="white" />
                 </div>
@@ -148,8 +151,11 @@ export default function DashboardPage() {
         likedSongs.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {likedSongs.map(song => (
-              <div key={song.id} className="cursor-pointer group" onClick={() => setCurrentSong(song as any)}>
+              <div key={song.id} className="cursor-pointer group" onClick={() => setCurrentSong(song)}>
                 <div className="aspect-square rounded-xl overflow-hidden mb-2 relative" style={{ background: song.coverGradient }}>
+                  {song.coverArt && (
+                    <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Play className="w-6 h-6 text-white" fill="white" />
                   </div>
