@@ -43,7 +43,7 @@ const MELODY_SCALES: Record<string, number[]> = {
 };
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
-function jitter(v: number, amt = 0.007): number { return v + (Math.random() - 0.5) * amt; }
+function jitter(v: number, amt = 0.007): number { return Math.max(0.001, v + (Math.random() - 0.5) * amt); }
 
 // ── Node helpers ───────────────────────────────────────────────────────────
 function kick(ctx: OfflineAudioContext, when: number, vol = 1.0) {
