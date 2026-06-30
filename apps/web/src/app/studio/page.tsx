@@ -138,9 +138,11 @@ export default function StudioPage() {
     Object.fromEntries(TRACKS.map(t => [t.id, [50, 50, 50] as [number,number,number]]))
   );
   const [masterVol,    setMasterVol]    = useState(85);
-  const [advancedMode, setAdvancedMode] = useState(false);
-  const [instrumental, setInstrumental] = useState(false);
-  const [customLyrics, setCustomLyrics] = useState('');
+  const [advancedMode,   setAdvancedMode]   = useState(false);
+  const [instrumental,   setInstrumental]   = useState(false);
+  const [customLyrics,   setCustomLyrics]   = useState('');
+  const [coverArtUrl,    setCoverArtUrl]    = useState<string | null>(null);
+  const [coverArtLoading,setCoverArtLoading]= useState(false);
 
   const STYLE_SUGGESTIONS: Record<string, string[]> = {
     'Hip-Hop': ['boom bap', 'lofi', 'west coast', 'lyrical', 'boom bap drums'],
@@ -241,6 +243,42 @@ export default function StudioPage() {
 
   const toggleMute = (id: string) => setMuted(m => ({ ...m, [id]: !m[id] }));
   const toggleSolo = (id: string) => setSolo(s => ({ ...s, [id]: !s[id] }));
+
+  const handleGenerateCoverArt = useCallback(async () => {
+    setCoverArtLoading(true);
+    setCoverArtUrl(null);
+    const styleMap: Record<string, string> = {
+      'Hip-Hop':    'urban street art, graffiti, city skyline, bold typography',
+      'Trap':       'dark moody aesthetic, purple fog, luxury cars, night city neon',
+      'R&B':        'soft golden light, silk textures, intimate atmosphere, warm tones',
+      'Afrobeats':  'vibrant colors, african patterns, tropical energy, sunset palette',
+      'Electronic': 'glowing circuits, neon grid, futuristic holographic visuals',
+      'Pop':        'bright pastel gradients, confetti, glossy bubbly shapes',
+      'Soul':       'vintage vinyl record texture, warm sepia, jazz club atmosphere',
+      'Drill':      'dark concrete, black and white gritty, urban menace, smoke',
+    };
+    const moodMap: Record<string, string> = {
+      'Energetic': 'high energy explosive dynamic',
+      'Dark':      'dark shadowy brooding cinematic',
+      'Chill':     'calm peaceful lo-fi dreamy',
+      'Romantic':  'sensual warm intimate candlelit',
+      'Aggressive':'raw intense powerful urban gritty',
+      'Melancholy':'melancholic emotional soft blue tones',
+      'Uplifting': 'uplifting bright golden hopeful',
+      'Epic':      'epic cinematic orchestral sweeping landscape',
+    };
+    const base = prompt.trim() || `${genre} music`;
+    const style = styleMap[genre] || 'abstract music album art';
+    const moodStr = moodMap[mood] || mood.toLowerCase();
+    const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
+    const seed = Math.floor(Math.random() * 999999);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(artPrompt)}?width=512&height=512&nologo=true&seed=${seed}`;
+    // Pollinations returns the image directly — preload via Image element
+    const img = new window.Image();
+    img.onload = () => { setCoverArtUrl(url); setCoverArtLoading(false); };
+    img.onerror = () => { setCoverArtLoading(false); };
+    img.src = url;
+  }, [genre, mood, genBpm, prompt]);
 
   /* ── Shared: AI panel ──────────────────────────────────── */
   const AIPanel = () => (
@@ -456,6 +494,79 @@ export default function StudioPage() {
           )}
         </div>
       )}
+
+      {/* ── Cover Art Generator ── */}
+      <div className="border-t pt-4" style={{ borderColor: '#1a1a3a' }}>
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-[10px] font-bold text-[#E91E8C] tracking-[0.15em] uppercase">◈ Cover Art</label>
+          <button
+            onClick={handleGenerateCoverArt}
+            disabled={coverArtLoading}
+            style={{
+              minHeight: '32px', touchAction: 'manipulation',
+              boxShadow: coverArtLoading ? 'none' : '0 0 12px rgba(233,30,140,0.35)',
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              coverArtLoading
+                ? 'border-[#1a1a3a] text-[#333355] cursor-not-allowed'
+                : 'border-[#E91E8C]/60 text-[#E91E8C] hover:bg-[#E91E8C]/10'
+            }`}
+          >
+            {coverArtLoading
+              ? <><span className="w-2.5 h-2.5 border border-[#E91E8C] border-t-transparent rounded-full animate-spin" /> Generating...</>
+              : coverArtUrl ? '↺ Regenerate' : '✦ Generate'
+            }
+          </button>
+        </div>
+
+        {/* Art preview */}
+        {coverArtLoading && (
+          <div className="w-full aspect-square rounded-xl bg-[#0A0A14] border border-[#1a1a3a] flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 border-2 border-[#E91E8C] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[10px] font-mono text-[#444466] tracking-widest">AI PAINTING...</p>
+          </div>
+        )}
+
+        {coverArtUrl && !coverArtLoading && (
+          <div className="relative group">
+            <img
+              src={coverArtUrl}
+              alt="Generated cover art"
+              className="w-full aspect-square rounded-xl object-cover border border-[#E91E8C]/30"
+              style={{ boxShadow: '0 0 24px rgba(233,30,140,0.2)' }}
+            />
+            {/* Download overlay */}
+            <div className="absolute inset-0 rounded-xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <a
+                href={coverArtUrl}
+                download="melaos-cover-art.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold rounded-full hover:scale-105 transition-transform"
+              >
+                ↓ Save
+              </a>
+              <button
+                onClick={handleGenerateCoverArt}
+                className="flex items-center gap-1.5 px-4 py-2 border border-white/60 text-white text-xs font-bold rounded-full hover:scale-105 transition-transform"
+              >
+                ↺ New
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!coverArtUrl && !coverArtLoading && (
+          <div
+            onClick={handleGenerateCoverArt}
+            className="w-full aspect-square rounded-xl border-2 border-dashed border-[#1a1a3a] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#E91E8C]/40 transition-colors group"
+          >
+            <span className="text-3xl opacity-20 group-hover:opacity-40 transition-opacity">🎨</span>
+            <p className="text-[10px] text-[#333355] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 
