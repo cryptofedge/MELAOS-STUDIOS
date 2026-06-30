@@ -26,7 +26,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-14 w-auto" />
+            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-28 w-auto" />
           </Link>
           <h1 className="text-2xl font-black text-white">
             {mode === 'signin' ? 'Welcome back' : 'Start creating'}
