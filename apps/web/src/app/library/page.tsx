@@ -1,7 +1,8 @@
 'use client';
 import { useState, useCallback } from 'react';
-import { Play, Heart, Share2, MoreHorizontal, Search, Plus, Music2, ListMusic, Tag, X, Download, RefreshCw, Image } from 'lucide-react';
+import { Play, Pause, Heart, Share2, MoreHorizontal, Search, Plus, Music2, ListMusic, Tag, X, Download, RefreshCw, Image } from 'lucide-react';
 import { mockSongs, formatPlays } from '@/lib/mockData';
+import { useAudioStore } from '@/lib/store';
 
 /* ── Cover Art Modal ─────────────────────────────────────── */
 function CoverArtModal({ song, onClose }: { song: { title: string; genre: string; tags: string[] }; onClose: () => void }) {
@@ -120,6 +121,7 @@ export default function LibraryPage() {
   const [sort, setSort] = useState('Newest');
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set(['2', '3', '6']));
   const [coverArtSong, setCoverArtSong] = useState<typeof mockSongs[number] | null>(null);
+  const { setCurrentSong, currentSong, isPlaying, setIsPlaying } = useAudioStore();
 
   const toggleLike = (id: string) => {
     setLikedIds(s => {
@@ -194,13 +196,19 @@ export default function LibraryPage() {
 
           {/* Song list */}
           <div className="space-y-1">
-            {displaySongs.map((song, i) => (
+            {displaySongs.map((song, i) => {
+              const isCurrent = currentSong?.id === song.id;
+              const isActive = isCurrent && isPlaying;
+              return (
               <div key={song.id}
-                className="group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#1A1A1A] transition-colors cursor-pointer">
+                onClick={() => isCurrent ? setIsPlaying(!isPlaying) : setCurrentSong(song)}
+                className={`group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#1A1A1A] transition-colors cursor-pointer ${isCurrent ? 'bg-[#1A1A1A]' : ''}`}>
                 {/* Index / play */}
                 <div className="w-6 text-center shrink-0">
-                  <span className="text-gray-600 text-xs group-hover:hidden">{i + 1}</span>
-                  <Play className="w-3.5 h-3.5 text-white hidden group-hover:block" />
+                  <span className={`text-gray-600 text-xs ${isActive ? 'hidden' : 'group-hover:hidden'}`}>{i + 1}</span>
+                  {isActive
+                    ? <Pause className="w-3.5 h-3.5 text-[#F28C28] block" />
+                    : <Play className="w-3.5 h-3.5 text-white hidden group-hover:block" />}
                 </div>
 
                 {/* Art */}
@@ -229,21 +237,22 @@ export default function LibraryPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => toggleLike(song.id)}
+                  <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}
                     className={`p-2 rounded-full transition-colors ${likedIds.has(song.id) ? 'text-[#E91E8C]' : 'text-gray-600 hover:text-gray-400'}`}>
                     <Heart className="w-3.5 h-3.5" fill={likedIds.has(song.id) ? 'currentColor' : 'none'} />
                   </button>
-                  <button className="p-2 text-gray-600 hover:text-gray-400 rounded-full transition-colors">
+                  <button onClick={e => e.stopPropagation()} className="p-2 text-gray-600 hover:text-gray-400 rounded-full transition-colors">
                     <Share2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => setCoverArtSong(song)}
+                  <button onClick={e => { e.stopPropagation(); setCoverArtSong(song); }}
                     className="p-2 text-gray-600 hover:text-[#E91E8C] rounded-full transition-colors"
                     title="Generate cover art">
                     <Image className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {displaySongs.length === 0 && (
