@@ -4,9 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { Play, Pause, Heart, MoreHorizontal, ChevronRight, Search, Plus } from 'lucide-react';
 import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
+import { GENRES } from '@/lib/genreProfiles';
 
 const tabs = ['Trending', 'New', 'Following', 'Genres'];
-const genres = ['All', 'Hip-Hop', 'R&B', 'Afrobeats', 'Pop', 'Electronic', 'Drill', 'Soul', 'Trap'];
+const genres = ['All', ...GENRES];
 
 // Staff Picks are curated mock songs (not in the main catalog) — built as full Song objects so they're playable
 const STAFF_PICKS: Song[] = [

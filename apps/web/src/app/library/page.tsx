@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { Play, Pause, Heart, Share2, MoreHorizontal, Search, Plus, Music2, ListMusic, Tag, X, Download, RefreshCw, Image } from 'lucide-react';
 import { mockSongs, formatPlays, mockPlaylists } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
+import { genreArtStyle } from '@/lib/genreProfiles';
 
 /* ── Cover Art Modal ─────────────────────────────────────── */
 function CoverArtModal({ song, onClose }: { song: { title: string; genre: string; tags: string[] }; onClose: () => void }) {
@@ -12,17 +13,7 @@ function CoverArtModal({ song, onClose }: { song: { title: string; genre: string
   const generate = useCallback(() => {
     setLoading(true);
     setArtUrl(null);
-    const styleMap: Record<string, string> = {
-      'Hip-Hop':    'urban street art, graffiti, city skyline, bold typography',
-      'Trap':       'dark moody aesthetic, purple fog, luxury cars, night city neon',
-      'R&B':        'soft golden light, silk textures, intimate atmosphere, warm tones',
-      'Afrobeats':  'vibrant colors, african patterns, tropical energy, sunset palette',
-      'Electronic': 'glowing circuits, neon grid, futuristic holographic visuals',
-      'Pop':        'bright pastel gradients, confetti, glossy bubbly shapes',
-      'Soul':       'vintage vinyl record texture, warm sepia, jazz club atmosphere',
-      'Drill':      'dark concrete, black and white gritty, urban menace, smoke',
-    };
-    const style = styleMap[song.genre] || 'abstract music album art';
+    const style = genreArtStyle(song.genre);
     const tags = song.tags.slice(0, 3).join(', ');
     const artPrompt = `album cover art for "${song.title}", ${style}, ${tags}, professional music artwork, square format, no text, no words`;
     const seed = Math.floor(Math.random() * 999999);

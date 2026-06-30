@@ -6,6 +6,7 @@ import {
   Zap, Activity, Cpu, Layers, Clock3, Sparkles, SlidersHorizontal,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
+import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
 
 const TRACKS = [
   { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: '0 0 12px #007AFF88' },
@@ -18,8 +19,8 @@ const TRACKS = [
 ];
 
 const SECTIONS = ['INTRO', 'VERSE', 'CHORUS', 'VERSE', 'CHORUS', 'BRIDGE', 'OUTRO'];
-const GENRES   = ['Hip-Hop', 'R&B', 'Afrobeats', 'Pop', 'Electronic', 'Drill', 'Soul', 'Trap'];
-const MOODS    = ['Energetic', 'Melancholic', 'Euphoric', 'Dark', 'Chill', 'Aggressive'];
+const GENRES   = [...GENRE_LIST];
+const MOODS    = [...MOOD_LIST];
 
 const DEFAULT_LYRICS = `[Verse 1]
 Walking through the city lights tonight
@@ -167,9 +168,9 @@ export default function StudioPage() {
     Object.fromEntries(TRACKS.map(t => [t.id, [50, 50, 50] as [number,number,number]]))
   );
   const [masterVol,    setMasterVol]    = useState(85);
-  const [advancedMode,   setAdvancedMode]   = useState(false);
+  const [aiTab,          setAiTab]          = useState<'simple' | 'advanced' | 'lyrics'>('simple');
+  const advancedMode = aiTab === 'advanced';
   const [instrumental,   setInstrumental]   = useState(false);
-  const [customLyrics,   setCustomLyrics]   = useState('');
   const [coverArtUrl,    setCoverArtUrl]    = useState<string | null>(null);
   const [coverArtLoading,setCoverArtLoading]= useState(false);
 
@@ -182,6 +183,14 @@ export default function StudioPage() {
     'Pop':     ['catchy hook', 'bright synths', 'anthemic', 'upbeat', 'radio ready'],
     'Soul':    ['gospel feel', 'vintage', 'warm bass', 'lush strings', 'blues'],
     'Drill':   ['dark', 'sliding bass', 'off beat snares', 'aggressive', 'uk drill'],
+    'Reggaeton':['dembow riddim', 'perreo', 'brassy synths', 'urbano', 'club ready'],
+    'Dembow':  ['Dominican dembow', 'raw street energy', 'rapid flow', 'distorted bass', 'tipico'],
+    'Bachata': ['requinto guitar', 'bongo groove', 'romantic', 'bolero roots', 'güira'],
+    'Salsa':   ['clave rhythm', 'piano montuno', 'horn section', 'conga heavy', 'son cubano'],
+    'Merengue':['tambora drum', 'güira scraper', 'fast two-step', 'accordion', 'carnival energy'],
+    'Cumbia':  ['accordion melody', 'guacharaca', 'tropical groove', 'folkloric', 'mid-tempo sway'],
+    'Reggae':  ['one-drop', 'offbeat skank', 'dub space', 'island groove', 'roots reggae'],
+    'Latin Trap':['trapeton', 'Spanish flow', 'dark 808s', 'urbano fusion', 'street anthem'],
   };
 
   const intervalRef   = useRef<NodeJS.Timeout | null>(null);
@@ -299,28 +308,20 @@ export default function StudioPage() {
   const handleGenerateCoverArt = useCallback(async () => {
     setCoverArtLoading(true);
     setCoverArtUrl(null);
-    const styleMap: Record<string, string> = {
-      'Hip-Hop':    'urban street art, graffiti, city skyline, bold typography',
-      'Trap':       'dark moody aesthetic, purple fog, luxury cars, night city neon',
-      'R&B':        'soft golden light, silk textures, intimate atmosphere, warm tones',
-      'Afrobeats':  'vibrant colors, african patterns, tropical energy, sunset palette',
-      'Electronic': 'glowing circuits, neon grid, futuristic holographic visuals',
-      'Pop':        'bright pastel gradients, confetti, glossy bubbly shapes',
-      'Soul':       'vintage vinyl record texture, warm sepia, jazz club atmosphere',
-      'Drill':      'dark concrete, black and white gritty, urban menace, smoke',
-    };
     const moodMap: Record<string, string> = {
-      'Energetic': 'high energy explosive dynamic',
-      'Dark':      'dark shadowy brooding cinematic',
-      'Chill':     'calm peaceful lo-fi dreamy',
-      'Romantic':  'sensual warm intimate candlelit',
-      'Aggressive':'raw intense powerful urban gritty',
-      'Melancholy':'melancholic emotional soft blue tones',
-      'Uplifting': 'uplifting bright golden hopeful',
-      'Epic':      'epic cinematic orchestral sweeping landscape',
+      'Energetic':  'high energy explosive dynamic',
+      'Dark':       'dark shadowy brooding cinematic',
+      'Chill':      'calm peaceful lo-fi dreamy',
+      'Romantic':   'sensual warm intimate candlelit',
+      'Sensual':    'sultry intimate slow-burn candlelit',
+      'Festive':    'celebratory vibrant carnival energy',
+      'Nostalgic':  'wistful retro warm-toned vintage',
+      'Aggressive': 'raw intense powerful urban gritty',
+      'Melancholic':'melancholic emotional soft blue tones',
+      'Euphoric':   'uplifting bright golden hopeful',
     };
     const base = prompt.trim() || `${genre} music`;
-    const style = styleMap[genre] || 'abstract music album art';
+    const style = genreArtStyle(genre);
     const moodStr = moodMap[mood] || mood.toLowerCase();
     const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
     const seed = Math.floor(Math.random() * 999999);
@@ -345,18 +346,18 @@ export default function StudioPage() {
   /* ── Shared: AI panel ──────────────────────────────────── */
   const AIPanel = () => (
     <div className="p-4 flex flex-col gap-4">
-      {/* Simple / Advanced toggle */}
-      <div className="flex items-center justify-between">
+      {/* Simple / Advanced / Lyrics toggle */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center bg-[#0A0A14] border border-[#1a1a3a] rounded-full p-0.5 gap-0.5">
-          {(['Simple', 'Advanced'] as const).map(m => (
-            <button key={m} onClick={() => setAdvancedMode(m === 'Advanced')}
+          {([['simple', 'Simple'], ['advanced', 'Advanced'], ['lyrics', 'Lyrics']] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setAiTab(key)}
               style={{ minHeight: '32px', touchAction: 'manipulation' }}
               className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
-                (m === 'Advanced') === advancedMode
+                aiTab === key
                   ? 'bg-[#AE06ED] text-white shadow-lg'
                   : 'text-[#444466] hover:text-[#8888AA]'
               }`}>
-              {m}
+              {label}
             </button>
           ))}
         </div>
@@ -371,50 +372,82 @@ export default function StudioPage() {
         </button>
       </div>
 
-      {/* Prompt */}
-      <div>
-        <label className="text-[10px] font-bold text-[#AE06ED] mb-1.5 block tracking-[0.15em] uppercase">
-          ◈ {advancedMode ? 'Song Style / Description' : 'Describe Your Song'}
-        </label>
-        <div className="relative">
-          <textarea
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            rows={3}
-            placeholder="A dark trap banger with 808s, auto-tune vocals, and a haunting piano melody..."
-            className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
-            style={{
-              fontSize: '14px',
-              background: 'rgba(0,0,0,0.6)',
-              boxShadow: 'inset 0 0 20px rgba(174,6,237,0.05)',
-            }}
-          />
-          <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#444466]">{prompt.length}/500</div>
+      {/* Prompt — hidden on the dedicated Lyrics tab */}
+      {aiTab !== 'lyrics' && (
+        <div>
+          <label className="text-[10px] font-bold text-[#AE06ED] mb-1.5 block tracking-[0.15em] uppercase">
+            ◈ {advancedMode ? 'Song Style / Description' : 'Describe Your Song'}
+          </label>
+          <div className="relative">
+            <textarea
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              rows={3}
+              placeholder="A dark trap banger with 808s, auto-tune vocals, and a haunting piano melody..."
+              className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
+              style={{
+                fontSize: '14px',
+                background: 'rgba(0,0,0,0.6)',
+                boxShadow: 'inset 0 0 20px rgba(174,6,237,0.05)',
+              }}
+            />
+            <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#444466]">{prompt.length}/500</div>
+          </div>
+          {/* Style tag suggestions */}
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {(STYLE_SUGGESTIONS[genre] || STYLE_SUGGESTIONS['Hip-Hop']).map(tag => (
+              <button key={tag} onClick={() => setPrompt(p => p ? `${p}, ${tag}` : tag)}
+                style={{ touchAction: 'manipulation' }}
+                className="px-2 py-0.5 rounded-full bg-[#1a0a2a] border border-[#AE06ED]/30 text-[#AE06ED]/70 text-[10px] hover:border-[#AE06ED] hover:text-[#AE06ED] transition-all">
+                + {tag}
+              </button>
+            ))}
+          </div>
         </div>
-        {/* Style tag suggestions */}
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {(STYLE_SUGGESTIONS[genre] || STYLE_SUGGESTIONS['Hip-Hop']).map(tag => (
-            <button key={tag} onClick={() => setPrompt(p => p ? `${p}, ${tag}` : tag)}
-              style={{ touchAction: 'manipulation' }}
-              className="px-2 py-0.5 rounded-full bg-[#1a0a2a] border border-[#AE06ED]/30 text-[#AE06ED]/70 text-[10px] hover:border-[#AE06ED] hover:text-[#AE06ED] transition-all">
-              + {tag}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Advanced: Custom Lyrics */}
-      {advancedMode && (
+      {/* Advanced: compact lyrics field */}
+      {aiTab === 'advanced' && (
         <div>
           <label className="text-[10px] font-bold text-[#F28C28] mb-1.5 block tracking-[0.15em] uppercase">◈ Custom Lyrics (optional)</label>
           <textarea
-            value={customLyrics}
-            onChange={e => setCustomLyrics(e.target.value)}
+            value={lyrics}
+            onChange={e => setLyrics(e.target.value)}
             rows={4}
             placeholder={"[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n..."}
             className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
+        </div>
+      )}
+
+      {/* Lyrics tab: dedicated full-width lyrics workspace */}
+      {aiTab === 'lyrics' && (
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[10px] font-bold text-[#F28C28] tracking-[0.15em] uppercase">◈ Lyrics</label>
+            <span className="text-[9px] font-mono text-[#444466]">{lyrics.length} chars</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {['[Verse]', '[Chorus]', '[Bridge]', '[Outro]', '[Intro]'].map(tag => (
+              <button key={tag} onClick={() => setLyrics(l => l ? `${l}\n\n${tag}\n` : `${tag}\n`)}
+                style={{ touchAction: 'manipulation' }}
+                className="px-2 py-0.5 rounded-full bg-[#1a0a00] border border-[#F28C28]/30 text-[#F28C28]/80 text-[10px] hover:border-[#F28C28] hover:text-[#F28C28] transition-all">
+                + {tag}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={lyrics}
+            onChange={e => setLyrics(e.target.value)}
+            rows={12}
+            placeholder={"[Verse]\nWrite your lyrics here...\n\n[Chorus]\nThe hook everyone remembers...\n\n[Bridge]\n..."}
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
+            style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
+          />
+          <p className="text-[10px] text-[#444466] mt-1.5">
+            Pick a genre, mood, and BPM below, then hit Generate — these lyrics become the vocal track.
+          </p>
         </div>
       )}
 

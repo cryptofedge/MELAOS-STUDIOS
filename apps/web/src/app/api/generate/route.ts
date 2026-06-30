@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildGenreTags } from '@/lib/genreProfiles';
 
 // Hosted ACE-Step 1.5 via Replicate — a real, already-trained, MIT-licensed
 // music foundation model (open-source, ~11k GitHub stars, actively
@@ -13,9 +14,14 @@ import { NextRequest, NextResponse } from 'next/server';
 const ACE_STEP_VERSION = '280fc4f9ee507577f880a167f639c02622421d8fecf492454320311217b688f1';
 const REPLICATE_API = 'https://api.replicate.com/v1';
 
+// Combines the user's free-text prompt (if any) with real production
+// knowledge for the chosen genre — instrumentation, rhythm, and the
+// legendary producer lineage that defines the sound — so ACE-Step gets a
+// genuinely informed prompt instead of just a bare genre word.
 function buildTags(prompt: string, genre: string, mood: string, bpm: number) {
-  const base = prompt.trim() || `${genre} music, ${mood.toLowerCase()} mood`;
-  return `${base}, ${genre.toLowerCase()}, ${mood.toLowerCase()}, ${bpm} bpm`.slice(0, 300);
+  const enriched = buildGenreTags(genre, mood, bpm);
+  const base = prompt.trim();
+  return (base ? `${base}, ${enriched}` : enriched).slice(0, 350);
 }
 
 // ACE-Step's lyrics field doubles as the vocals on/off switch: [instrumental]

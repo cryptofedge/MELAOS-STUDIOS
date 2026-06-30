@@ -18,6 +18,15 @@ const PROGRESSIONS: Record<string, number[][]> = {
   pop:       [[NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4]],
   soul:      [[NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.G3,NOTES.B3,NOTES.D4]],
   drill:     [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.E3,NOTES.G3,NOTES.B3], [NOTES.D3,NOTES.F3,NOTES.A3]],
+  // ── Latin rhythms ─────────────────────────────────────────────────────
+  reggaeton: [[NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.E3,NOTES.G3,NOTES.B3], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.D4,NOTES.F4,NOTES.A4]],
+  dembow:    [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4]],
+  bachata:   [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.D4,NOTES.F4,NOTES.A4], [NOTES.E3,NOTES.G3,NOTES.B3], [NOTES.A3,NOTES.C4,NOTES.E4]],
+  salsa:     [[NOTES.D4,NOTES.F4,NOTES.A4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.D4,NOTES.F4,NOTES.A4]],
+  merengue:  [[NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4]],
+  cumbia:    [[NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4]],
+  reggae:    [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.D4,NOTES.F4,NOTES.A4]],
+  latintrap: [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.E3,NOTES.G3,NOTES.B3]],
 };
 
 const BASS_ROOTS: Record<string, number[]> = {
@@ -29,6 +38,15 @@ const BASS_ROOTS: Record<string, number[]> = {
   pop:       [NOTES.C3, NOTES.G3/2, NOTES.A3/2, NOTES.F3/2],
   soul:      [NOTES.F3/2, NOTES.C3, NOTES.A3/2, NOTES.G3/2],
   drill:     [NOTES.A3/2, NOTES.F3/2, NOTES.E3/2, NOTES.D3],
+  // ── Latin rhythms ─────────────────────────────────────────────────────
+  reggaeton: [NOTES.G3/2, NOTES.E3/2, NOTES.C3, NOTES.D3/2],
+  dembow:    [NOTES.A3/2, NOTES.G3/2, NOTES.F3/2, NOTES.G3/2],
+  bachata:   [NOTES.A3/2, NOTES.D3/2, NOTES.E3/2, NOTES.A3/2],
+  salsa:     [NOTES.D3/2, NOTES.G3/2, NOTES.C3, NOTES.D3/2],
+  merengue:  [NOTES.C3, NOTES.F3/2, NOTES.G3/2, NOTES.C3],
+  cumbia:    [NOTES.F3/2, NOTES.C3, NOTES.G3/2, NOTES.C3],
+  reggae:    [NOTES.A3/2, NOTES.F3/2, NOTES.G3/2, NOTES.D3/2],
+  latintrap: [NOTES.A3/2, NOTES.F3/2, NOTES.G3/2, NOTES.E3/2],
 };
 
 const MELODY_SCALES: Record<string, number[]> = {
@@ -40,6 +58,15 @@ const MELODY_SCALES: Record<string, number[]> = {
   pop:       [NOTES.C5, NOTES.D5, NOTES.E5, NOTES.G5, NOTES.A5],
   soul:      [NOTES.F4, NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5],
   drill:     [NOTES.A4, NOTES.C5, NOTES.D5, NOTES.E5, NOTES.G5],
+  // ── Latin rhythms ─────────────────────────────────────────────────────
+  reggaeton: [NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5, NOTES.E5],
+  dembow:    [NOTES.A4, NOTES.B4, NOTES.D5, NOTES.E5, NOTES.G5],
+  bachata:   [NOTES.A4, NOTES.B4, NOTES.D5, NOTES.E5, NOTES.F5],
+  salsa:     [NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5, NOTES.F5],
+  merengue:  [NOTES.F4, NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5],
+  cumbia:    [NOTES.F4, NOTES.G4, NOTES.A4, NOTES.C5, NOTES.E5],
+  reggae:    [NOTES.E4, NOTES.G4, NOTES.A4, NOTES.B4, NOTES.D5],
+  latintrap: [NOTES.A4, NOTES.C5, NOTES.D5, NOTES.F5, NOTES.G5],
 };
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -196,8 +223,14 @@ export async function generateTrack(
   const bassRoots = BASS_ROOTS[genreKey] ?? BASS_ROOTS.hiphop;
   const melScale = MELODY_SCALES[genreKey] ?? MELODY_SCALES.hiphop;
 
-  const isTrap = genreKey === 'trap' || genreKey === 'drill';
+  const isTrap = genreKey === 'trap' || genreKey === 'drill' || genreKey === 'latintrap';
   const isAfro = genreKey === 'afrobeats';
+  // Dembow riddim (the "boom-ch-boom-chick" pattern) underpins both
+  // reggaeton and dembow — same rhythmic DNA, different intensity.
+  const isDembow = genreKey === 'reggaeton' || genreKey === 'dembow';
+  const isReggae = genreKey === 'reggae';
+  const isSalsa = genreKey === 'salsa';
+  const isMerengue = genreKey === 'merengue';
 
   const beat = 60 / bpm;           // seconds per quarter note
   const bar = beat * 4;             // seconds per bar
@@ -208,23 +241,47 @@ export async function generateTrack(
   for (let b = 0; b < bars; b++) {
     const t = b * bar + START;
 
-    // Kick
-    kick(ctx, jitter(t), 0.9);
-    if (isTrap) { kick(ctx, jitter(t + beat * 2 + beat * 0.5), 0.65); }
-    else if (isAfro) { kick(ctx, jitter(t + beat * 1.5), 0.55); kick(ctx, jitter(t + beat * 2.5), 0.5); }
-    else { kick(ctx, jitter(t + beat * 2), 0.65); }
+    if (isReggae) {
+      // One-drop: kick and snare hit together on beat 3 only — the
+      // signature reggae "drop" that leaves beat 1 empty.
+      kick(ctx, jitter(t + beat * 2), 0.85);
+      snare(ctx, jitter(t + beat * 2), 0.5);
+    } else if (isDembow) {
+      // Boom-ch-boom-chick: kick / kick(&2) / snare(3) / kick(4)
+      kick(ctx, jitter(t), 0.9);
+      kick(ctx, jitter(t + beat * 1.5), 0.6);
+      snare(ctx, jitter(t + beat * 2), 0.6);
+      kick(ctx, jitter(t + beat * 3), 0.55);
+    } else if (isMerengue) {
+      // Fast double-time merengue kick pattern
+      kick(ctx, jitter(t), 0.7); kick(ctx, jitter(t + beat * 1), 0.55);
+      kick(ctx, jitter(t + beat * 2), 0.7); kick(ctx, jitter(t + beat * 3), 0.55);
+      snare(ctx, jitter(t + beat * 1.5), 0.4);
+      snare(ctx, jitter(t + beat * 3.5), 0.4);
+    } else {
+      // Kick
+      kick(ctx, jitter(t), 0.9);
+      if (isTrap) { kick(ctx, jitter(t + beat * 2 + beat * 0.5), 0.65); }
+      else if (isAfro) { kick(ctx, jitter(t + beat * 1.5), 0.55); kick(ctx, jitter(t + beat * 2.5), 0.5); }
+      else { kick(ctx, jitter(t + beat * 2), 0.65); }
 
-    // Snare
-    snare(ctx, jitter(t + beat), 0.55);
-    snare(ctx, jitter(t + beat * 3), 0.6);
-    if (isAfro) snare(ctx, jitter(t + beat * 2.5), 0.3);
+      // Snare
+      snare(ctx, jitter(t + beat), 0.55);
+      snare(ctx, jitter(t + beat * 3), 0.6);
+      if (isAfro) snare(ctx, jitter(t + beat * 2.5), 0.3);
+    }
 
-    // Hi-hats
-    const hatStep = isTrap ? beat / 3 : beat / 2;
-    const hatCount = Math.floor(bar / hatStep);
-    for (let h = 0; h < hatCount; h++) {
-      const hv = h % 2 === 0 ? 0.22 : 0.11;
-      hat(ctx, jitter(t + h * hatStep), hv, isTrap ? 0.03 : 0.05);
+    // Hi-hats — salsa stands in dense conga-like 16ths, reggae skanks on
+    // the offbeat only, everything else gets the standard 8th-note pattern.
+    if (isReggae) {
+      for (let h = 0; h < 4; h++) hat(ctx, jitter(t + h * beat + beat / 2), 0.18, 0.06);
+    } else {
+      const hatStep = isTrap ? beat / 3 : isSalsa ? beat / 4 : beat / 2;
+      const hatCount = Math.floor(bar / hatStep);
+      for (let h = 0; h < hatCount; h++) {
+        const hv = h % 2 === 0 ? 0.22 : 0.11;
+        hat(ctx, jitter(t + h * hatStep), hv, isTrap ? 0.03 : 0.05);
+      }
     }
   }
 
