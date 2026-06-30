@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Music2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -26,10 +26,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F28C28] to-[#E91E8C] flex items-center justify-center">
-              <Music2 className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-black text-lg text-white">MELAOS <span className="text-[#F28C28]">STUDIOS</span></span>
+            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-14 w-auto" />
           </Link>
           <h1 className="text-2xl font-black text-white">
             {mode === 'signin' ? 'Welcome back' : 'Start creating'}
