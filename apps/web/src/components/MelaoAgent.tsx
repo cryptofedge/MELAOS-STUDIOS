@@ -1,6 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { X, Send, Music2, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Send, Music2, Sparkles, GripHorizontal } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'melao';
@@ -30,6 +30,9 @@ function getMelaoResponse(input: string): string {
   return MELAO_RESPONSES.default;
 }
 
+const PANEL_W = 320;
+const PANEL_H = 420;
+
 export default function MelaoAgent() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -39,9 +42,45 @@ export default function MelaoAgent() {
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Floating position — starts anchored bottom-right, then user can drag
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Set initial position once window is available
+  useEffect(() => {
+    if (typeof window !== 'undefined' && pos === null) {
+      setPos({
+        x: window.innerWidth - PANEL_W - 16,
+        y: window.innerHeight - PANEL_H - 96,
+      });
+    }
+  }, [open]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!panelRef.current) return;
+    dragging.current = true;
+    const rect = panelRef.current.getBoundingClientRect();
+    dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const newX = Math.max(0, Math.min(window.innerWidth - PANEL_W, e.clientX - dragOffset.current.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - PANEL_H, e.clientY - dragOffset.current.y));
+    setPos({ x: newX, y: newY });
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
 
   function send() {
     const text = input.trim();
@@ -61,9 +100,9 @@ export default function MelaoAgent() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating trigger button */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(o => !o)}
         style={{
           background: 'linear-gradient(135deg, #F28C28, #E91E8C)',
           minWidth: '56px',
@@ -77,24 +116,29 @@ export default function MelaoAgent() {
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
       </button>
 
-      {/* Chat panel — full width on mobile, fixed 320px on desktop */}
-      {open && (
+      {/* Draggable chat panel */}
+      {open && pos && (
         <div
+          ref={panelRef}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
           className="fixed z-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#333]"
           style={{
-            height: '420px',
+            width: PANEL_W,
+            height: PANEL_H,
             background: '#111',
-            // Mobile: full width minus margins; desktop: fixed 320px right-anchored
-            bottom: '6rem',
-            right: '1rem',
-            left: '1rem',
-            maxWidth: '320px',
-            marginLeft: 'auto',
+            left: pos.x,
+            top: pos.y,
+            touchAction: 'none',
           }}
         >
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-[#222] shrink-0"
-            style={{ background: 'linear-gradient(135deg, #1a0a00, #1a001a)' }}>
+          {/* Drag handle header */}
+          <div
+            onPointerDown={onPointerDown}
+            className="flex items-center gap-3 px-4 py-3 border-b border-[#222] shrink-0 cursor-grab active:cursor-grabbing select-none"
+            style={{ background: 'linear-gradient(135deg, #1a0a00, #1a001a)' }}
+          >
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }}>
               M
@@ -106,12 +150,14 @@ export default function MelaoAgent() {
                 Eclat Universe · FEDGE 2.O
               </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              <GripHorizontal className="w-4 h-4 text-gray-600" />
               <Sparkles className="w-3.5 h-3.5 text-orange-400" />
               <button
+                onPointerDown={e => e.stopPropagation()}
                 onClick={() => setOpen(false)}
                 style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
-                className="flex items-center justify-center text-gray-500 hover:text-white transition-colors ml-1"
+                className="flex items-center justify-center text-gray-500 hover:text-white transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
