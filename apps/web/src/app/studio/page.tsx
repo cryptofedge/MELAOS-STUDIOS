@@ -229,16 +229,20 @@ export default function StudioPage() {
     }, 400);
 
     try {
-      // Try the real AI generator first (HuggingFace MusicGen); fall back to the
-      // client-side synth if it's unavailable, slow, or the Space is busy.
+      // Try the real AI generator first (Replicate-hosted MusicGen for
+      // instrumentals, MiniMax Music-1.5 for vocal tracks); fall back to the
+      // client-side synth if it's unavailable, slow, or out of credit.
       let resolvedAudioUrl: string;
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 25_000);
+        const timeout = setTimeout(() => controller.abort(), 85_000);
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, genre, mood, bpm: genBpm, vocals: vocalGender, duration: 15 }),
+          body: JSON.stringify({
+            prompt, genre, mood, bpm: genBpm, vocals: vocalGender, lyrics,
+            duration: vocalGender === 'none' ? 15 : 30,
+          }),
           signal: controller.signal,
         });
         clearTimeout(timeout);
