@@ -19,8 +19,9 @@ const mockUser = {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('My Songs');
-  const { setCurrentSong } = useAudioStore();
+  const { setCurrentSong, likedIds } = useAudioStore();
   const userSongs = mockSongs.slice(0, 8);
+  const likedSongs = mockSongs.filter(s => likedIds.includes(s.id));
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -143,19 +144,26 @@ export default function DashboardPage() {
       )}
 
       {activeTab === 'Liked' && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {mockSongs.slice(2, 8).map(song => (
-            <div key={song.id} className="cursor-pointer group" onClick={() => setCurrentSong(song as any)}>
-              <div className="aspect-square rounded-xl overflow-hidden mb-2 relative" style={{ background: song.coverGradient }}>
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-6 h-6 text-white" fill="white" />
+        likedSongs.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {likedSongs.map(song => (
+              <div key={song.id} className="cursor-pointer group" onClick={() => setCurrentSong(song as any)}>
+                <div className="aspect-square rounded-xl overflow-hidden mb-2 relative" style={{ background: song.coverGradient }}>
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="w-6 h-6 text-white" fill="white" />
+                  </div>
                 </div>
+                <p className="text-white text-sm font-semibold truncate">{song.title}</p>
+                <p className="text-gray-500 text-xs">{song.artist}</p>
               </div>
-              <p className="text-white text-sm font-semibold truncate">{song.title}</p>
-              <p className="text-gray-500 text-xs">{song.artist}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-600">
+            <Heart className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p>No liked songs yet. Tap the heart on any track to save it here.</p>
+          </div>
+        )
       )}
 
       {activeTab === 'Playlists' && (

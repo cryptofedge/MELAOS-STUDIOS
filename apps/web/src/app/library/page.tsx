@@ -119,17 +119,8 @@ export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState('Songs');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('Newest');
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set(['2', '3', '6']));
   const [coverArtSong, setCoverArtSong] = useState<typeof mockSongs[number] | null>(null);
-  const { setCurrentSong, currentSong, isPlaying, setIsPlaying } = useAudioStore();
-
-  const toggleLike = (id: string) => {
-    setLikedIds(s => {
-      const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
-  };
+  const { setCurrentSong, currentSong, isPlaying, setIsPlaying, likedIds, toggleLikedSong } = useAudioStore();
 
   const filtered = mockSongs.filter(s =>
     s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -141,7 +132,7 @@ export default function LibraryPage() {
     ? [...filtered].sort((a, b) => b.plays - a.plays)
     : filtered;
 
-  const liked = sorted.filter(s => likedIds.has(s.id));
+  const liked = sorted.filter(s => likedIds.includes(s.id));
 
   const displaySongs = activeTab === 'Liked' ? liked : sorted;
 
@@ -237,9 +228,9 @@ export default function LibraryPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={e => { e.stopPropagation(); toggleLike(song.id); }}
-                    className={`p-2 rounded-full transition-colors ${likedIds.has(song.id) ? 'text-[#E91E8C]' : 'text-gray-600 hover:text-gray-400'}`}>
-                    <Heart className="w-3.5 h-3.5" fill={likedIds.has(song.id) ? 'currentColor' : 'none'} />
+                  <button onClick={e => { e.stopPropagation(); toggleLikedSong(song.id); }}
+                    className={`p-2 rounded-full transition-colors ${likedIds.includes(song.id) ? 'text-[#E91E8C]' : 'text-gray-600 hover:text-gray-400'}`}>
+                    <Heart className="w-3.5 h-3.5" fill={likedIds.includes(song.id) ? 'currentColor' : 'none'} />
                   </button>
                   <button onClick={e => e.stopPropagation()} className="p-2 text-gray-600 hover:text-gray-400 rounded-full transition-colors">
                     <Share2 className="w-3.5 h-3.5" />

@@ -19,10 +19,11 @@ const STAFF_PICKS: Song[] = [
 ];
 
 function SongArtCard({ song, version }: { song: Song; version?: string }) {
-  const { setCurrentSong, currentSong, isPlaying, toggleLike } = useAudioStore();
+  const { setCurrentSong, currentSong, isPlaying, likedIds, toggleLikedSong } = useAudioStore();
   const [hovered, setHovered] = useState(false);
   const isActive = currentSong?.id === song.id && isPlaying;
   const isCurrent = currentSong?.id === song.id;
+  const isLiked = likedIds.includes(song.id);
 
   return (
     <div
@@ -39,9 +40,9 @@ function SongArtCard({ song, version }: { song: Song; version?: string }) {
         {/* Overlay */}
         <div className={`absolute inset-0 bg-black/40 flex items-end justify-between p-2 transition-opacity ${hovered || isActive ? 'opacity-100' : 'opacity-0'}`}>
           <button
-            onClick={e => { e.stopPropagation(); if (isCurrent) toggleLike(); else { setCurrentSong(song); toggleLike(); } }}
-            className="p-1.5 rounded-full bg-black/40 transition-colors text-white hover:text-[#E91E8C]">
-            <Heart className="w-3.5 h-3.5" />
+            onClick={e => { e.stopPropagation(); toggleLikedSong(song.id); }}
+            className={`p-1.5 rounded-full bg-black/40 transition-colors ${isLiked ? 'text-[#E91E8C]' : 'text-white hover:text-[#E91E8C]'}`}>
+            <Heart className="w-3.5 h-3.5" fill={isLiked ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={e => e.stopPropagation()}

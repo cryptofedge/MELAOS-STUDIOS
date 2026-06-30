@@ -116,9 +116,10 @@ function useBeatEngine() {
 
 export default function AudioPlayer() {
   const {
-    currentSong, isPlaying, progress, volume, isLiked, isLooping,
+    currentSong, isPlaying, progress, volume, likedIds, isLooping,
     setIsPlaying, setProgress, setVolume, toggleLike, toggleLoop, playNext, playPrev
   } = useAudioStore();
+  const isLiked = currentSong ? likedIds.includes(currentSong.id) : false;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
