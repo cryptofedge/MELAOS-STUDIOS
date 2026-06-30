@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Public HuggingFace MusicGen Gradio Space — no token needed
-const SPACE = 'https://facebook-musicgen.hf.space';
-
-function randHash() {
-  return Math.random().toString(36).slice(2, 10);
-}
+// Hosted MusicGen via Replicate — real, already-trained model, no GPU/training
+// required on our side. Requires REPLICATE_API_TOKEN (server-side only, never
+// exposed to the browser).
+//
+// meta/musicgen is a community model, not an "official model" — Replicate's
+// shorthand /models/{owner}/{name}/predictions route 404s for it. It must be
+// run via the versioned /predictions endpoint instead.
+const REPLICATE_MODEL_VERSION = '671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb';
+const REPLICATE_API = 'https://api.replicate.com/v1';
 
 function buildPrompt(prompt: string, genre: string, mood: string, bpm: number, vocals: string) {
   const base = prompt.trim() || `${genre} music, ${mood.toLowerCase()} mood`;
@@ -22,88 +25,77 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  const token = process.env.REPLICATE_API_TOKEN;
+  if (!token) {
+    return NextResponse.json(
+      { error: 'AI generation not configured — REPLICATE_API_TOKEN is missing.' },
+      { status: 503 }
+    );
+  }
+
   const { prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120, vocals = 'male', duration = 10 } = body;
   const finalPrompt = buildPrompt(prompt, genre, mood, bpm, vocals);
-  const dur = Math.min(Math.max(duration, 5), 30);
-  const sessionHash = randHash();
+  const dur = Math.min(Math.max(Number(duration) || 10, 5), 30);
 
-  // ── Step 1: join the Gradio queue ──────────────────────────────────────────
-  // Gradio 5 moved every queue endpoint under /gradio_api, and this Space's
-  // live API only takes [prompt, melody] — duration/model/sampling params
-  // from the old Gradio 3 API are no longer accepted.
-  const joinRes = await fetch(`${SPACE}/gradio_api/queue/join`, {
+  // ── Step 1: create the prediction ──────────────────────────────────────────
+  const createRes = await fetch(`${REPLICATE_API}/predictions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Prefer: 'wait=25', // ask Replicate to hold the connection up to 25s if it finishes fast
+    },
     body: JSON.stringify({
-      fn_index: 0,
-      trigger_id: 9,
-      data: [finalPrompt, null],
-      event_data: null,
-      session_hash: sessionHash,
+      version: REPLICATE_MODEL_VERSION,
+      input: {
+        prompt: finalPrompt,
+        duration: dur,
+        model_version: 'stereo-melody-large',
+        output_format: 'mp3',
+        normalization_strategy: 'peak',
+      },
     }),
-  }).catch(e => { throw new Error(`Queue join network error: ${e.message}`); });
+  }).catch(e => { throw new Error(`Replicate request error: ${e.message}`); });
 
-  if (!joinRes.ok) {
-    const txt = await joinRes.text().catch(() => '');
-    throw new Error(`Queue join ${joinRes.status}: ${txt.substring(0, 200)}`);
+  if (!createRes.ok) {
+    const txt = await createRes.text().catch(() => '');
+    return NextResponse.json(
+      { error: `Replicate request failed (${createRes.status}): ${txt.substring(0, 300)}` },
+      { status: 502 }
+    );
   }
 
-  // ── Step 2: consume SSE stream until process_completed ────────────────────
-  const MAX_WAIT_MS = 120_000;
+  let prediction = await createRes.json();
+
+  // ── Step 2: poll until the prediction completes ────────────────────────────
+  const MAX_WAIT_MS = 90_000;
   const started = Date.now();
 
-  const streamRes = await fetch(`${SPACE}/gradio_api/queue/data?session_hash=${sessionHash}`, {
-    headers: { Accept: 'text/event-stream' },
-    signal: AbortSignal.timeout(MAX_WAIT_MS),
-  }).catch(e => { throw new Error(`Queue stream error: ${e.message}`); });
-
-  if (!streamRes.ok || !streamRes.body) {
-    throw new Error(`Queue stream ${streamRes.status}`);
-  }
-
-  const reader = streamRes.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let audioUrl: string | null = null;
-
-  outer: while (Date.now() - started < MAX_WAIT_MS) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      if (!line.startsWith('data:')) continue;
-      let evt: any;
-      try { evt = JSON.parse(line.slice(5)); } catch { continue; }
-
-      if (evt.msg === 'process_completed') {
-        if (evt.success === false) {
-          const reason = evt.output?.error || evt.output?.title || 'Space returned an error';
-          return NextResponse.json({ error: `Generation failed: ${reason}` }, { status: 502 });
-        }
-        const output = evt.output?.data?.[0];
-        if (output?.url) { audioUrl = output.url; break outer; }
-        if (output?.name) { audioUrl = `${SPACE}/file=${output.name}`; break outer; }
-        if (typeof output === 'string' && output.startsWith('http')) { audioUrl = output; break outer; }
-        break outer;
-      }
-
-      if (evt.msg === 'process_generating') {
-        // intermediate chunk — ignore and keep reading
-      }
+  while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && prediction.status !== 'canceled') {
+    if (Date.now() - started > MAX_WAIT_MS) {
+      return NextResponse.json(
+        { error: 'Music generation timed out — Replicate may be under load. Try again in a moment.' },
+        { status: 504 }
+      );
     }
+    await new Promise(r => setTimeout(r, 1500));
+
+    const pollRes = await fetch(`${REPLICATE_API}/predictions/${prediction.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(e => { throw new Error(`Replicate poll error: ${e.message}`); });
+
+    if (!pollRes.ok) throw new Error(`Replicate poll ${pollRes.status}`);
+    prediction = await pollRes.json();
   }
 
-  reader.cancel().catch(() => {});
+  if (prediction.status !== 'succeeded') {
+    const reason = prediction.error || `Generation ${prediction.status}`;
+    return NextResponse.json({ error: `Generation failed: ${reason}` }, { status: 502 });
+  }
 
+  const audioUrl: string | undefined = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
   if (!audioUrl) {
-    return NextResponse.json(
-      { error: 'Music generation timed out — Gradio Space may be busy. Try again in a moment.' },
-      { status: 504 }
-    );
+    return NextResponse.json({ error: 'Replicate returned no audio output' }, { status: 502 });
   }
 
   // ── Step 3: fetch audio bytes and return as base64 data URL ───────────────
@@ -112,7 +104,7 @@ export async function POST(req: NextRequest) {
 
   const audioBuffer = await audioRes.arrayBuffer();
   const b64 = Buffer.from(audioBuffer).toString('base64');
-  const mimeType = audioRes.headers.get('content-type') || 'audio/wav';
+  const mimeType = audioRes.headers.get('content-type') || 'audio/mpeg';
 
   return NextResponse.json({
     audioUrl: `data:${mimeType};base64,${b64}`,
