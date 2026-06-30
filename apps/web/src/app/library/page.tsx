@@ -26,7 +26,9 @@ function CoverArtModal({ song, onClose }: { song: { title: string; genre: string
     const tags = song.tags.slice(0, 3).join(', ');
     const artPrompt = `album cover art for "${song.title}", ${style}, ${tags}, professional music artwork, square format, no text, no words`;
     const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(artPrompt)}?width=512&height=512&nologo=true&seed=${seed}`;
+    // Routed through our own API so the image is same-origin — Pollinations
+    // 403s direct browser requests for CORS-mode loads.
+    const url = `/api/cover-art?prompt=${encodeURIComponent(artPrompt)}&seed=${seed}`;
     const img = new window.Image();
     img.onload = () => { setArtUrl(url); setLoading(false); };
     img.onerror = () => setLoading(false);

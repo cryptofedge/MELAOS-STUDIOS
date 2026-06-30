@@ -53,6 +53,9 @@ export default function Navbar() {
             <Link href="/pricing" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
               Pricing
             </Link>
+            <Link href="/learn" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+              Learn
+            </Link>
             <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full transition-all hover:scale-105">
               Create
             </Link>
@@ -108,6 +111,7 @@ export default function Navbar() {
               ['Explore', '/explore'],
               ['Library', '/library'],
               ['Pricing', '/pricing'],
+              ['Learn', '/learn'],
               ['Dashboard', '/dashboard'],
               ['Sign In', '/auth'],
             ].map(([label, href]) => (
