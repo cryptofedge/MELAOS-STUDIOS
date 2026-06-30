@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
   Zap, Activity, Cpu, Layers
 } from 'lucide-react';
+import { generateTrack } from '@/lib/musicSynth';
 
 const TRACKS = [
   { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: '0 0 12px #007AFF88' },
@@ -183,20 +184,10 @@ export default function StudioPage() {
     }, 400);
 
     try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, genre, mood, bpm: genBpm, vocals: vocalGender }),
-      });
+      const blobUrl = await generateTrack(genre, mood, genBpm, vocalGender);
 
       clearInterval(progressTimer.current!);
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Server error ${res.status}`);
-      }
-
-      const data = await res.json();
+      const data = { audioUrl: blobUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 30 };
       setGenProgress(100);
 
       // Load the returned audio URL
