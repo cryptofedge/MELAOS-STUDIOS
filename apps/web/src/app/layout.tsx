@@ -21,10 +21,21 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'MELAOS STUDIOS',
   },
+  icons: {
+    icon: '/melaos-logo-3.png',
+    apple: '/melaos-logo-3.png',
+  },
   openGraph: {
     title: 'MELAOS STUDIOS',
     description: 'Where Sound Meets Soul',
     type: 'website',
+    images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MELAOS STUDIOS',
+    description: 'Where Sound Meets Soul',
+    images: ['/og-image.png'],
   },
 };
 

@@ -64,7 +64,7 @@ function WaveformSVG({ color, glow, height = 40, seed = 0 }: { color: string; gl
       Math.sin(i * 0.35 + seed) * (height * 0.32) +
       Math.sin(i * 0.85 + seed * 2) * (height * 0.14) +
       Math.sin(i * 1.4 + seed * 0.5) * (height * 0.08);
-    return `${x},${y}`;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
   }).join(' ');
   return (
     <svg viewBox={`0 0 ${W} ${height}`} width="100%" height={height} preserveAspectRatio="none">
@@ -101,6 +101,35 @@ function DotGrid() {
         backgroundSize: '24px 24px',
       }} />
   );
+}
+
+/* ─── Stamp the MELAOS logo onto a generated image ────────── */
+function loadLogo(): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const logo = new window.Image();
+    logo.onload = () => resolve(logo);
+    logo.onerror = reject;
+    logo.src = '/melaos-logo-3.png';
+  });
+}
+
+async function watermarkImage(img: HTMLImageElement): Promise<string> {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('no 2d context');
+  ctx.drawImage(img, 0, 0);
+
+  const logo = await loadLogo();
+  const logoW = canvas.width * 0.28;
+  const logoH = logoW * (logo.naturalHeight / logo.naturalWidth);
+  const pad = canvas.width * 0.03;
+  ctx.globalAlpha = 0.85;
+  ctx.drawImage(logo, canvas.width - logoW - pad, canvas.height - logoH - pad, logoW, logoH);
+  ctx.globalAlpha = 1;
+
+  return canvas.toDataURL('image/png'); // throws if canvas is CORS-tainted
 }
 
 type MobileTab = 'timeline' | 'ai' | 'mix';
@@ -291,10 +320,20 @@ export default function StudioPage() {
     const moodStr = moodMap[mood] || mood.toLowerCase();
     const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
     const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(artPrompt)}?width=512&height=512&nologo=true&seed=${seed}`;
-    // Pollinations returns the image directly — preload via Image element
+    // Routed through our own API so the image is same-origin (Pollinations
+    // 403s direct browser CORS requests, which would taint the watermark canvas).
+    const url = `/api/cover-art?prompt=${encodeURIComponent(artPrompt)}&seed=${seed}`;
     const img = new window.Image();
-    img.onload = () => { setCoverArtUrl(url); setCoverArtLoading(false); };
+    img.onload = async () => {
+      try {
+        const watermarked = await watermarkImage(img);
+        setCoverArtUrl(watermarked);
+      } catch {
+        setCoverArtUrl(url); // fallback — show art unwatermarked
+      } finally {
+        setCoverArtLoading(false);
+      }
+    };
     img.onerror = () => { setCoverArtLoading(false); };
     img.src = url;
   }, [genre, mood, genBpm, prompt]);
