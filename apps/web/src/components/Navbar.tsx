@@ -53,7 +53,7 @@ export default function Navbar() {
             <Link href="/pricing" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
               Pricing
             </Link>
-            <Link href="/learn" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+            <Link href="/learn" target="_blank" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
               Learn
             </Link>
             <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full transition-all hover:scale-105">
@@ -118,6 +118,7 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
+                target={href === '/learn' ? '_blank' : undefined}
                 onClick={() => setMenuOpen(false)}
                 className="text-xl font-semibold text-gray-200 hover:text-[#F28C28] transition-colors py-1"
               >
