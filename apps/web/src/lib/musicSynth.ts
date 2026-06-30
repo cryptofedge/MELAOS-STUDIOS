@@ -43,7 +43,9 @@ const MELODY_SCALES: Record<string, number[]> = {
 };
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
-function jitter(v: number, amt = 0.007): number { return Math.max(0.001, v + (Math.random() - 0.5) * amt); }
+// All times offset by START so t=0 never causes negative AudioParam values
+const START = 0.05;
+function jitter(v: number, amt = 0.006): number { return Math.max(START, v + (Math.random() - 0.5) * amt); }
 
 // ── Node helpers ───────────────────────────────────────────────────────────
 function kick(ctx: OfflineAudioContext, when: number, vol = 1.0) {
@@ -200,7 +202,7 @@ export async function generateTrack(
 
   // ── Drums ───────────────────────────────────────────────────────────────
   for (let b = 0; b < bars; b++) {
-    const t = b * bar;
+    const t = b * bar + START;
 
     // Kick
     kick(ctx, jitter(t), 0.9);
@@ -225,12 +227,10 @@ export async function generateTrack(
   // ── Bass ────────────────────────────────────────────────────────────────
   for (let c = 0; c < Math.ceil(bars / 2); c++) {
     const chord_i = c % prog.length;
-    const t = c * chordDur;
+    const t = c * chordDur + START;
     const root = bassRoots[chord_i];
 
-    // Main bass hit
     bassNote(ctx, jitter(t), root, beat * 1.2, 0.65);
-    // Groove hits
     bassNote(ctx, jitter(t + beat * 1.5), root, beat * 0.5, 0.4);
     bassNote(ctx, jitter(t + beat * 2.5), root, beat * 0.8, 0.45);
     if (isTrap) bassNote(ctx, jitter(t + beat * 3.25), root * 1.5, beat * 0.4, 0.3);
@@ -239,7 +239,7 @@ export async function generateTrack(
   // ── Chords (pads) ───────────────────────────────────────────────────────
   for (let c = 0; c < Math.ceil(bars / 2); c++) {
     const chord_i = c % prog.length;
-    const t = c * chordDur;
+    const t = c * chordDur + START;
     const notes = prog[chord_i];
     for (const freq of notes) {
       chordNote(ctx, t, freq, chordDur * 0.9, 0.1);
@@ -250,7 +250,7 @@ export async function generateTrack(
   const melodyStartBar = Math.min(4, bars - 1);
   let prevNote = melScale[0];
   for (let b = melodyStartBar; b < bars; b++) {
-    const t = b * bar;
+    const t = b * bar + START;
     // Melody plays ~50% of beats, random selection
     const phrases = [[0, 1, 2.5], [0, 1.5, 3], [0.5, 2, 3.5]];
     const phrase = pick(phrases);
