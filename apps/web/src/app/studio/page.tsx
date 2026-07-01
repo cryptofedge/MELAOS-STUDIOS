@@ -245,6 +245,7 @@ export default function StudioPage() {
   const [instrumental,   setInstrumental]   = useState(false);
   const [coverArtUrl,    setCoverArtUrl]    = useState<string | null>(null);
   const [coverArtLoading,setCoverArtLoading]= useState(false);
+  const [coverArtPrompt, setCoverArtPrompt] = useState('');
 
   const STYLE_SUGGESTIONS: Record<string, string[]> = {
     'Hip-Hop': ['boom bap', 'lofi', 'west coast', 'lyrical', 'boom bap drums'],
@@ -510,7 +511,7 @@ export default function StudioPage() {
       'Melancholic':'melancholic emotional soft blue tones',
       'Euphoric':   'uplifting bright golden hopeful',
     };
-    const base = prompt.trim() || `${genre} music`;
+    const base = coverArtPrompt.trim() || prompt.trim() || `${genre} music`;
     const style = genreArtStyle(genre);
     const moodStr = moodMap[mood] || mood.toLowerCase();
     const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
@@ -531,7 +532,7 @@ export default function StudioPage() {
     };
     img.onerror = () => { setCoverArtLoading(false); };
     img.src = url;
-  }, [genre, mood, genBpm, prompt]);
+  }, [genre, mood, genBpm, prompt, coverArtPrompt]);
 
   /* ── Shared: AI panel ──────────────────────────────────── */
   const AIPanel = () => (
@@ -803,6 +804,15 @@ export default function StudioPage() {
             }
           </button>
         </div>
+
+        {/* Cover art idea prompt */}
+        <textarea
+          value={coverArtPrompt}
+          onChange={e => setCoverArtPrompt(e.target.value.slice(0, 300))}
+          placeholder="Describe the cover art you want — e.g. neon skyline, vintage vinyl sleeve, hand-drawn graffiti portrait..."
+          rows={2}
+          className="w-full bg-black/60 border border-[#E91E8C]/30 rounded-lg p-2.5 text-xs text-[#E0E0FF] placeholder:text-[#8888BB] focus:outline-none focus:border-[#E91E8C] resize-none transition-all mb-3"
+        />
 
         {/* Art preview */}
         {coverArtLoading && (
