@@ -13,11 +13,13 @@ export default function StudioWaveform({
   audioUrl,
   color,
   height = 64,
+  onReady,
 }: {
   audioEl: HTMLAudioElement | null;
   audioUrl: string | null;
   color: string;
   height?: number;
+  onReady?: (ws: WaveSurfer | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
@@ -48,6 +50,7 @@ export default function StudioWaveform({
         interact: true,
       });
       wsRef.current = ws;
+      onReady?.(ws);
     };
 
     // WaveSurfer measures the container's width at creation time and won't
@@ -66,10 +69,10 @@ export default function StudioWaveform({
         }
       });
       ro.observe(container);
-      return () => { ro.disconnect(); ws?.destroy(); wsRef.current = null; };
+      return () => { ro.disconnect(); ws?.destroy(); wsRef.current = null; onReady?.(null); };
     }
 
-    return () => { ws?.destroy(); wsRef.current = null; };
+    return () => { ws?.destroy(); wsRef.current = null; onReady?.(null); };
   }, [audioEl, audioUrl, color, height]);
 
   if (!audioEl || !audioUrl) {

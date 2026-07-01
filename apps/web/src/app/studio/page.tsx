@@ -8,6 +8,7 @@ import {
 import { generateTrack } from '@/lib/musicSynth';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
 import StudioWaveform from '@/components/StudioWaveform';
+import type WaveSurfer from 'wavesurfer.js';
 
 const TRACKS = [
   { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: '0 0 12px #007AFF88' },
@@ -227,6 +228,9 @@ export default function StudioPage() {
   const [audioEl,      setAudioEl]      = useState<HTMLAudioElement | null>(null);
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
+  const [editTool,     setEditTool]     = useState<'zoom' | 'trim' | 'selector' | 'grabber' | 'scrub' | 'pencil'>('selector');
+  const [pinnedTracks, setPinnedTracks] = useState<Record<string, boolean>>({});
+  const [zoomLevel,    setZoomLevel]    = useState(50); // px/sec, passed to WaveSurfer.zoom()
   const [tick,         setTick]         = useState(0);
   const [pan,          setPan]          = useState<Record<string, number>>(
     Object.fromEntries(TRACKS.map(t => [t.id, 50]))
@@ -265,6 +269,7 @@ export default function StudioPage() {
   const progressTimer = useRef<NodeJS.Timeout | null>(null);
   const audioCtxRef   = useRef<AudioContext | null>(null);
   const analyserRef   = useRef<AnalyserNode | null>(null);
+  const wsInstanceRef = useRef<WaveSurfer | null>(null);
 
   // Real-time level from the actual generated audio's signal, sampled once
   // per playback tick — drives the mixing board meters so they pulse with
@@ -278,6 +283,69 @@ export default function StudioPage() {
     for (let i = 0; i < data.length; i++) sum += data[i];
     return sum / data.length / 255;
   }, []);
+
+  // Tab to Transients — a real Pro Tools editing feature: jump the playhead
+  // to the next/previous detected transient (a sharp rise in amplitude)
+  // using the actual decoded peak data from the generated song, not a
+  // fixed grid step.
+  const jumpToTransient = useCallback((direction: 1 | -1) => {
+    const peaks = waveformPeaks;
+    const audio = audioRef.current;
+    if (!peaks || peaks.length < 2 || !audio || !audio.duration) return;
+    const currentIdx = Math.floor((audio.currentTime / audio.duration) * peaks.length);
+    const threshold = 0.35;
+    let idx = currentIdx + direction;
+    while (idx > 0 && idx < peaks.length - 1) {
+      if (peaks[idx] > threshold && peaks[idx] > peaks[idx - 1] * 1.3) break;
+      idx += direction;
+    }
+    idx = Math.max(0, Math.min(peaks.length - 1, idx));
+    const newTime = (idx / peaks.length) * audio.duration;
+    audio.currentTime = newTime;
+    setPlayheadPct((newTime / audio.duration) * 100);
+    setTimeMs(Math.floor(newTime * 1000));
+  }, [waveformPeaks]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const tag = (document.activeElement?.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return; // don't hijack form navigation
+      if (!waveformPeaks) return;
+      e.preventDefault();
+      jumpToTransient(e.shiftKey ? -1 : 1);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [jumpToTransient, waveformPeaks]);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(z => {
+      const next = Math.min(500, z + 25);
+      wsInstanceRef.current?.zoom(next);
+      return next;
+    });
+  }, []);
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(z => {
+      const next = Math.max(10, z - 25);
+      wsInstanceRef.current?.zoom(next);
+      return next;
+    });
+  }, []);
+
+  const togglePin = (id: string) => setPinnedTracks(p => ({ ...p, [id]: !p[id] }));
+  const orderedTracks = [...TRACKS].sort((a, b) => (pinnedTracks[b.id] ? 1 : 0) - (pinnedTracks[a.id] ? 1 : 0));
+
+  const EDIT_TOOLS = [
+    { id: 'zoom', icon: '🔍', label: 'Zoom' },
+    { id: 'trim', icon: '✂️', label: 'Trim' },
+    { id: 'selector', icon: 'I', label: 'Selector' },
+    { id: 'grabber', icon: '✋', label: 'Grabber' },
+    { id: 'scrub', icon: '↔', label: 'Scrub' },
+    { id: 'pencil', icon: '✏️', label: 'Pencil' },
+  ] as const;
+
   const TOTAL_MS = 214000;
 
   // Playback timer
@@ -950,6 +1018,10 @@ export default function StudioPage() {
             style={{ color: isActive ? track.color : '#445566', textShadow: isActive ? `0 0 6px ${track.color}44` : 'none' }}>
             {track.name}
           </span>
+          <button onClick={e => { e.stopPropagation(); togglePin(track.id); }}
+            className="text-[9px] shrink-0 transition-colors"
+            style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#2a2a44' }}
+            aria-label="Pin track to top" title="Pin track">📌</button>
           <span className="text-[7px] font-mono shrink-0" style={{ color: '#2a2a44' }}>{trackIO(track.id)}</span>
         </div>
         <div className="flex items-center gap-1 ml-3">
@@ -1062,9 +1134,9 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* Channel strips */}
+      {/* Channel strips — same pinned-first order as the track sidebar */}
       <div className="flex gap-0 py-2 px-1 min-w-max">
-        {TRACKS.map(track => {
+        {orderedTracks.map(track => {
           const [bass, mid, treble] = eq[track.id] || [50, 50, 50];
           const vol = volumes[track.id] ?? 80;
           const panVal = pan[track.id] ?? 50;
@@ -1316,9 +1388,10 @@ export default function StudioPage() {
                   <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
                   <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
                 </div>
-                <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={40} />
+                <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={40}
+                  onReady={ws => { wsInstanceRef.current = ws; }} />
               </div>
-              {TRACKS.map(track => (
+              {orderedTracks.map(track => (
                 <div key={track.id} className={`h-12 border-b relative flex items-center ${muted[track.id] ? 'opacity-20' : ''}`}
                   style={{ borderColor: '#0D0D20' }}>
                   <div className="w-16 shrink-0 flex items-center gap-1 px-2 h-full border-r"
@@ -1366,9 +1439,10 @@ export default function StudioPage() {
             <Layers className="w-3 h-3" style={{ color: '#AE06ED' }} />
             <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#AE06ED' }}>Tracks</span>
           </div>
-          {/* Track list */}
+          {/* Track list — pinned tracks (Pro Tools 2026.4's "track pinning")
+              stay fixed at the top */}
           <div className="overflow-y-auto" style={{ flex: '0 0 auto' }}>
-            {TRACKS.map(track => <TrackRow key={track.id} track={track} />)}
+            {orderedTracks.map(track => <TrackRow key={track.id} track={track} />)}
           </div>
           {/* Lyrics editor */}
           <div className="flex-1 border-t flex flex-col min-h-0"
@@ -1409,7 +1483,34 @@ export default function StudioPage() {
               <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
               <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
             </div>
-            <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={48} />
+            <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={48}
+              onReady={ws => { wsInstanceRef.current = ws; }} />
+          </div>
+
+          {/* Edit Tools — Pro Tools' Trim/Selector/Grabber/Scrub/Pencil/Zoom
+              toolbar, plus real zoom controls wired to the waveform */}
+          <div className="hidden md:flex items-center gap-1 px-2 py-1 border-b shrink-0"
+            style={{ background: '#020208', borderColor: '#0D0D20' }}>
+            {EDIT_TOOLS.map(t => (
+              <button key={t.id} onClick={() => setEditTool(t.id)} title={t.label}
+                style={{ minWidth: '26px', minHeight: '26px' }}
+                className={`flex items-center justify-center rounded text-xs transition-all ${
+                  editTool === t.id ? 'bg-[#AE06ED]/20 text-[#AE06ED] border border-[#AE06ED]/50' : 'text-[#444466] hover:text-[#8888AA] border border-transparent'
+                }`}>
+                {t.icon}
+              </button>
+            ))}
+            <div className="h-4 w-px mx-1" style={{ background: '#1a1a3a' }} />
+            <button onClick={handleZoomOut} title="Zoom out"
+              className="w-6 h-6 flex items-center justify-center rounded text-[#444466] hover:text-[#8888AA] text-xs">−</button>
+            <span className="text-[8px] font-mono w-10 text-center" style={{ color: '#333355' }}>{zoomLevel}px/s</span>
+            <button onClick={handleZoomIn} title="Zoom in"
+              className="w-6 h-6 flex items-center justify-center rounded text-[#444466] hover:text-[#8888AA] text-xs">+</button>
+            <div className="h-4 w-px mx-1" style={{ background: '#1a1a3a' }} />
+            <button onClick={() => jumpToTransient(-1)} title="Previous transient (Shift+Tab)"
+              className="text-[8px] font-mono px-1.5 h-6 rounded text-[#444466] hover:text-[#8888AA] border border-[#1a1a3a]">⏮ Tab</button>
+            <button onClick={() => jumpToTransient(1)} title="Next transient (Tab)"
+              className="text-[8px] font-mono px-1.5 h-6 rounded text-[#444466] hover:text-[#8888AA] border border-[#1a1a3a]">Tab ⏭</button>
           </div>
 
           {/* Timeline */}
@@ -1425,7 +1526,7 @@ export default function StudioPage() {
                 style={{ background: '#FF2D78', boxShadow: '0 0 8px #FF2D78' }} />
             </div>
 
-            {TRACKS.map(track => <TimelineLane key={track.id} track={track} />)}
+            {orderedTracks.map(track => <TimelineLane key={track.id} track={track} />)}
           </div>
 
           <TransportBar />
