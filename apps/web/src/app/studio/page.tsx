@@ -929,7 +929,7 @@ export default function StudioPage() {
 
       <button onClick={() => { setTimeMs(0); setPlayheadPct(0); }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#333366] hover:text-[#AE06ED] transition-colors">
+        className="flex items-center justify-center text-[#9999CC] hover:text-[#AE06ED] transition-colors">
         <SkipBack className="w-4 h-4" />
       </button>
 
@@ -940,7 +940,7 @@ export default function StudioPage() {
           background: isPlaying
             ? 'linear-gradient(135deg, #6A0572, #AE06ED)'
             : 'linear-gradient(135deg, #111130, #1a1a3a)',
-          border: `1px solid ${isPlaying ? '#AE06ED' : '#333366'}`,
+          border: `1px solid ${isPlaying ? '#AE06ED' : '#9999CC'}`,
         }}
         className="w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-all shrink-0">
         {isPlaying
@@ -953,19 +953,19 @@ export default function StudioPage() {
           if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
         }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#333366] hover:text-[#FF2D78] transition-colors">
+        className="flex items-center justify-center text-[#9999CC] hover:text-[#FF2D78] transition-colors">
         <Square className="w-4 h-4" />
       </button>
 
       <button style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#333366] hover:text-[#FF2D78] transition-colors">
+        className="flex items-center justify-center text-[#9999CC] hover:text-[#FF2D78] transition-colors">
         <Circle className="w-4 h-4" />
       </button>
 
       <button onClick={() => setLooping(l => !l)}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation',
           filter: looping ? 'drop-shadow(0 0 4px #00FFD1)' : 'none' }}
-        className={`flex items-center justify-center transition-all ${looping ? 'text-[#00FFD1]' : 'text-[#333366] hover:text-[#00FFD1]/60'}`}>
+        className={`flex items-center justify-center transition-all ${looping ? 'text-[#00FFD1]' : 'text-[#9999CC] hover:text-[#00FFD1]/60'}`}>
         <Repeat className="w-4 h-4" />
       </button>
 
@@ -974,13 +974,13 @@ export default function StudioPage() {
       {/* BPM */}
       <div className="flex items-center gap-1 shrink-0">
         <button onClick={() => setBpm(b => Math.max(40, b - 1))}
-          className="text-[#333366] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">−</button>
+          className="text-[#9999CC] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">−</button>
         <div className="border rounded px-2 py-0.5 text-xs font-mono min-w-[58px] text-center"
           style={{ background: '#050510', borderColor: '#F28C2844', color: '#F28C28', textShadow: '0 0 6px #F28C28', boxShadow: '0 0 8px #F28C2822' }}>
           {bpm} BPM
         </div>
         <button onClick={() => setBpm(b => Math.min(300, b + 1))}
-          className="text-[#333366] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">+</button>
+          className="text-[#9999CC] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">+</button>
       </div>
 
       <div className="h-5 w-px mx-1 shrink-0" style={{ background: 'linear-gradient(180deg, transparent, #007AFF44, transparent)' }} />
@@ -1041,7 +1041,7 @@ export default function StudioPage() {
       </div>
 
       <button onClick={() => setPanelOpen(p => !p)}
-        className="hidden lg:flex text-[#333366] hover:text-[#AE06ED] transition-colors items-center justify-center ml-auto">
+        className="hidden lg:flex text-[#9999CC] hover:text-[#AE06ED] transition-colors items-center justify-center ml-auto">
         {panelOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
       </button>
     </div>
@@ -1166,11 +1166,12 @@ export default function StudioPage() {
 
   /* ── Mixing board ──────────────────────────────────────── */
   const MixingBoard = () => (
-    <div className="border-t shrink-0 overflow-x-auto"
+    <div className="border-t shrink-0 overflow-x-scroll"
       style={{
         background: 'linear-gradient(180deg, #02020C, #050514)',
         borderColor: '#AE06ED33',
         boxShadow: '0 -2px 20px rgba(174,6,237,0.1)',
+        scrollbarWidth: 'auto',
       }}>
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b shrink-0"
@@ -1178,12 +1179,24 @@ export default function StudioPage() {
         <Cpu className="w-3 h-3" style={{ color: '#F28C28', filter: 'drop-shadow(0 0 3px #F28C28)' }} />
         <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#F28C28' }}>Mixing Board</span>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-[8px] font-mono" style={{ color: '#333366' }}>EQ · PAN · FADER</span>
+          <span className="text-[8px] font-mono font-bold" style={{ color: '#9999CC' }}>EQ · PAN · FADER</span>
+          <button onClick={() => setSolo({})}
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#007AFF] hover:border-[#007AFF]/50 transition-colors uppercase tracking-wider">
+            Clear Solo
+          </button>
+          <button onClick={() => setMuted({})}
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#F28C28] hover:border-[#F28C28]/50 transition-colors uppercase tracking-wider">
+            Unmute All
+          </button>
+          <button onClick={() => { setVolumes({}); setPan({}); setEq({}); }}
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#FF2D78] hover:border-[#FF2D78]/50 transition-colors uppercase tracking-wider">
+            Reset Mix
+          </button>
         </div>
       </div>
 
       {/* Channel strips — same pinned-first order as the track sidebar */}
-      <div className="flex gap-0 py-2 px-1 min-w-max">
+      <div className="flex gap-0 py-2 px-1" style={{ minWidth: '100%' }}>
         {orderedTracks.map(track => {
           const [bass, mid, treble] = eq[track.id] || [50, 50, 50];
           const vol = volumes[track.id] ?? 80;
@@ -1357,6 +1370,12 @@ export default function StudioPage() {
 
           <span className="text-[8px] font-mono" style={{ color: '#AE06ED', textShadow: '0 0 4px #AE06ED' }}>{masterVol}%</span>
           <span className="text-[6px] font-mono mt-1" style={{ color: '#8888BB' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
+        </div>
+
+        {/* Filler — keeps the empty space after Master from being dead air */}
+        <div className="flex-1 flex items-center justify-center min-w-[160px] px-4">
+          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-28 w-auto max-w-full object-contain opacity-90 select-none pointer-events-none"
+            style={{ mixBlendMode: 'screen' }} />
         </div>
       </div>
     </div>
@@ -1574,7 +1593,7 @@ export default function StudioPage() {
             <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
             <button onClick={handleZoomOut} title="Zoom out"
               className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">−</button>
-            <span className="text-[9px] font-mono font-bold w-10 text-center" style={{ color: '#9999CC' }}>{zoomLevel}px/s</span>
+            <span className="text-[11px] font-mono font-bold w-12 text-center" style={{ color: '#C4C4E8' }}>{zoomLevel}px/s</span>
             <button onClick={handleZoomIn} title="Zoom in"
               className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">+</button>
             <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
