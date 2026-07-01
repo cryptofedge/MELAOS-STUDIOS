@@ -1442,7 +1442,7 @@ export default function StudioPage() {
           </div>
           {/* Track list — pinned tracks (Pro Tools 2026.4's "track pinning")
               stay fixed at the top */}
-          <div className="overflow-y-auto" style={{ flex: '0 0 auto' }}>
+          <div className="overflow-y-auto" style={{ maxHeight: '40vh' }}>
             {orderedTracks.map(track => <TrackRow key={track.id} track={track} />)}
           </div>
           {/* Lyrics editor */}
