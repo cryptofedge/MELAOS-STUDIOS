@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
+import StudioWaveform from '@/components/StudioWaveform';
 
 const TRACKS = [
   { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: '0 0 12px #007AFF88' },
@@ -56,29 +57,89 @@ From the studio to you — this is proof
 Where sound meets soul...`;
 
 /* ─── Waveform ─────────────────────────────────────────── */
+// Decodes the actual generated audio and reduces it to per-segment peak
+// amplitudes, so every track lane's waveform reflects the real song's
+// energy/dynamics instead of a decorative fixed sine curve.
+async function extractWaveformPeaks(audioUrl: string, numPeaks = 200): Promise<number[]> {
+  const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+  const ctx = new AudioCtx();
+  try {
+    const res = await fetch(audioUrl);
+    const arrayBuffer = await res.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const channelData = audioBuffer.getChannelData(0);
+    const blockSize = Math.max(1, Math.floor(channelData.length / numPeaks));
+    const peaks: number[] = [];
+    for (let i = 0; i < numPeaks; i++) {
+      const start = i * blockSize;
+      let sum = 0;
+      for (let j = 0; j < blockSize; j++) sum += Math.abs(channelData[start + j] || 0);
+      peaks.push(sum / blockSize);
+    }
+    const max = Math.max(...peaks, 0.0001);
+    return peaks.map(p => p / max);
+  } finally {
+    ctx.close().catch(() => {});
+  }
+}
+
 const W = 600;
-function WaveformSVG({ color, glow, height = 40, seed = 0 }: { color: string; glow: string; height?: number; seed?: number }) {
-  const pts = Array.from({ length: 80 }, (_, i) => {
-    const x = (i / 79) * W;
-    const y =
-      height / 2 +
-      Math.sin(i * 0.35 + seed) * (height * 0.32) +
-      Math.sin(i * 0.85 + seed * 2) * (height * 0.14) +
-      Math.sin(i * 1.4 + seed * 0.5) * (height * 0.08);
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  }).join(' ');
+// Pro Tools-style vertical peak/bar waveform, mirrored around a center
+// zero-line, drawn on a filled clip background with rounded clip corners.
+// Renders real decoded peak data when available (post-generation); falls
+// back to a placeholder shape beforehand. Each track applies a subtle
+// per-track jitter to the same real peak data so lanes read as related
+// (same song) rather than identical copies.
+//
+// All computed coordinates are rounded with .toFixed() before being used —
+// Math.sin can differ in its last bit between Node (SSR) and the browser
+// (CSR), which otherwise causes a hydration mismatch.
+function WaveformSVG({ color, height = 40, seed = 0, peaks }: { color: string; glow?: string; height?: number; seed?: number; peaks?: number[] | null }) {
+  const barCount = 100;
+  const amps = Array.from({ length: barCount }, (_, i) => {
+    let raw: number;
+    if (peaks && peaks.length > 0) {
+      const idx = Math.min(peaks.length - 1, Math.floor((i / barCount) * peaks.length));
+      const base = peaks[idx];
+      const jitter = 1 + Math.sin(i * 0.6 + seed * 3.1) * 0.15;
+      raw = Math.max(0.05, Math.min(1, base * jitter));
+    } else {
+      raw = 0.22 + Math.abs(Math.sin(i * 0.35 + seed)) * 0.5 + Math.abs(Math.sin(i * 1.3 + seed * 2)) * 0.15;
+    }
+    return Number(raw.toFixed(4));
+  });
+  const barW = W / barCount;
+  const bars = amps.map((amp, i) => {
+    const barH = Number(Math.max(1.5, amp * (height * 0.92)).toFixed(2));
+    const x = Number((i * barW + barW * 0.18).toFixed(2));
+    const y = Number(((height - barH) / 2).toFixed(2));
+    return <rect key={i} x={x} y={y} width={(barW * 0.64).toFixed(2)} height={barH} rx={(barW * 0.3).toFixed(2)} fill={color} />;
+  });
   return (
     <svg viewBox={`0 0 ${W} ${height}`} width="100%" height={height} preserveAspectRatio="none">
-      <defs>
-        <filter id={`glow-${seed}`}>
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"
-        filter={`url(#glow-${seed})`} opacity="0.85" />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="0.5" opacity="0.3" />
+      {/* Zero (center) line — a defining Pro Tools waveform cue */}
+      <line x1="0" y1={height / 2} x2={W} y2={height / 2} stroke={color} strokeOpacity="0.2" strokeWidth="1" />
+      <g opacity="0.95">{bars}</g>
     </svg>
+  );
+}
+
+/* ─── Bar/tick ruler ──────────────────────────────────── */
+// Pro Tools-style bar ruler: numbered bar marks with minor tick subdivisions.
+function BarRuler({ compact = false }: { compact?: boolean }) {
+  const BARS = 32;
+  return (
+    <div className="h-5 border-b flex shrink-0 relative select-none"
+      style={{ background: '#020208', borderColor: '#0D0D20' }}>
+      {Array.from({ length: BARS }, (_, i) => (
+        <div key={i} className="flex-1 relative border-r" style={{ borderColor: '#0D0D2088' }}>
+          {i % 4 === 0 && (
+            <span className="absolute left-0.5 top-0 text-[7px] font-mono" style={{ color: '#445566' }}>{i + 1}</span>
+          )}
+          <div className="absolute bottom-0 left-1/2 w-px" style={{ height: i % 4 === 0 ? '6px' : '3px', background: '#1a1a3a' }} />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -141,6 +202,10 @@ export default function StudioPage() {
   const [bpm,          setBpm]          = useState(120);
   const [playheadPct,  setPlayheadPct]  = useState(0);
   const [looping,      setLooping]      = useState(false);
+  const [editMode,     setEditMode]     = useState<'Shuffle' | 'Slip' | 'Spot' | 'Grid'>('Grid');
+  const [gridValue,    setGridValue]    = useState('1/4 Note');
+  const [recordArmed,  setRecordArmed]  = useState<Record<string, boolean>>({});
+  const GRID_VALUES = ['1 Bar', '1/2 Note', '1/4 Note', '1/8 Note', '1/16 Note'];
   const [panelOpen,    setPanelOpen]    = useState(true);
   const [mobileTab,    setMobileTab]    = useState<MobileTab>('timeline');
   const [muted,        setMuted]        = useState<Record<string, boolean>>({});
@@ -158,6 +223,8 @@ export default function StudioPage() {
   const [genDone,      setGenDone]      = useState(false);
   const [genError,     setGenError]     = useState<string | null>(null);
   const [audioUrl,     setAudioUrl]     = useState<string | null>(null);
+  const [waveformPeaks,setWaveformPeaks]= useState<number[] | null>(null);
+  const [audioEl,      setAudioEl]      = useState<HTMLAudioElement | null>(null);
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [tick,         setTick]         = useState(0);
@@ -196,6 +263,21 @@ export default function StudioPage() {
   const intervalRef   = useRef<NodeJS.Timeout | null>(null);
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const progressTimer = useRef<NodeJS.Timeout | null>(null);
+  const audioCtxRef   = useRef<AudioContext | null>(null);
+  const analyserRef   = useRef<AnalyserNode | null>(null);
+
+  // Real-time level from the actual generated audio's signal, sampled once
+  // per playback tick — drives the mixing board meters so they pulse with
+  // this song's real energy instead of random flicker.
+  const getRealLevel = useCallback((): number => {
+    const analyser = analyserRef.current;
+    if (!analyser) return 0;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i];
+    return sum / data.length / 255;
+  }, []);
   const TOTAL_MS = 214000;
 
   // Playback timer
@@ -222,12 +304,24 @@ export default function StudioPage() {
     return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}:${String(Math.floor((ms % 1000) / 10)).padStart(2,'0')}`;
   };
 
+  // Pro Tools' primary counter — Bars|Beats|Ticks (960 ticks per beat,
+  // assumes 4/4) — derived from elapsed time and the current BPM.
+  const formatBarsBeats = (ms: number, currentBpm: number) => {
+    const beatMs = 60000 / currentBpm;
+    const totalBeats = ms / beatMs;
+    const bar = Math.floor(totalBeats / 4) + 1;
+    const beat = Math.floor(totalBeats % 4) + 1;
+    const ticks = Math.floor((totalBeats % 1) * 960);
+    return `${bar}|${beat}|${String(ticks).padStart(3, '0')}`;
+  };
+
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setGenProgress(0);
     setGenDone(false);
     setGenError(null);
     setAudioUrl(null);
+    setWaveformPeaks(null);
     setIsPlaying(false);
 
     // Animate progress bar while waiting for API (~20-30s)
@@ -275,6 +369,25 @@ export default function StudioPage() {
       audioRef.current = new Audio(data.audioUrl);
       audioRef.current.preload = 'auto';
       audioRef.current.volume = 0.9;
+      audioRef.current.crossOrigin = 'anonymous';
+      setAudioEl(audioRef.current);
+
+      // Route through an AnalyserNode so the mixing board meters can read
+      // this song's real signal level during playback.
+      try {
+        if (!audioCtxRef.current) {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          audioCtxRef.current = new AudioCtx();
+        }
+        const source = audioCtxRef.current.createMediaElementSource(audioRef.current);
+        const analyser = audioCtxRef.current.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        analyser.connect(audioCtxRef.current.destination);
+        analyserRef.current = analyser;
+      } catch {
+        analyserRef.current = null; // meters fall back to a static look — playback is unaffected
+      }
 
       // Sync playhead from real audio
       audioRef.current.ontimeupdate = () => {
@@ -285,6 +398,10 @@ export default function StudioPage() {
       audioRef.current.onended = () => { setIsPlaying(false); setPlayheadPct(0); setTimeMs(0); };
 
       setAudioUrl(data.audioUrl);
+      setWaveformPeaks(null);
+      // Decode the real audio into peak data so the timeline waveforms
+      // reflect this song's actual dynamics instead of a placeholder shape.
+      extractWaveformPeaks(data.audioUrl).then(setWaveformPeaks).catch(() => setWaveformPeaks(null));
       setTimeout(() => { setGenerating(false); setGenDone(true); }, 300);
 
     } catch (err: any) {
@@ -304,6 +421,10 @@ export default function StudioPage() {
 
   const toggleMute = (id: string) => setMuted(m => ({ ...m, [id]: !m[id] }));
   const toggleSolo = (id: string) => setSolo(s => ({ ...s, [id]: !s[id] }));
+  const toggleRecordArm = (id: string) => setRecordArmed(r => ({ ...r, [id]: !r[id] }));
+  // I/O routing labels, one per track — decorative but authentic to a real
+  // console's channel strip, cycling through the interface's input pairs.
+  const trackIO = (trackId: string) => `A ${(TRACKS.findIndex(t => t.id === trackId) % 4) * 2 + 1}-${(TRACKS.findIndex(t => t.id === trackId) % 4) * 2 + 2}`;
 
   const handleGenerateCoverArt = useCallback(async () => {
     setCoverArtLoading(true);
@@ -674,6 +795,22 @@ export default function StudioPage() {
         boxShadow: '0 -1px 0 #AE06ED22, inset 0 1px 0 #ffffff08',
       }}>
 
+      {/* Edit mode — Shuffle / Slip / Spot / Grid */}
+      <div className="hidden md:flex items-center rounded overflow-hidden border shrink-0"
+        style={{ borderColor: '#1a1a3a', background: '#020208' }}>
+        {(['Shuffle', 'Slip', 'Spot', 'Grid'] as const).map(m => (
+          <button key={m} onClick={() => setEditMode(m)}
+            style={{ minHeight: '28px', touchAction: 'manipulation' }}
+            className={`px-2 text-[9px] font-bold tracking-wide transition-all ${
+              editMode === m ? 'bg-[#AE06ED]/20 text-[#AE06ED]' : 'text-[#333355] hover:text-[#8888AA]'
+            }`}>
+            {m}
+          </button>
+        ))}
+      </div>
+
+      <div className="h-5 w-px mx-1 shrink-0 hidden md:block" style={{ background: 'linear-gradient(180deg, transparent, #AE06ED44, transparent)' }} />
+
       <button onClick={() => { setTimeMs(0); setPlayheadPct(0); }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
         className="flex items-center justify-center text-[#333366] hover:text-[#AE06ED] transition-colors">
@@ -732,6 +869,19 @@ export default function StudioPage() {
 
       <div className="h-5 w-px mx-1 shrink-0" style={{ background: 'linear-gradient(180deg, transparent, #007AFF44, transparent)' }} />
 
+      {/* Bars|Beats — Pro Tools' primary counter */}
+      <div className="hidden sm:block font-mono text-xs px-2 py-1 rounded shrink-0 border"
+        style={{
+          background: '#020208',
+          borderColor: '#00FFD133',
+          color: '#00FFD1',
+          textShadow: '0 0 8px #00FFD1',
+          boxShadow: '0 0 12px #00FFD122',
+          letterSpacing: '0.1em',
+        }}>
+        {formatBarsBeats(timeMs, bpm)}
+      </div>
+
       {/* Timecode */}
       <div className="font-mono text-xs px-2 py-1 rounded shrink-0 border"
         style={{
@@ -745,10 +895,22 @@ export default function StudioPage() {
         {formatTime(timeMs)}
       </div>
 
-      {/* VU meter dots */}
+      <div className="h-5 w-px mx-1 shrink-0 hidden lg:block" style={{ background: 'linear-gradient(180deg, transparent, #F28C2844, transparent)' }} />
+
+      {/* Grid + Nudge */}
+      <div className="hidden lg:flex items-center gap-1 shrink-0">
+        <select value={gridValue} onChange={e => setGridValue(e.target.value)}
+          style={{ minHeight: '28px', background: '#020208', borderColor: '#F28C2844', color: '#F28C28' }}
+          className="text-[9px] font-mono rounded px-1.5 border focus:outline-none">
+          {GRID_VALUES.map(g => <option key={g} value={g} style={{ background: '#0A0A14' }}>{g}</option>)}
+        </select>
+      </div>
+
+      {/* VU meter dots — driven by the real generated audio's signal level */}
       <div className="hidden lg:flex items-end gap-0.5 h-5 ml-2 shrink-0">
         {Array.from({ length: 12 }, (_, i) => {
-          const active = isPlaying && (tick % 3 !== 0 ? i < Math.floor(Math.random() * 5) + 5 : i < 4);
+          const lvl = isPlaying ? getRealLevel() : 0;
+          const active = lvl * 12 > i;
           return (
             <div key={i} className="w-1 rounded-sm transition-all duration-75"
               style={{
@@ -788,8 +950,16 @@ export default function StudioPage() {
             style={{ color: isActive ? track.color : '#445566', textShadow: isActive ? `0 0 6px ${track.color}44` : 'none' }}>
             {track.name}
           </span>
+          <span className="text-[7px] font-mono shrink-0" style={{ color: '#2a2a44' }}>{trackIO(track.id)}</span>
         </div>
         <div className="flex items-center gap-1 ml-3">
+          <button onClick={e => { e.stopPropagation(); toggleRecordArm(track.id); }}
+            className="text-[9px] font-black w-4 h-4 rounded-full transition-all border flex items-center justify-center shrink-0"
+            style={{
+              background: recordArmed[track.id] ? '#FF2D78' : 'transparent',
+              borderColor: recordArmed[track.id] ? '#FF2D78' : '#1a1a3a',
+              boxShadow: recordArmed[track.id] ? '0 0 6px #FF2D78' : 'none',
+            }} aria-label="Record enable" />
           <button onClick={e => { e.stopPropagation(); toggleMute(track.id); }}
             className="text-[9px] font-black px-1.5 py-0.5 rounded transition-all border"
             style={{
@@ -841,7 +1011,7 @@ export default function StudioPage() {
             border: `1px solid ${track.color}${isActive ? '55' : '22'}`,
             boxShadow: isActive ? `0 0 10px ${track.color}22` : 'none',
           }}>
-          <WaveformSVG color={track.color} glow={track.glow} height={compact ? 32 : 48} seed={TRACKS.indexOf(track)} />
+          <WaveformSVG color={track.color} glow={track.glow} height={compact ? 32 : 48} seed={TRACKS.indexOf(track)} peaks={waveformPeaks} />
         </div>
       </div>
     );
@@ -949,7 +1119,13 @@ export default function StudioPage() {
                 {/* Level meter */}
                 <div className="flex gap-0.5 items-end h-full">
                   {[0,1].map(ch => {
-                    const lvl = isPlaying && !muted[track.id] ? Math.random() * (vol / 100) : 0;
+                    // Real signal level from the generated audio's analyser,
+                    // with a small per-track/per-channel offset so the seven
+                    // strips don't all move in lockstep despite reading the
+                    // same (non-stem-separated) master signal.
+                    const trackSeed = TRACKS.indexOf(track);
+                    const jitter = 0.85 + 0.3 * Math.abs(Math.sin(trackSeed * 1.7 + ch * 2.3 + tick * 0.4));
+                    const lvl = isPlaying && !muted[track.id] ? getRealLevel() * jitter * (vol / 100) : 0;
                     return (
                       <div key={ch} className="w-1.5 h-full flex flex-col-reverse gap-px">
                         {Array.from({length: 12}, (_, i) => (
@@ -1134,6 +1310,14 @@ export default function StudioPage() {
                   </div>
                 ))}
               </div>
+              <BarRuler compact />
+              <div className="border-b shrink-0 px-2 py-1.5" style={{ background: '#020208', borderColor: '#0D0D20' }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
+                  <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
+                </div>
+                <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={40} />
+              </div>
               {TRACKS.map(track => (
                 <div key={track.id} className={`h-12 border-b relative flex items-center ${muted[track.id] ? 'opacity-20' : ''}`}
                   style={{ borderColor: '#0D0D20' }}>
@@ -1150,7 +1334,7 @@ export default function StudioPage() {
                         background: `${track.color}10`,
                         border: `1px solid ${track.color}30`,
                       }}>
-                      <WaveformSVG color={track.color} glow={track.glow} height={38} seed={TRACKS.indexOf(track)} />
+                      <WaveformSVG color={track.color} glow={track.glow} height={38} seed={TRACKS.indexOf(track)} peaks={waveformPeaks} />
                     </div>
                   </div>
                 </div>
@@ -1213,6 +1397,19 @@ export default function StudioPage() {
                   style={{ color: i % 2 === 0 ? '#AE06ED44' : '#007AFF33' }}>{s}</span>
               </div>
             ))}
+          </div>
+          <BarRuler />
+
+          {/* Master waveform — real decoded audio via WaveSurfer.js, not a
+              synthetic shape. Click to seek; the playhead genuinely tracks
+              this song's actual audio element. */}
+          <div className="border-b shrink-0 px-2 py-1.5"
+            style={{ background: '#020208', borderColor: '#0D0D20' }}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
+              <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
+            </div>
+            <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={48} />
           </div>
 
           {/* Timeline */}
