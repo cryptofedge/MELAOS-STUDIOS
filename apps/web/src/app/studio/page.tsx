@@ -4,6 +4,7 @@ import {
   SkipBack, Play, Pause, Square, Circle, Repeat,
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
   Zap, Activity, Cpu, Layers, Clock3, Sparkles, SlidersHorizontal,
+  ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
@@ -338,12 +339,12 @@ export default function StudioPage() {
   const orderedTracks = [...TRACKS].sort((a, b) => (pinnedTracks[b.id] ? 1 : 0) - (pinnedTracks[a.id] ? 1 : 0));
 
   const EDIT_TOOLS = [
-    { id: 'zoom', icon: '🔍', label: 'Zoom' },
-    { id: 'trim', icon: '✂️', label: 'Trim' },
-    { id: 'selector', icon: 'I', label: 'Selector' },
-    { id: 'grabber', icon: '✋', label: 'Grabber' },
-    { id: 'scrub', icon: '↔', label: 'Scrub' },
-    { id: 'pencil', icon: '✏️', label: 'Pencil' },
+    { id: 'zoom', Icon: ScanSearch, label: 'Zoom' },
+    { id: 'trim', Icon: Scissors, label: 'Trim' },
+    { id: 'selector', Icon: MousePointer2, label: 'Selector' },
+    { id: 'grabber', Icon: Hand, label: 'Grabber' },
+    { id: 'scrub', Icon: Waves, label: 'Scrub' },
+    { id: 'pencil', Icon: PenLine, label: 'Pencil' },
   ] as const;
 
   const TOTAL_MS = 214000;
@@ -1509,13 +1510,18 @@ export default function StudioPage() {
               Anchored directly below the Master Waveform. */}
           <div className="hidden md:flex items-center gap-1 px-2 py-1 border-t shrink-0"
             style={{ background: '#020208', borderColor: '#0D0D20' }}>
-            {EDIT_TOOLS.map(t => (
-              <button key={t.id} onClick={() => setEditTool(t.id)} title={t.label}
-                style={{ minWidth: '26px', minHeight: '26px' }}
-                className={`flex items-center justify-center rounded text-sm font-bold transition-all ${
-                  editTool === t.id ? 'bg-[#AE06ED]/30 text-[#D9A5FF] border border-[#AE06ED]' : 'bg-white/[0.04] text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-transparent'
+            {EDIT_TOOLS.map(({ id, Icon, label }) => (
+              <button key={id} onClick={() => setEditTool(id)} title={label}
+                style={{
+                  minWidth: '28px', minHeight: '28px',
+                  boxShadow: editTool === id ? '0 0 10px #AE06ED88, inset 0 0 8px #AE06ED22' : 'none',
+                }}
+                className={`flex items-center justify-center rounded-md transition-all ${
+                  editTool === id
+                    ? 'bg-[#AE06ED]/20 text-[#E2B8FF] border border-[#AE06ED]'
+                    : 'bg-white/[0.03] text-[#8FE3FF] hover:text-white hover:bg-[#00FFD1]/10 hover:border-[#00FFD1]/60 border border-[#1a1a3a]'
                 }`}>
-                {t.icon}
+                <Icon className="w-3.5 h-3.5" strokeWidth={2.25} />
               </button>
             ))}
             <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
