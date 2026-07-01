@@ -234,6 +234,7 @@ export default function StudioPage() {
   const [waveformPeaks,setWaveformPeaks]= useState<number[] | null>(null);
   const [audioEl,      setAudioEl]      = useState<HTMLAudioElement | null>(null);
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
+  const [projectName,  setProjectName]  = useState('Untitled Project');
   const [lyricsLang,   setLyricsLang]   = useState('English');
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [editTool,     setEditTool]     = useState<'zoom' | 'trim' | 'selector' | 'grabber' | 'scrub' | 'pencil'>('selector');
@@ -1427,7 +1428,14 @@ export default function StudioPage() {
             style={{ filter: 'drop-shadow(0 0 6px #AE06ED88)' }} />
         </div>
         <div className="w-px h-4 shrink-0" style={{ background: '#AE06ED33' }} />
-        <span className="text-[11px] font-mono font-bold tracking-wider truncate" style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD144' }}>Untitled Project</span>
+        <input
+          value={projectName}
+          onChange={e => setProjectName(e.target.value.slice(0, 60))}
+          onBlur={() => { if (!projectName.trim()) setProjectName('Untitled Project'); }}
+          spellCheck={false}
+          className="text-[11px] font-mono font-bold tracking-wider truncate bg-transparent border-none outline-none focus:underline"
+          style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD144', width: `${Math.max(9, projectName.length + 1)}ch` }}
+        />
         <div className="ml-auto flex items-center gap-2">
           <Activity className="w-3.5 h-3.5" style={{ color: '#00FFD1', filter: 'drop-shadow(0 0 3px #00FFD1)' }} />
           <span className="text-[10px] font-mono tracking-wider hidden sm:inline"
