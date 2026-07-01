@@ -4,7 +4,7 @@ import {
   SkipBack, Play, Pause, Square, Circle, Repeat,
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
   Zap, Activity, Cpu, Layers, Clock3, Sparkles, SlidersHorizontal,
-  ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine,
+  ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine, Download,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
@@ -1070,6 +1070,15 @@ export default function StudioPage() {
             className="text-[10px] shrink-0 transition-colors opacity-80 hover:opacity-100"
             style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#8888BB' }}
             aria-label="Pin track to top" title="Pin track">📌</button>
+          {audioUrl && (
+            <a href={audioUrl} download={`melaos-${track.name.toLowerCase()}.mp3`}
+              onClick={e => e.stopPropagation()}
+              className="shrink-0 transition-colors opacity-80 hover:opacity-100"
+              style={{ color: track.color }}
+              aria-label={`Download ${track.name} track`} title={`Download ${track.name}`}>
+              <Download className="w-2.5 h-2.5" />
+            </a>
+          )}
           <span className="text-[8px] font-mono font-bold shrink-0" style={{ color: '#8888BB' }}>{trackIO(track.id)}</span>
         </div>
         <div className="flex items-center gap-1 ml-3">
