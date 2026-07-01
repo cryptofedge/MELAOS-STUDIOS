@@ -1373,8 +1373,8 @@ export default function StudioPage() {
         </div>
 
         {/* Filler — keeps the empty space after Master from being dead air */}
-        <div className="flex-1 flex items-center justify-center min-w-[160px] px-4">
-          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-28 w-auto max-w-full object-contain opacity-90 select-none pointer-events-none"
+        <div className="flex-1 h-full flex items-center justify-center min-w-[160px] px-6">
+          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="w-auto h-2/3 max-w-[420px] object-contain opacity-90 select-none pointer-events-none"
             style={{ mixBlendMode: 'screen' }} />
         </div>
       </div>
