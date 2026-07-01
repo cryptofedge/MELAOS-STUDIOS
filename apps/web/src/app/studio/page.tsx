@@ -544,7 +544,7 @@ export default function StudioPage() {
               className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
                 aiTab === key
                   ? 'bg-[#AE06ED] text-white shadow-lg'
-                  : 'text-[#444466] hover:text-[#8888AA]'
+                  : 'text-[#9999CC] hover:text-[#8888AA]'
               }`}>
               {label}
             </button>
@@ -555,7 +555,7 @@ export default function StudioPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
             instrumental
               ? 'border-[#00FFD1] bg-[#00FFD1]/10 text-[#00FFD1]'
-              : 'border-[#1a1a3a] text-[#444466] hover:border-[#333355]'
+              : 'border-[#1a1a3a] text-[#9999CC] hover:border-[#8888BB]'
           }`}>
           ♪ Instrumental
         </button>
@@ -573,14 +573,14 @@ export default function StudioPage() {
               onChange={e => setPrompt(e.target.value)}
               rows={3}
               placeholder="A dark trap banger with 808s, auto-tune vocals, and a haunting piano melody..."
-              className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
+              className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
               style={{
                 fontSize: '14px',
                 background: 'rgba(0,0,0,0.6)',
                 boxShadow: 'inset 0 0 20px rgba(174,6,237,0.05)',
               }}
             />
-            <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#444466]">{prompt.length}/500</div>
+            <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#9999CC]">{prompt.length}/500</div>
           </div>
           {/* Style tag suggestions */}
           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -604,7 +604,7 @@ export default function StudioPage() {
             onChange={e => setLyrics(e.target.value)}
             rows={4}
             placeholder={"[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n..."}
-            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
         </div>
@@ -615,7 +615,7 @@ export default function StudioPage() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-[10px] font-bold text-[#F28C28] tracking-[0.15em] uppercase">◈ Lyrics</label>
-            <span className="text-[9px] font-mono text-[#444466]">{lyrics.length} chars</span>
+            <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
           </div>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {['[Verse]', '[Chorus]', '[Bridge]', '[Outro]', '[Intro]'].map(tag => (
@@ -631,10 +631,10 @@ export default function StudioPage() {
             onChange={e => setLyrics(e.target.value)}
             rows={12}
             placeholder={"[Verse]\nWrite your lyrics here...\n\n[Chorus]\nThe hook everyone remembers...\n\n[Bridge]\n..."}
-            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#444466] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
-          <p className="text-[10px] text-[#444466] mt-1.5">
+          <p className="text-[10px] text-[#9999CC] mt-1.5">
             Pick a genre, mood, and BPM below, then hit Generate — these lyrics become the vocal track.
           </p>
         </div>
@@ -679,7 +679,7 @@ export default function StudioPage() {
             accentColor: '#F28C28',
           }}
         />
-        <div className="flex justify-between text-[9px] text-[#333355] mt-1 font-mono">
+        <div className="flex justify-between text-[9px] text-[#8888BB] mt-1 font-mono">
           <span>60</span><span>130</span><span>200</span>
         </div>
       </div>
@@ -697,7 +697,7 @@ export default function StudioPage() {
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
                 vocalGender === v
                   ? 'bg-[#00FFD1]/10 border-[#00FFD1] text-[#00FFD1]'
-                  : 'border-[#1a1a3a] text-[#333355] hover:text-[#00FFD1]/60 hover:border-[#00FFD1]/30'
+                  : 'border-[#1a1a3a] text-[#8888BB] hover:text-[#00FFD1]/60 hover:border-[#00FFD1]/30'
               }`}
             >
               {v === 'none' ? 'None' : v}
@@ -715,7 +715,7 @@ export default function StudioPage() {
         }}
         className={`w-full py-3 rounded-xl font-black text-sm tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all ${
           generating || genDone
-            ? 'bg-[#0A0A14] border border-[#222244] text-[#333355] cursor-not-allowed'
+            ? 'bg-[#0A0A14] border border-[#8888BB] text-[#8888BB] cursor-not-allowed'
             : 'bg-gradient-to-r from-[#6A0572] via-[#AE06ED] to-[#007AFF] text-white hover:scale-[1.02]'
         }`}
       >
@@ -792,7 +792,7 @@ export default function StudioPage() {
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${
               coverArtLoading
-                ? 'border-[#1a1a3a] text-[#333355] cursor-not-allowed'
+                ? 'border-[#1a1a3a] text-[#8888BB] cursor-not-allowed'
                 : 'border-[#E91E8C]/60 text-[#E91E8C] hover:bg-[#E91E8C]/10'
             }`}
           >
@@ -807,7 +807,7 @@ export default function StudioPage() {
         {coverArtLoading && (
           <div className="w-full aspect-square rounded-xl bg-[#0A0A14] border border-[#1a1a3a] flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-[#E91E8C] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[10px] font-mono text-[#444466] tracking-widest">AI PAINTING...</p>
+            <p className="text-[10px] font-mono text-[#9999CC] tracking-widest">AI PAINTING...</p>
           </div>
         )}
 
@@ -847,7 +847,7 @@ export default function StudioPage() {
             className="w-full aspect-square rounded-xl border-2 border-dashed border-[#1a1a3a] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#E91E8C]/40 transition-colors group"
           >
             <span className="text-3xl opacity-20 group-hover:opacity-40 transition-opacity">🎨</span>
-            <p className="text-[10px] text-[#333355] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
+            <p className="text-[10px] text-[#8888BB] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
           </div>
         )}
       </div>
@@ -870,7 +870,7 @@ export default function StudioPage() {
           <button key={m} onClick={() => setEditMode(m)}
             style={{ minHeight: '28px', touchAction: 'manipulation' }}
             className={`px-2 text-[9px] font-bold tracking-wide transition-all ${
-              editMode === m ? 'bg-[#AE06ED]/20 text-[#AE06ED]' : 'text-[#333355] hover:text-[#8888AA]'
+              editMode === m ? 'bg-[#AE06ED]/20 text-[#AE06ED]' : 'text-[#8888BB] hover:text-[#8888AA]'
             }`}>
             {m}
           </button>
@@ -1019,10 +1019,10 @@ export default function StudioPage() {
             {track.name}
           </span>
           <button onClick={e => { e.stopPropagation(); togglePin(track.id); }}
-            className="text-[9px] shrink-0 transition-colors"
-            style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#2a2a44' }}
+            className="text-[10px] shrink-0 transition-colors opacity-80 hover:opacity-100"
+            style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#8888BB' }}
             aria-label="Pin track to top" title="Pin track">📌</button>
-          <span className="text-[7px] font-mono shrink-0" style={{ color: '#2a2a44' }}>{trackIO(track.id)}</span>
+          <span className="text-[8px] font-mono font-bold shrink-0" style={{ color: '#8888BB' }}>{trackIO(track.id)}</span>
         </div>
         <div className="flex items-center gap-1 ml-3">
           <button onClick={e => { e.stopPropagation(); toggleRecordArm(track.id); }}
@@ -1037,14 +1037,14 @@ export default function StudioPage() {
             style={{
               background: muted[track.id] ? '#F28C2820' : 'transparent',
               borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a',
-              color: muted[track.id] ? '#F28C28' : '#333355',
+              color: muted[track.id] ? '#F28C28' : '#8888BB',
             }}>M</button>
           <button onClick={e => { e.stopPropagation(); toggleSolo(track.id); }}
             className="text-[9px] font-black px-1.5 py-0.5 rounded transition-all border"
             style={{
               background: solo[track.id] ? '#007AFF20' : 'transparent',
               borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a',
-              color: solo[track.id] ? '#007AFF' : '#333355',
+              color: solo[track.id] ? '#007AFF' : '#8888BB',
             }}>S</button>
           <div className="flex-1 ml-1 h-0.5 rounded-full bg-[#0D0D20] cursor-pointer overflow-hidden"
             onClick={e => {
@@ -1170,7 +1170,7 @@ export default function StudioPage() {
                         cur[i] = val;
                         return { ...prev, [track.id]: cur };
                       })} />
-                    <span className="text-[6px] font-mono" style={{ color: '#222244' }}>
+                    <span className="text-[6px] font-mono" style={{ color: '#8888BB' }}>
                       {i === 0 ? 'B' : i === 1 ? 'M' : 'T'}
                     </span>
                   </div>
@@ -1181,7 +1181,7 @@ export default function StudioPage() {
               <div className="flex flex-col items-center gap-0.5">
                 <Knob value={panVal} color="#AE06ED" size={22}
                   onChange={val => setPan(p => ({ ...p, [track.id]: val }))} />
-                <span className="text-[6px] font-mono" style={{ color: '#222244' }}>
+                <span className="text-[6px] font-mono" style={{ color: '#8888BB' }}>
                   {panVal < 45 ? `L${Math.round((50-panVal)*2)}` : panVal > 55 ? `R${Math.round((panVal-50)*2)}` : 'C'}
                 </span>
               </div>
@@ -1251,10 +1251,10 @@ export default function StudioPage() {
               <div className="flex gap-1">
                 <button onClick={e => { e.stopPropagation(); toggleMute(track.id); }}
                   className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
-                  style={{ background: muted[track.id] ? '#F28C2820' : 'transparent', borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a', color: muted[track.id] ? '#F28C28' : '#333355' }}>M</button>
+                  style={{ background: muted[track.id] ? '#F28C2820' : 'transparent', borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a', color: muted[track.id] ? '#F28C28' : '#8888BB' }}>M</button>
                 <button onClick={e => { e.stopPropagation(); toggleSolo(track.id); }}
                   className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
-                  style={{ background: solo[track.id] ? '#007AFF20' : 'transparent', borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a', color: solo[track.id] ? '#007AFF' : '#333355' }}>S</button>
+                  style={{ background: solo[track.id] ? '#007AFF20' : 'transparent', borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a', color: solo[track.id] ? '#007AFF' : '#8888BB' }}>S</button>
               </div>
             </div>
           );
@@ -1308,7 +1308,7 @@ export default function StudioPage() {
           </div>
 
           <span className="text-[8px] font-mono" style={{ color: '#AE06ED', textShadow: '0 0 4px #AE06ED' }}>{masterVol}%</span>
-          <span className="text-[6px] font-mono mt-1" style={{ color: '#333355' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
+          <span className="text-[6px] font-mono mt-1" style={{ color: '#8888BB' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
         </div>
       </div>
     </div>
@@ -1494,23 +1494,23 @@ export default function StudioPage() {
             {EDIT_TOOLS.map(t => (
               <button key={t.id} onClick={() => setEditTool(t.id)} title={t.label}
                 style={{ minWidth: '26px', minHeight: '26px' }}
-                className={`flex items-center justify-center rounded text-xs transition-all ${
-                  editTool === t.id ? 'bg-[#AE06ED]/20 text-[#AE06ED] border border-[#AE06ED]/50' : 'text-[#444466] hover:text-[#8888AA] border border-transparent'
+                className={`flex items-center justify-center rounded text-sm font-bold transition-all ${
+                  editTool === t.id ? 'bg-[#AE06ED]/30 text-[#D9A5FF] border border-[#AE06ED]' : 'bg-white/[0.04] text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-transparent'
                 }`}>
                 {t.icon}
               </button>
             ))}
-            <div className="h-4 w-px mx-1" style={{ background: '#1a1a3a' }} />
+            <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
             <button onClick={handleZoomOut} title="Zoom out"
-              className="w-6 h-6 flex items-center justify-center rounded text-[#444466] hover:text-[#8888AA] text-xs">−</button>
-            <span className="text-[8px] font-mono w-10 text-center" style={{ color: '#333355' }}>{zoomLevel}px/s</span>
+              className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">−</button>
+            <span className="text-[9px] font-mono font-bold w-10 text-center" style={{ color: '#9999CC' }}>{zoomLevel}px/s</span>
             <button onClick={handleZoomIn} title="Zoom in"
-              className="w-6 h-6 flex items-center justify-center rounded text-[#444466] hover:text-[#8888AA] text-xs">+</button>
-            <div className="h-4 w-px mx-1" style={{ background: '#1a1a3a' }} />
+              className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">+</button>
+            <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
             <button onClick={() => jumpToTransient(-1)} title="Previous transient (Shift+Tab)"
-              className="text-[8px] font-mono px-1.5 h-6 rounded text-[#444466] hover:text-[#8888AA] border border-[#1a1a3a]">⏮ Tab</button>
+              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">⏮ Tab</button>
             <button onClick={() => jumpToTransient(1)} title="Next transient (Tab)"
-              className="text-[8px] font-mono px-1.5 h-6 rounded text-[#444466] hover:text-[#8888AA] border border-[#1a1a3a]">Tab ⏭</button>
+              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">Tab ⏭</button>
           </div>
 
           {/* Timeline */}
