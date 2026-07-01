@@ -18,10 +18,11 @@ const REPLICATE_API = 'https://api.replicate.com/v1';
 // knowledge for the chosen genre — instrumentation, rhythm, and the
 // legendary producer lineage that defines the sound — so ACE-Step gets a
 // genuinely informed prompt instead of just a bare genre word.
-function buildTags(prompt: string, genre: string, mood: string, bpm: number) {
+function buildTags(prompt: string, genre: string, mood: string, bpm: number, lyricsLanguage: string) {
   const enriched = buildGenreTags(genre, mood, bpm);
   const base = prompt.trim();
-  return (base ? `${base}, ${enriched}` : enriched).slice(0, 350);
+  const langTag = lyricsLanguage && lyricsLanguage !== 'English' ? `, ${lyricsLanguage} vocals` : '';
+  return (base ? `${base}, ${enriched}${langTag}` : `${enriched}${langTag}`).slice(0, 350);
 }
 
 // ACE-Step's lyrics field doubles as the vocals on/off switch: [instrumental]
@@ -95,10 +96,10 @@ export async function POST(req: NextRequest) {
 
   const {
     prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120,
-    vocals = 'male', duration = 30, lyrics = '',
+    vocals = 'male', duration = 30, lyrics = '', lyricsLanguage = 'English',
   } = body;
 
-  const tags = buildTags(prompt, genre, mood, bpm);
+  const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage);
   const finalLyrics = buildLyrics(lyrics, vocals, genre, mood);
   const dur = Math.min(Math.max(Number(duration) || 30, 10), 240);
   const title = tags.substring(0, 50);

@@ -24,6 +24,12 @@ const TRACKS = [
 const SECTIONS = ['INTRO', 'VERSE', 'CHORUS', 'VERSE', 'CHORUS', 'BRIDGE', 'OUTRO'];
 const GENRES   = [...GENRE_LIST];
 const MOODS    = [...MOOD_LIST];
+const LYRICS_LANGUAGES = [
+  'English', 'Spanish', 'Portuguese', 'French', 'Italian', 'German',
+  'Dutch', 'Japanese', 'Korean', 'Mandarin Chinese', 'Hindi', 'Arabic',
+  'Russian', 'Turkish', 'Polish', 'Swedish', 'Yoruba', 'Zulu', 'Swahili',
+  'Vietnamese', 'Thai', 'Indonesian', 'Tagalog',
+];
 
 const DEFAULT_LYRICS = `[Verse 1]
 Walking through the city lights tonight
@@ -228,6 +234,7 @@ export default function StudioPage() {
   const [waveformPeaks,setWaveformPeaks]= useState<number[] | null>(null);
   const [audioEl,      setAudioEl]      = useState<HTMLAudioElement | null>(null);
   const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
+  const [lyricsLang,   setLyricsLang]   = useState('English');
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [editTool,     setEditTool]     = useState<'zoom' | 'trim' | 'selector' | 'grabber' | 'scrub' | 'pencil'>('selector');
   const [pinnedTracks, setPinnedTracks] = useState<Record<string, boolean>>({});
@@ -425,6 +432,7 @@ export default function StudioPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt, genre, mood, bpm: genBpm, vocals: vocalGender, lyrics,
+            lyricsLanguage: lyricsLang,
             duration: vocalGender === 'none' ? 15 : 30,
           }),
           signal: controller.signal,
@@ -639,6 +647,16 @@ export default function StudioPage() {
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-[10px] font-bold text-[#F28C28] tracking-[0.15em] uppercase">◈ Lyrics</label>
             <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
+          </div>
+          <div className="mb-2">
+            <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">◈ Language</label>
+            <select
+              value={lyricsLang} onChange={e => setLyricsLang(e.target.value)}
+              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(242,140,40,0.15)' }}
+              className="w-full border border-[#F28C28]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#F28C28] transition-all"
+            >
+              {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A14' }}>{l}</option>)}
+            </select>
           </div>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {['[Verse]', '[Chorus]', '[Bridge]', '[Outro]', '[Intro]'].map(tag => (
