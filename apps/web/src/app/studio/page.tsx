@@ -1015,7 +1015,7 @@ export default function StudioPage() {
           <div className="w-2 h-2 rounded-full shrink-0 transition-all"
             style={{ backgroundColor: track.color, boxShadow: isActive ? `0 0 6px ${track.color}` : 'none' }} />
           <span className={`text-[11px] font-bold tracking-wider flex-1 truncate uppercase transition-colors`}
-            style={{ color: isActive ? track.color : '#445566', textShadow: isActive ? `0 0 6px ${track.color}44` : 'none' }}>
+            style={{ color: track.color, opacity: isActive ? 1 : 0.75, textShadow: isActive ? `0 0 6px ${track.color}44` : 'none' }}>
             {track.name}
           </span>
           <button onClick={e => { e.stopPropagation(); togglePin(track.id); }}
@@ -1383,14 +1383,6 @@ export default function StudioPage() {
                 ))}
               </div>
               <BarRuler compact />
-              <div className="border-b shrink-0 px-2 py-1.5" style={{ background: '#020208', borderColor: '#0D0D20' }}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
-                  <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
-                </div>
-                <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={40}
-                  onReady={ws => { wsInstanceRef.current = ws; }} />
-              </div>
               {orderedTracks.map(track => (
                 <div key={track.id} className={`h-12 border-b relative flex items-center ${muted[track.id] ? 'opacity-20' : ''}`}
                   style={{ borderColor: '#0D0D20' }}>
@@ -1412,6 +1404,14 @@ export default function StudioPage() {
                   </div>
                 </div>
               ))}
+              <div className="border-t shrink-0 px-2 py-1.5" style={{ background: '#020208', borderColor: '#0D0D20' }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
+                  <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
+                </div>
+                <StudioWaveform audioEl={audioEl} audioUrl={audioUrl} color="#FF2D78" height={40}
+                  onReady={ws => { wsInstanceRef.current = ws; }} />
+              </div>
             </div>
           )}
 
@@ -1474,10 +1474,27 @@ export default function StudioPage() {
           </div>
           <BarRuler />
 
+          {/* Timeline */}
+          <div className="flex-1 overflow-y-auto relative min-h-0">
+            {/* Playhead */}
+            <div className="absolute top-0 bottom-0 w-px z-20 pointer-events-none transition-all"
+              style={{
+                left: `${playheadPct}%`,
+                background: 'linear-gradient(180deg, #FF2D78, #FF2D7888)',
+                boxShadow: '0 0 8px #FF2D78, 0 0 16px #FF2D7844',
+              }}>
+              <div className="w-3 h-3 rounded-full absolute -top-1 -left-[5px]"
+                style={{ background: '#FF2D78', boxShadow: '0 0 8px #FF2D78' }} />
+            </div>
+
+            {orderedTracks.map(track => <TimelineLane key={track.id} track={track} />)}
+          </div>
+
           {/* Master waveform — real decoded audio via WaveSurfer.js, not a
               synthetic shape. Click to seek; the playhead genuinely tracks
-              this song's actual audio element. */}
-          <div className="border-b shrink-0 px-2 py-1.5"
+              this song's actual audio element. Anchored at the bottom of
+              the timeline, above the transport bar. */}
+          <div className="border-t shrink-0 px-2 py-1.5"
             style={{ background: '#020208', borderColor: '#0D0D20' }}>
             <div className="flex items-center gap-1.5 mb-1">
               <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
@@ -1488,8 +1505,9 @@ export default function StudioPage() {
           </div>
 
           {/* Edit Tools — Pro Tools' Trim/Selector/Grabber/Scrub/Pencil/Zoom
-              toolbar, plus real zoom controls wired to the waveform */}
-          <div className="hidden md:flex items-center gap-1 px-2 py-1 border-b shrink-0"
+              toolbar, plus real zoom controls wired to the waveform.
+              Anchored directly below the Master Waveform. */}
+          <div className="hidden md:flex items-center gap-1 px-2 py-1 border-t shrink-0"
             style={{ background: '#020208', borderColor: '#0D0D20' }}>
             {EDIT_TOOLS.map(t => (
               <button key={t.id} onClick={() => setEditTool(t.id)} title={t.label}
@@ -1511,22 +1529,6 @@ export default function StudioPage() {
               className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">⏮ Tab</button>
             <button onClick={() => jumpToTransient(1)} title="Next transient (Tab)"
               className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">Tab ⏭</button>
-          </div>
-
-          {/* Timeline */}
-          <div className="flex-1 overflow-y-auto relative min-h-0">
-            {/* Playhead */}
-            <div className="absolute top-0 bottom-0 w-px z-20 pointer-events-none transition-all"
-              style={{
-                left: `${playheadPct}%`,
-                background: 'linear-gradient(180deg, #FF2D78, #FF2D7888)',
-                boxShadow: '0 0 8px #FF2D78, 0 0 16px #FF2D7844',
-              }}>
-              <div className="w-3 h-3 rounded-full absolute -top-1 -left-[5px]"
-                style={{ background: '#FF2D78', boxShadow: '0 0 8px #FF2D78' }} />
-            </div>
-
-            {orderedTracks.map(track => <TimelineLane key={track.id} track={track} />)}
           </div>
 
           <TransportBar />
