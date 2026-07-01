@@ -136,7 +136,7 @@ function BarRuler({ compact = false }: { compact?: boolean }) {
       {Array.from({ length: BARS }, (_, i) => (
         <div key={i} className="flex-1 relative border-r" style={{ borderColor: '#0D0D2088' }}>
           {i % 4 === 0 && (
-            <span className="absolute left-0.5 top-0 text-[7px] font-mono" style={{ color: '#445566' }}>{i + 1}</span>
+            <span className="absolute left-0.5 top-0 text-[7px] font-mono font-bold" style={{ color: '#9999CC' }}>{i + 1}</span>
           )}
           <div className="absolute bottom-0 left-1/2 w-px" style={{ height: i % 4 === 0 ? '6px' : '3px', background: '#1a1a3a' }} />
         </div>
@@ -246,6 +246,17 @@ export default function StudioPage() {
   const [coverArtUrl,    setCoverArtUrl]    = useState<string | null>(null);
   const [coverArtLoading,setCoverArtLoading]= useState(false);
   const [coverArtPrompt, setCoverArtPrompt] = useState('');
+  const [refImage,       setRefImage]       = useState<string | null>(null);
+  const refImageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRefImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setRefImage(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const STYLE_SUGGESTIONS: Record<string, string[]> = {
     'Hip-Hop': ['boom bap', 'lofi', 'west coast', 'lyrical', 'boom bap drums'],
@@ -515,24 +526,34 @@ export default function StudioPage() {
     const style = genreArtStyle(genre);
     const moodStr = moodMap[mood] || mood.toLowerCase();
     const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
-    const seed = Math.floor(Math.random() * 999999);
-    // Routed through our own API so the image is same-origin (Pollinations
-    // 403s direct browser CORS requests, which would taint the watermark canvas).
-    const url = `/api/cover-art?prompt=${encodeURIComponent(artPrompt)}&seed=${seed}`;
-    const img = new window.Image();
-    img.onload = async () => {
-      try {
-        const watermarked = await watermarkImage(img);
-        setCoverArtUrl(watermarked);
-      } catch {
-        setCoverArtUrl(url); // fallback — show art unwatermarked
-      } finally {
-        setCoverArtLoading(false);
-      }
-    };
-    img.onerror = () => { setCoverArtLoading(false); };
-    img.src = url;
-  }, [genre, mood, genBpm, prompt, coverArtPrompt]);
+    try {
+      // Routed through our own API (Higgsfield) so the image comes back as a
+      // same-origin data URL — a remote-origin <img> would taint the
+      // watermark canvas.
+      const res = await fetch('/api/cover-art', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: artPrompt, refImage: refImage || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Image generation failed');
+      const img = new window.Image();
+      img.onload = async () => {
+        try {
+          const watermarked = await watermarkImage(img);
+          setCoverArtUrl(watermarked);
+        } catch {
+          setCoverArtUrl(data.imageUrl); // fallback — show art unwatermarked
+        } finally {
+          setCoverArtLoading(false);
+        }
+      };
+      img.onerror = () => { setCoverArtLoading(false); };
+      img.src = data.imageUrl;
+    } catch {
+      setCoverArtLoading(false);
+    }
+  }, [genre, mood, genBpm, prompt, coverArtPrompt, refImage]);
 
   /* ── Shared: AI panel ──────────────────────────────────── */
   const AIPanel = () => (
@@ -813,6 +834,22 @@ export default function StudioPage() {
           rows={2}
           className="w-full bg-black/60 border border-[#E91E8C]/30 rounded-lg p-2.5 text-xs text-[#E0E0FF] placeholder:text-[#8888BB] focus:outline-none focus:border-[#E91E8C] resize-none transition-all mb-3"
         />
+
+        {/* Reference image upload */}
+        <input ref={refImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleRefImageChange} />
+        {refImage ? (
+          <div className="relative mb-3 inline-block">
+            <img src={refImage} alt="Reference" className="h-16 w-16 object-cover rounded-lg border border-[#E91E8C]/40" />
+            <button onClick={() => setRefImage(null)}
+              className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black border border-[#E91E8C] text-[#E91E8C] text-[9px] flex items-center justify-center hover:bg-[#E91E8C]/20"
+              aria-label="Remove reference image">✕</button>
+          </div>
+        ) : (
+          <button onClick={() => refImageInputRef.current?.click()}
+            className="w-full mb-3 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-[#1a1a3a] text-[10px] font-mono tracking-wide text-[#9999CC] hover:text-[#E91E8C] hover:border-[#E91E8C]/40 transition-colors">
+            ↑ Upload reference image
+          </button>
+        )}
 
         {/* Art preview */}
         {coverArtLoading && (
@@ -1344,7 +1381,7 @@ export default function StudioPage() {
             style={{ filter: 'drop-shadow(0 0 6px #AE06ED88)' }} />
         </div>
         <div className="w-px h-4 shrink-0" style={{ background: '#AE06ED33' }} />
-        <span className="text-[11px] font-mono text-[#333366] tracking-wider truncate">Untitled Project</span>
+        <span className="text-[11px] font-mono font-bold tracking-wider truncate" style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD144' }}>Untitled Project</span>
         <div className="ml-auto flex items-center gap-2">
           <Activity className="w-3.5 h-3.5" style={{ color: '#00FFD1', filter: 'drop-shadow(0 0 3px #00FFD1)' }} />
           <span className="text-[10px] font-mono tracking-wider hidden sm:inline"
@@ -1389,7 +1426,7 @@ export default function StudioPage() {
                   <div key={i} className="flex-1 border-r flex items-center justify-center"
                     style={{ borderColor: '#0D0D20' }}>
                     <span className="text-[7px] font-black tracking-[0.2em] uppercase"
-                      style={{ color: i % 2 === 0 ? '#AE06ED55' : '#007AFF44' }}>{s}</span>
+                      style={{ color: i % 2 === 0 ? '#D9A5FF' : '#7EC0FF' }}>{s}</span>
                   </div>
                 ))}
               </div>
@@ -1464,7 +1501,7 @@ export default function StudioPage() {
               <span className="text-[9px] font-black tracking-[0.2em] uppercase" style={{ color: '#AE06ED' }}>Lyrics</span>
             </div>
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
-              style={{ fontSize: '11px', background: 'transparent', color: '#445566', letterSpacing: '0.03em', resize: 'none' }}
+              style={{ fontSize: '11px', background: 'transparent', color: '#C4C4E8', letterSpacing: '0.03em', resize: 'none' }}
               className="flex-1 font-mono p-2 focus:outline-none leading-relaxed min-h-0"
               spellCheck={false} />
           </div>
@@ -1479,7 +1516,7 @@ export default function StudioPage() {
               <div key={i} className="flex-1 border-r flex items-center justify-center"
                 style={{ borderColor: '#0D0D20' }}>
                 <span className="text-[8px] font-black tracking-[0.2em] uppercase"
-                  style={{ color: i % 2 === 0 ? '#AE06ED44' : '#007AFF33' }}>{s}</span>
+                  style={{ color: i % 2 === 0 ? '#D9A5FF' : '#7EC0FF' }}>{s}</span>
               </div>
             ))}
           </div>
