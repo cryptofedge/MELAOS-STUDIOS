@@ -367,7 +367,7 @@ export default function StudioPage() {
     { id: 'pencil', Icon: PenLine, label: 'Pencil' },
   ] as const;
 
-  const TOTAL_MS = 214000;
+  const TOTAL_MS = 150000;
 
   // Playback timer
   useEffect(() => {
@@ -427,14 +427,14 @@ export default function StudioPage() {
       let resolvedAudioUrl: string;
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 85_000);
+        const timeout = setTimeout(() => controller.abort(), 170_000);
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt, genre, mood, bpm: genBpm, vocals: vocalGender, lyrics,
             lyricsLanguage: lyricsLang,
-            duration: vocalGender === 'none' ? 15 : 30,
+            duration: 150,
           }),
           signal: controller.signal,
         });
@@ -1224,7 +1224,7 @@ export default function StudioPage() {
       </div>
 
       {/* Channel strips — same pinned-first order as the track sidebar */}
-      <div className="flex gap-0 py-2 px-1" style={{ minWidth: '100%' }}>
+      <div className="flex gap-0 py-2 px-1 min-w-max">
         {orderedTracks.map(track => {
           const [bass, mid, treble] = eq[track.id] || [50, 50, 50];
           const vol = volumes[track.id] ?? 80;
@@ -1400,8 +1400,11 @@ export default function StudioPage() {
           <span className="text-[6px] font-mono mt-1" style={{ color: '#8888BB' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
         </div>
 
-        {/* Filler — keeps the empty space after Master from being dead air */}
-        <div className="flex-1 h-full flex items-center justify-center min-w-[160px] px-6">
+        {/* Filler — keeps the empty space after Master from being dead air.
+            Fixed width (not flex-1) so the channel-strip row has a real
+            content width and can actually overflow/scroll on narrower
+            viewports instead of always stretching to fill the container. */}
+        <div className="shrink-0 w-[420px] h-full flex items-center justify-center px-6">
           <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="w-auto h-2/3 max-w-[420px] object-contain opacity-90 select-none pointer-events-none"
             style={{ mixBlendMode: 'screen' }} />
         </div>

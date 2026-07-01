@@ -52,7 +52,7 @@ async function runReplicate(token: string, version: string, input: Record<string
 
   let prediction = await createRes.json();
 
-  const MAX_WAIT_MS = 90_000;
+  const MAX_WAIT_MS = 160_000;
   const started = Date.now();
 
   while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && prediction.status !== 'canceled') {
