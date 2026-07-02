@@ -8,27 +8,52 @@ interface Message {
   text: string;
 }
 
-const MELAO_RESPONSES: Record<string, string> = {
-  default: "Yo, I'm Melao — the mind behind MELAOS STUDIOS. Ask me about beats, production, the sound we're building, anything.",
-  greet: "Wassup! Melao here. Ready to talk music, creation, or whatever's on your mind.",
-  beat: "Every beat I make starts with a feeling. You gotta feel it before you can build it. What kind of energy are you going for?",
-  studio: "The studio is where magic happens. MELAOS STUDIOS — powered by Eclat Universe — is built for artists who take their sound seriously. Every tool you need, right here.",
-  collab: "Collaboration is everything in music. The best tracks come from two energies meeting in the right space. You trying to create something?",
-  genre: "I don't box myself in. Afrobeats, Drill, R&B, Trap — if it hits, it hits. What's your lane?",
-  help: "I got you. Whether it's production tips, navigating the studio, or just vibing on ideas — I'm here. What do you need?",
-  sign: "MELAOS STUDIOS is the label and the platform. If your sound is real, we want to hear it. Drop something in the studio and let's see what you've got.",
+type Lang = 'en' | 'es';
+
+const MELAO_RESPONSES: Record<Lang, Record<string, string>> = {
+  en: {
+    default: "Yo, I'm Melao — the mind behind MELAOS STUDIOS. Ask me about beats, production, the sound we're building, anything.",
+    greet: "Wassup! Melao here. Ready to talk music, creation, or whatever's on your mind.",
+    beat: "Every beat I make starts with a feeling. You gotta feel it before you can build it. What kind of energy are you going for?",
+    studio: "The studio is where magic happens. MELAOS STUDIOS — powered by Eclat Universe — is built for artists who take their sound seriously. Every tool you need, right here.",
+    collab: "Collaboration is everything in music. The best tracks come from two energies meeting in the right space. You trying to create something?",
+    genre: "I don't box myself in. Afrobeats, Drill, R&B, Trap, Dembow — if it hits, it hits. What's your lane?",
+    help: "I got you. Whether it's production tips, navigating the studio, or just vibing on ideas — I'm here. What do you need?",
+    sign: "MELAOS STUDIOS is the label and the platform. If your sound is real, we want to hear it. Drop something in the studio and let's see what you've got.",
+  },
+  es: {
+    default: "Dime a ver, soy Melao — la mente detrás de MELAOS STUDIOS. Pregúntame de beats, producción, el sonido que estamos construyendo, lo que sea.",
+    greet: "¡Qué lo que! Aquí Melao. Listo pa' hablar de música, de crear, o de lo que tengas en mente.",
+    beat: "Cada beat que hago empieza con un sentimiento. Tienes que sentirlo antes de construirlo. ¿Qué energía andas buscando?",
+    studio: "El estudio es donde pasa la magia. MELAOS STUDIOS — con el poder de Eclat Universe — está hecho pa' artistas que se toman su sonido en serio. Todas las herramientas, aquí mismo.",
+    collab: "La colaboración lo es todo en la música. Los mejores temas salen cuando dos energías se encuentran en el espacio correcto. ¿Quieres crear algo?",
+    genre: "Yo no me encasillo. Dembow, Reggaetón, Bachata, Trap, R&B — si pega, pega. ¿Cuál es tu carril?",
+    help: "Te tengo. Ya sean tips de producción, moverte por el estudio, o soltar ideas — aquí estoy. ¿Qué necesitas?",
+    sign: "MELAOS STUDIOS es el sello y la plataforma. Si tu sonido es real, queremos escucharlo. Suelta algo en el estudio y vamos a ver qué tienes.",
+  },
 };
 
-function getMelaoResponse(input: string): string {
+// Spanish input detection — accents, ñ, or common Spanish words flip the reply
+// to Spanish even without touching the EN/ES toggle. Melao habla los dos.
+function detectLang(input: string, current: Lang): Lang {
+  const low = ` ${input.toLowerCase()} `;
+  if (/[áéíóúñ¿¡]/.test(low)) return 'es';
+  if (/ (hola|que lo que|dime|como|quiero|puedes|ayuda|musica|cancion|estudio|genero|ritmo|hacer|crear|gracias|por favor|el|la|los|una|un|de|y|con|para|mi) /.test(low)) return 'es';
+  if (/ (hi|hello|hey|the|what|how|can|help|make|create|beat|song|thanks) /.test(low)) return 'en';
+  return current;
+}
+
+function getMelaoResponse(input: string, lang: Lang): string {
   const low = input.toLowerCase();
-  if (low.match(/hi|hello|hey|wassup|what's good/)) return MELAO_RESPONSES.greet;
-  if (low.match(/beat|track|produce|production|sound/)) return MELAO_RESPONSES.beat;
-  if (low.match(/studio|daw|record|create|generate/)) return MELAO_RESPONSES.studio;
-  if (low.match(/collab|work together|feature|ft\./)) return MELAO_RESPONSES.collab;
-  if (low.match(/genre|style|type of music|rap|drill|afro|r&b|trap|soul/)) return MELAO_RESPONSES.genre;
-  if (low.match(/help|how|what can|guide/)) return MELAO_RESPONSES.help;
-  if (low.match(/sign|label|deal|contract|artist/)) return MELAO_RESPONSES.sign;
-  return MELAO_RESPONSES.default;
+  const R = MELAO_RESPONSES[lang];
+  if (low.match(/hi|hello|hey|wassup|what's good|hola|que lo que|buenas|saludos/)) return R.greet;
+  if (low.match(/beat|track|produce|production|sound|ritmo|pista|producir|producción|sonido/)) return R.beat;
+  if (low.match(/studio|daw|record|create|generate|estudio|grabar|crear|generar/)) return R.studio;
+  if (low.match(/collab|work together|feature|ft\.|colabor|junte|featuring/)) return R.collab;
+  if (low.match(/genre|style|type of music|rap|drill|afro|r&b|trap|soul|género|genero|estilo|dembow|reggaeton|bachata|salsa|merengue/)) return R.genre;
+  if (low.match(/help|how|what can|guide|ayuda|cómo|como puedo|guía|guia/)) return R.help;
+  if (low.match(/sign|label|deal|contract|artist|firmar|sello|contrato|disquera|artista/)) return R.sign;
+  return R.default;
 }
 
 const PANEL_W = 320;
@@ -37,8 +62,9 @@ const PANEL_H = 420;
 export default function MelaoAgent() {
   const { currentSong } = useAudioStore();
   const [open, setOpen] = useState(false);
+  const [lang, setLang] = useState<Lang>('en');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'melao', text: "Yo, I'm Melao — MELAOS STUDIOS, powered by Eclat Universe. What's on your mind?" }
+    { role: 'melao', text: "Yo, I'm Melao — MELAOS STUDIOS, powered by Eclat Universe. What's on your mind? / ¿Qué lo que? También hablo español. 🇩🇴" }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -124,12 +150,15 @@ export default function MelaoAgent() {
   function send() {
     const text = input.trim();
     if (!text) return;
+    // Auto-switch language when the user's message is clearly ES or EN
+    const replyLang = detectLang(text, lang);
+    if (replyLang !== lang) setLang(replyLang);
     setMessages(m => [...m, { role: 'user', text }]);
     setInput('');
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMessages(m => [...m, { role: 'melao', text: getMelaoResponse(text) }]);
+      setMessages(m => [...m, { role: 'melao', text: getMelaoResponse(text, replyLang) }]);
     }, 900 + Math.random() * 600);
   }
 
@@ -197,6 +226,16 @@ export default function MelaoAgent() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onPointerDown={e => e.stopPropagation()}
+                onClick={() => setLang(l => l === 'en' ? 'es' : 'en')}
+                style={{ minHeight: '24px', touchAction: 'manipulation' }}
+                className="text-[10px] font-black px-2 py-0.5 rounded-full border border-[#333] text-orange-400 hover:border-orange-400 transition-colors tracking-wider"
+                title={lang === 'en' ? 'Cambiar a español' : 'Switch to English'}
+                aria-label="Toggle language"
+              >
+                {lang === 'en' ? 'EN' : 'ES'}
+              </button>
               <GripHorizontal className="w-4 h-4 text-gray-600" />
               <Sparkles className="w-3.5 h-3.5 text-orange-400" />
               <button
@@ -257,7 +296,7 @@ export default function MelaoAgent() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Talk to Melao..."
+              placeholder={lang === 'es' ? 'Háblale a Melao...' : 'Talk to Melao...'}
               style={{ fontSize: '16px' }}
               className="flex-1 bg-[#1a1a1a] text-white text-sm rounded-full px-4 py-2 outline-none border border-[#333] focus:border-orange-500 placeholder-gray-600 transition-colors"
             />
