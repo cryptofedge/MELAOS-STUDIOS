@@ -7,6 +7,7 @@ import {
   ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine, Download,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
+import { useAudioStore, TIER_MAX_DURATION } from '@/lib/store';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
 import StudioWaveform from '@/components/StudioWaveform';
 import type WaveSurfer from 'wavesurfer.js';
@@ -256,6 +257,8 @@ export default function StudioPage() {
   const [coverArtPrompt, setCoverArtPrompt] = useState('');
   const [refImage,       setRefImage]       = useState<string | null>(null);
   const refImageInputRef = useRef<HTMLInputElement>(null);
+  const tier = useAudioStore(s => s.tier);
+  const maxDuration = TIER_MAX_DURATION[tier];
 
   const handleRefImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -441,7 +444,8 @@ export default function StudioPage() {
             vocals: instrumental ? 'none' : vocalGender,
             lyrics,
             lyricsLanguage: lyricsLang,
-            duration: 150,
+            duration: maxDuration,
+            tier,
           }),
           signal: controller.signal,
         });
@@ -455,7 +459,7 @@ export default function StudioPage() {
       }
 
       clearInterval(progressTimer.current!);
-      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 150 };
+      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: maxDuration };
       setGenProgress(100);
 
       // Load the returned audio URL
@@ -506,7 +510,7 @@ export default function StudioPage() {
       setGenerating(false);
       setGenError(err.message || 'Generation failed');
     }
-  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, instrumental]);
+  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, instrumental, tier, maxDuration]);
 
   // Sync play/pause with real audio when available
   useEffect(() => {
@@ -782,6 +786,16 @@ export default function StudioPage() {
           <><Zap className="w-4 h-4" /> Generate Track</>
         )}
       </button>
+
+      {/* Tier duration notice */}
+      {tier === 'free' && (
+        <p className="text-[10px] text-center -mt-2" style={{ color: '#9999CC' }}>
+          Free tier: songs up to 0:{maxDuration} ·{' '}
+          <a href="/pricing" className="font-bold hover:underline" style={{ color: '#F28C28' }}>
+            Upgrade for full-length tracks
+          </a>
+        </p>
+      )}
 
       {/* Error */}
       {genError && (

@@ -3,6 +3,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Song } from './mockData';
 
+export type UserTier = 'free' | 'pro' | 'premier';
+
+// Song length caps per subscription tier (seconds). Free gets a 50s
+// preview-length track; paid tiers get the full 2:30 generation.
+export const TIER_MAX_DURATION: Record<UserTier, number> = {
+  free: 50,
+  pro: 150,
+  premier: 150,
+};
+
 interface AudioStore {
   currentSong: Song | null;
   isPlaying: boolean;
@@ -11,6 +21,8 @@ interface AudioStore {
   queue: Song[];
   likedIds: string[];
   isLooping: boolean;
+  tier: UserTier;
+  setTier: (tier: UserTier) => void;
   setCurrentSong: (song: Song) => void;
   setIsPlaying: (playing: boolean) => void;
   setProgress: (progress: number) => void;
@@ -33,6 +45,8 @@ export const useAudioStore = create<AudioStore>()(
       queue: [],
       likedIds: [],
       isLooping: false,
+      tier: 'free',
+      setTier: (tier) => set({ tier }),
       setCurrentSong: (song) => set({ currentSong: song, isPlaying: true, progress: 0 }),
       setIsPlaying: (playing) => set({ isPlaying: playing }),
       setProgress: (progress) => set({ progress }),
@@ -61,6 +75,6 @@ export const useAudioStore = create<AudioStore>()(
         if (prev) set({ currentSong: prev, isPlaying: true, progress: 0 });
       },
     }),
-    { name: 'melaos-audio-store', partialize: (s) => ({ likedIds: s.likedIds, volume: s.volume }) }
+    { name: 'melaos-audio-store', partialize: (s) => ({ likedIds: s.likedIds, volume: s.volume, tier: s.tier }) }
   )
 );

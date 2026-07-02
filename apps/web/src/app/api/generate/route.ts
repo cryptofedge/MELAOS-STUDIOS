@@ -97,11 +97,16 @@ export async function POST(req: NextRequest) {
   const {
     prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120,
     vocals = 'male', duration = 30, lyrics = '', lyricsLanguage = 'English',
+    tier = 'free',
   } = body;
 
   const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage);
   const finalLyrics = buildLyrics(lyrics, vocals, genre, mood);
-  const dur = Math.min(Math.max(Number(duration) || 30, 10), 240);
+  // Free tier is capped at a sub-minute preview; paid tiers get full songs.
+  // (Note: tier is client-reported until real auth lands — this cap is a
+  // product gate, not a security boundary.)
+  const tierCap = tier === 'pro' || tier === 'premier' ? 240 : 50;
+  const dur = Math.min(Math.max(Number(duration) || 30, 10), tierCap);
   const title = tags.substring(0, 50);
 
   const result = await runReplicate(token, ACE_STEP_VERSION, {
