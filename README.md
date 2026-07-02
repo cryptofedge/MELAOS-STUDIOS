@@ -117,7 +117,7 @@ This project is part of the FEDGE 2.O ecosystem and is protected under full inte
 ### License Details
 
 - **Type:** Proprietary - All Rights Reserved
-- **Owner:** Rafael Fellito Rodriguez and Eclat Universe
+- **Owners:** Rafael Fellito Rodriguez, Milciades Holguin, and Eclat Universe
 - **Brand:** FEDGE 2.O
 - **Status:** Protected and Confidential
 
@@ -134,6 +134,7 @@ This project is part of the FEDGE 2.O ecosystem and is protected under full inte
 When referencing this software, please include:
 - FEDGE 2.O
 - Rafael Fellito Rodriguez
+- Milciades Holguin
 - Eclat Universe
 - Melaos Studios
 
