@@ -369,16 +369,21 @@ export default function StudioPage() {
 
   const TOTAL_MS = 150000;
 
-  // Playback timer
+  // Playback timer. With a real generated song loaded, the audio element's
+  // ontimeupdate drives the playhead/timecode — this interval only pumps the
+  // meter tick, so the two never fight over the same state (which showed up
+  // as a jittering counter). The simulated clock only runs pre-generation.
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
-        setTimeMs(prev => {
-          const next = prev + 100;
-          if (next >= TOTAL_MS) { setIsPlaying(false); return 0; }
-          setPlayheadPct((next / TOTAL_MS) * 100);
-          return next;
-        });
+        if (!audioRef.current) {
+          setTimeMs(prev => {
+            const next = prev + 100;
+            if (next >= TOTAL_MS) { setIsPlaying(false); return 0; }
+            setPlayheadPct((next / TOTAL_MS) * 100);
+            return next;
+          });
+        }
         setTick(t => t + 1);
       }, 100);
     } else {
@@ -421,8 +426,8 @@ export default function StudioPage() {
     }, 400);
 
     try {
-      // Try the real AI generator first (Replicate-hosted MusicGen for
-      // instrumentals, MiniMax Music-1.5 for vocal tracks); fall back to the
+      // Try the real AI generator first (Replicate-hosted ACE-Step 1.5,
+      // one model for both instrumental and vocal tracks); fall back to the
       // client-side synth if it's unavailable, slow, or out of credit.
       let resolvedAudioUrl: string;
       try {
@@ -432,7 +437,9 @@ export default function StudioPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt, genre, mood, bpm: genBpm, vocals: vocalGender, lyrics,
+            prompt, genre, mood, bpm: genBpm,
+            vocals: instrumental ? 'none' : vocalGender,
+            lyrics,
             lyricsLanguage: lyricsLang,
             duration: 150,
           }),
@@ -448,7 +455,7 @@ export default function StudioPage() {
       }
 
       clearInterval(progressTimer.current!);
-      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 30 };
+      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: 150 };
       setGenProgress(100);
 
       // Load the returned audio URL
@@ -499,7 +506,7 @@ export default function StudioPage() {
       setGenerating(false);
       setGenError(err.message || 'Generation failed');
     }
-  }, [prompt, genre, mood, genBpm, vocalGender]);
+  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, instrumental]);
 
   // Sync play/pause with real audio when available
   useEffect(() => {
@@ -508,6 +515,11 @@ export default function StudioPage() {
     if (isPlaying) { a.play().catch(() => setIsPlaying(false)); }
     else { a.pause(); }
   }, [isPlaying, audioUrl]);
+
+  // Sync the transport Loop button with the real audio element
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.loop = looping;
+  }, [looping, audioUrl]);
 
   const toggleMute = (id: string) => setMuted(m => ({ ...m, [id]: !m[id] }));
   const toggleSolo = (id: string) => setSolo(s => ({ ...s, [id]: !s[id] }));
