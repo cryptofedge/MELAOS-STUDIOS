@@ -4,7 +4,7 @@ import {
   SkipBack, Play, Pause, Square, Circle, Repeat,
   ChevronLeft, ChevronRight, Mic2, Loader2, Check,
   Zap, Activity, Cpu, Layers, Clock3, Sparkles, SlidersHorizontal,
-  ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine, Download,
+  ScanSearch, Scissors, MousePointer2, Hand, Waves, PenLine, Download, Mic,
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 import { useAudioStore, TIER_MAX_DURATION } from '@/lib/store';
@@ -259,6 +259,41 @@ export default function StudioPage() {
   const refImageInputRef = useRef<HTMLInputElement>(null);
   const tier = useAudioStore(s => s.tier);
   const maxDuration = TIER_MAX_DURATION[tier];
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Dictate the song description via the browser's built-in Web Speech API
+  // (Chrome/Edge/Safari) — no external service, audio never leaves the
+  // browser vendor's own speech stack.
+  const toggleDictation = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setGenError('Speech input is not supported in this browser');
+      return;
+    }
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.onresult = (e: any) => {
+      let transcript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) transcript += e.results[i][0].transcript;
+      }
+      if (transcript) {
+        setPrompt(p => (p ? `${p.trimEnd()} ${transcript.trim()}` : transcript.trim()).slice(0, 500));
+      }
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setListening(true);
+  };
 
   const handleRefImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -629,6 +664,19 @@ export default function StudioPage() {
               }}
             />
             <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#9999CC]">{prompt.length}/500</div>
+            <button
+              onClick={toggleDictation}
+              title={listening ? 'Stop dictation' : 'Speak your description'}
+              aria-label={listening ? 'Stop dictation' : 'Speak your description'}
+              className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
+                listening
+                  ? 'border-[#FF2D78] bg-[#FF2D78]/20 text-[#FF2D78] animate-pulse'
+                  : 'border-[#AE06ED]/40 bg-black/40 text-[#9999CC] hover:text-[#AE06ED] hover:border-[#AE06ED]'
+              }`}
+              style={{ boxShadow: listening ? '0 0 10px #FF2D7888' : 'none' }}
+            >
+              <Mic className="w-3.5 h-3.5" />
+            </button>
           </div>
           {/* Style tag suggestions */}
           <div className="flex flex-wrap gap-1.5 mt-2">
