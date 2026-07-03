@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   // which WhatsApp/iMessage/X silently ignore, so shared links showed no
   // logo preview at all.
   metadataBase: new URL('https://melaosstudios.com'),
-  title: 'MELAOS STUDIOS — Where Sound Meets Soul',
-  description: 'Create, discover, and share AI-powered music with MELAOS STUDIOS. Make any song you can imagine.',
-  keywords: ['AI music', 'music generator', 'beats', 'MELAOS', 'create music'],
+  title: 'MELAOS STUDIOS — Donde el Sonido Encuentra el Alma',
+  description: 'Crea, descubre y comparte música hecha con IA. Crea cualquier canción que imagines. Make any song you can imagine.',
+  keywords: ['música IA', 'generador de música', 'AI music', 'beats', 'MELAOS', 'crear música', 'dembow', 'bachata'],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -35,24 +35,25 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'MELAOS STUDIOS — Where Sound Meets Soul',
-    description: 'Create, discover, and share AI-powered music. Make any song you can imagine.',
+    title: 'MELAOS STUDIOS — Donde el Sonido Encuentra el Alma',
+    description: 'Crea, descubre y comparte música hecha con IA. Crea cualquier canción que imagines.',
     type: 'website',
     url: 'https://melaosstudios.com',
     siteName: 'MELAOS STUDIOS',
-    images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS — Where Sound Meets Soul' }],
+    locale: 'es_US',
+    images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS — Donde el Sonido Encuentra el Alma' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MELAOS STUDIOS — Where Sound Meets Soul',
-    description: 'Create, discover, and share AI-powered music. Make any song you can imagine.',
+    title: 'MELAOS STUDIOS — Donde el Sonido Encuentra el Alma',
+    description: 'Crea, descubre y comparte música hecha con IA. Crea cualquier canción que imagines.',
     images: ['/og-image.png'],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className="bg-[#0A0A0A] text-white font-sans antialiased">
         <Navbar />
         <main className="pt-16 pb-20 min-h-screen">
