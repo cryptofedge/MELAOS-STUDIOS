@@ -325,6 +325,23 @@ export default function StudioPage() {
 
   const intervalRef   = useRef<NodeJS.Timeout | null>(null);
   const audioRef      = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef  = useRef<string | null>(null);
+
+  // Chrome silently refuses to load audio from data: URLs larger than ~2MB
+  // (readyState stays 0 forever, no error) — and a full-length song's base64
+  // payload is well past that. Re-materialize the API's data URL as a Blob
+  // object URL, which has no size cap, and use that everywhere.
+  const toPlayableUrl = (url: string): string => {
+    if (!url.startsWith('data:')) return url;
+    const [meta, b64] = url.split(',');
+    const mime = /data:(.*?)(;|$)/.exec(meta)?.[1] || 'audio/mpeg';
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    objectUrlRef.current = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    return objectUrlRef.current;
+  };
   const progressTimer = useRef<NodeJS.Timeout | null>(null);
   const audioCtxRef   = useRef<AudioContext | null>(null);
   const analyserRef   = useRef<AnalyserNode | null>(null);
@@ -494,7 +511,7 @@ export default function StudioPage() {
       }
 
       clearInterval(progressTimer.current!);
-      const data = { audioUrl: resolvedAudioUrl, title: `${genre} · ${mood} · ${genBpm}bpm`, duration: maxDuration };
+      const data = { audioUrl: toPlayableUrl(resolvedAudioUrl), title: `${genre} · ${mood} · ${genBpm}bpm`, duration: maxDuration };
       setGenProgress(100);
 
       // Load the returned audio URL
@@ -547,12 +564,18 @@ export default function StudioPage() {
     }
   }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, instrumental, tier, maxDuration]);
 
-  // Sync play/pause with real audio when available
+  // Sync play/pause with real audio when available. The audio element is
+  // routed through an AudioContext (for the analyser meters), and browsers
+  // start AudioContexts suspended under autoplay policy — if it stays
+  // suspended the song "plays" (timecode advances) but produces no sound,
+  // so always resume the context alongside play().
   useEffect(() => {
     const a = audioRef.current;
     if (!a || !audioUrl) return;
-    if (isPlaying) { a.play().catch(() => setIsPlaying(false)); }
-    else { a.pause(); }
+    if (isPlaying) {
+      audioCtxRef.current?.resume().catch(() => {});
+      a.play().catch(() => setIsPlaying(false));
+    } else { a.pause(); }
   }, [isPlaying, audioUrl]);
 
   // Sync the transport Loop button with the real audio element

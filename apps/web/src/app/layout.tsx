@@ -13,6 +13,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  // Absolute base URL — without this Next emits relative og:image paths,
+  // which WhatsApp/iMessage/X silently ignore, so shared links showed no
+  // logo preview at all.
+  metadataBase: new URL('https://melaos-studios.onrender.com'),
   title: 'MELAOS STUDIOS — Where Sound Meets Soul',
   description: 'Create, discover, and share AI-powered music with MELAOS STUDIOS. Make any song you can imagine.',
   keywords: ['AI music', 'music generator', 'beats', 'MELAOS', 'create music'],
@@ -23,19 +27,25 @@ export const metadata: Metadata = {
     title: 'MELAOS STUDIOS',
   },
   icons: {
-    icon: '/melaos-logo-3.png',
-    apple: '/melaos-logo-3.png',
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'MELAOS STUDIOS',
-    description: 'Where Sound Meets Soul',
+    title: 'MELAOS STUDIOS — Where Sound Meets Soul',
+    description: 'Create, discover, and share AI-powered music. Make any song you can imagine.',
     type: 'website',
-    images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS' }],
+    url: 'https://melaos-studios.onrender.com',
+    siteName: 'MELAOS STUDIOS',
+    images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS — Where Sound Meets Soul' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MELAOS STUDIOS',
-    description: 'Where Sound Meets Soul',
+    title: 'MELAOS STUDIOS — Where Sound Meets Soul',
+    description: 'Create, discover, and share AI-powered music. Make any song you can imagine.',
     images: ['/og-image.png'],
   },
 };
