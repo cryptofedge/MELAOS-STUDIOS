@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
 import MelaoAgent from '@/components/MelaoAgent';
 import OnboardingTour from '@/components/OnboardingTour';
+import Footer from '@/components/Footer';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main className="pt-16 pb-20 min-h-screen">
           {children}
+          <Footer />
         </main>
         <AudioPlayer />
         <MelaoAgent />
