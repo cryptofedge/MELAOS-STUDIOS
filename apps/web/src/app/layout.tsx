@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   // Absolute base URL — without this Next emits relative og:image paths,
   // which WhatsApp/iMessage/X silently ignore, so shared links showed no
   // logo preview at all.
-  metadataBase: new URL('https://melaos-studios.onrender.com'),
+  metadataBase: new URL('https://melaosstudios.com'),
   title: 'MELAOS STUDIOS — Where Sound Meets Soul',
   description: 'Create, discover, and share AI-powered music with MELAOS STUDIOS. Make any song you can imagine.',
   keywords: ['AI music', 'music generator', 'beats', 'MELAOS', 'create music'],
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     title: 'MELAOS STUDIOS — Where Sound Meets Soul',
     description: 'Create, discover, and share AI-powered music. Make any song you can imagine.',
     type: 'website',
-    url: 'https://melaos-studios.onrender.com',
+    url: 'https://melaosstudios.com',
     siteName: 'MELAOS STUDIOS',
     images: [{ url: '/og-image.png', width: 2400, height: 1339, alt: 'MELAOS STUDIOS — Where Sound Meets Soul' }],
   },
