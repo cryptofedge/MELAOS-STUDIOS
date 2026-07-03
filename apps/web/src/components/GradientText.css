@@ -6,11 +6,14 @@
   align-items: center;
   justify-content: center;
   border-radius: 1.25rem;
-  overflow: hidden;
+  /* No overflow:hidden here — combined with tight line-heights it clips
+     descenders (the "g" in "imagine" was getting cut). Only the bordered
+     variant, which needs its rounded corners masked, hides overflow. */
 }
 
 .melaos-gradient-text.with-border {
   padding: 0.35rem 0.75rem;
+  overflow: hidden;
 }
 
 .melaos-gradient-text .gradient-overlay {
