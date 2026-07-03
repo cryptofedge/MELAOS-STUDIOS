@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { generateTrack } from '@/lib/musicSynth';
 import { useAudioStore, TIER_MAX_DURATION } from '@/lib/store';
+import { useT } from '@/lib/i18n';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
 import StudioWaveform from '@/components/StudioWaveform';
 import type WaveSurfer from 'wavesurfer.js';
@@ -259,6 +260,7 @@ export default function StudioPage() {
   const refImageInputRef = useRef<HTMLInputElement>(null);
   const tier = useAudioStore(s => s.tier);
   const maxDuration = TIER_MAX_DURATION[tier];
+  const { t } = useT();
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
@@ -644,7 +646,7 @@ export default function StudioPage() {
       {/* Simple / Advanced / Lyrics toggle */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center bg-[#0A0A14] border border-[#1a1a3a] rounded-full p-0.5 gap-0.5">
-          {([['simple', 'Simple'], ['advanced', 'Advanced'], ['lyrics', 'Lyrics']] as const).map(([key, label]) => (
+          {([['simple', t('studio.simple')], ['advanced', t('studio.advanced')], ['lyrics', t('studio.lyrics')]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setAiTab(key)}
               style={{ minHeight: '32px', touchAction: 'manipulation' }}
               className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
@@ -663,7 +665,7 @@ export default function StudioPage() {
               ? 'border-[#00FFD1] bg-[#00FFD1]/10 text-[#00FFD1]'
               : 'border-[#1a1a3a] text-[#9999CC] hover:border-[#8888BB]'
           }`}>
-          ♪ Instrumental
+          ♪ {t('studio.instrumental')}
         </button>
       </div>
 
@@ -671,14 +673,14 @@ export default function StudioPage() {
       {aiTab !== 'lyrics' && (
         <div>
           <label className="text-[10px] font-bold text-[#AE06ED] mb-1.5 block tracking-[0.15em] uppercase">
-            ◈ {advancedMode ? 'Song Style / Description' : 'Describe Your Song'}
+            ◈ {advancedMode ? 'Song Style / Description' : t('studio.describe')}
           </label>
           <div className="relative">
             <textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               rows={3}
-              placeholder="A dark trap banger with 808s, auto-tune vocals, and a haunting piano melody..."
+              placeholder={t('studio.promptPlaceholder')}
               className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
               style={{
                 fontSize: '14px',
@@ -737,7 +739,7 @@ export default function StudioPage() {
             <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
           </div>
           <div className="mb-2">
-            <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">◈ Language</label>
+            <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">◈ {t('studio.language')}</label>
             <select
               value={lyricsLang} onChange={e => setLyricsLang(e.target.value)}
               style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(242,140,40,0.15)' }}
@@ -772,7 +774,7 @@ export default function StudioPage() {
       {/* Genre + Mood */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ Genre</label>
+          <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ {t('studio.genre')}</label>
           <select
             value={genre} onChange={e => setGenre(e.target.value)}
             style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,122,255,0.15)' }}
@@ -782,7 +784,7 @@ export default function StudioPage() {
           </select>
         </div>
         <div>
-          <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ Mood</label>
+          <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ {t('studio.mood')}</label>
           <select
             value={mood} onChange={e => setMood(e.target.value)}
             style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,122,255,0.15)' }}
@@ -815,7 +817,7 @@ export default function StudioPage() {
 
       {/* Vocals — hidden when instrumental */}
       {!instrumental && <div>
-        <label className="text-[10px] font-bold text-[#00FFD1] mb-1.5 block tracking-[0.15em] uppercase">◈ Vocals</label>
+        <label className="text-[10px] font-bold text-[#00FFD1] mb-1.5 block tracking-[0.15em] uppercase">◈ {t('studio.vocals')}</label>
         <div className="flex gap-2">
           {(['male', 'female', 'none'] as const).map(v => (
             <button key={v} onClick={() => setVocalGender(v)}
@@ -829,7 +831,7 @@ export default function StudioPage() {
                   : 'border-[#1a1a3a] text-[#8888BB] hover:text-[#00FFD1]/60 hover:border-[#00FFD1]/30'
               }`}
             >
-              {v === 'none' ? 'None' : v}
+              {v === 'none' ? t('studio.none') : v === 'male' ? t('studio.male') : t('studio.female')}
             </button>
           ))}
         </div>
@@ -849,21 +851,21 @@ export default function StudioPage() {
         }`}
       >
         {generating ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Synthesizing...</>
+          <><Loader2 className="w-4 h-4 animate-spin" /> {t('studio.generating')}</>
         ) : genDone ? (
           <><Check className="w-4 h-4 text-[#00FFD1]" style={{ filter: 'drop-shadow(0 0 4px #00FFD1)' }} />
-            <span className="text-[#00FFD1]" style={{ textShadow: '0 0 8px #00FFD1' }}>Generated</span></>
+            <span className="text-[#00FFD1]" style={{ textShadow: '0 0 8px #00FFD1' }}>{t('studio.generated')}</span></>
         ) : (
-          <><Zap className="w-4 h-4" /> Generate Track</>
+          <><Zap className="w-4 h-4" /> {t('studio.generate')}</>
         )}
       </button>
 
       {/* Tier duration notice */}
       {tier === 'free' && (
         <p className="text-[10px] text-center -mt-2" style={{ color: '#9999CC' }}>
-          Free tier: songs up to 0:{maxDuration} ·{' '}
+          {t('studio.freeTier').replace('0:50', `0:${maxDuration}`)}{' '}
           <a href="/pricing" className="font-bold hover:underline" style={{ color: '#F28C28' }}>
-            Upgrade for full-length tracks
+            {t('studio.upgrade')}
           </a>
         </p>
       )}
@@ -901,7 +903,7 @@ export default function StudioPage() {
                 style={{ boxShadow: '0 0 14px #00FFD144', minHeight: '42px' }}
                 className="w-full py-2 rounded-xl font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-all"
               >
-                {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause</> : <><Play className="w-3.5 h-3.5 ml-0.5" /> Play Track</>}
+                {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause</> : <><Play className="w-3.5 h-3.5 ml-0.5" /> {t('studio.play')}</>}
               </button>
               <a
                 href={audioUrl}
@@ -911,7 +913,7 @@ export default function StudioPage() {
                 className="text-[9px] font-mono text-center tracking-wider hover:underline transition-colors"
                 style={{ color: '#007AFF' }}
               >
-                ◈ Download MP3
+                ◈ {t('studio.download')}
               </a>
             </div>
           )}
@@ -921,7 +923,7 @@ export default function StudioPage() {
       {/* ── Cover Art Generator ── */}
       <div className="border-t pt-4" style={{ borderColor: '#1a1a3a' }}>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-[10px] font-bold text-[#E91E8C] tracking-[0.15em] uppercase">◈ Cover Art</label>
+          <label className="text-[10px] font-bold text-[#E91E8C] tracking-[0.15em] uppercase">◈ {t('studio.coverArt')}</label>
           <button
             onClick={handleGenerateCoverArt}
             disabled={coverArtLoading}

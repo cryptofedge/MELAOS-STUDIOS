@@ -23,6 +23,8 @@ interface AudioStore {
   isLooping: boolean;
   tier: UserTier;
   setTier: (tier: UserTier) => void;
+  uiLang: 'es' | 'en';
+  setUiLang: (lang: 'es' | 'en') => void;
   setCurrentSong: (song: Song) => void;
   setIsPlaying: (playing: boolean) => void;
   setProgress: (progress: number) => void;
@@ -47,6 +49,10 @@ export const useAudioStore = create<AudioStore>()(
       isLooping: false,
       tier: 'free',
       setTier: (tier) => set({ tier }),
+      // Platform UI language — Spanish-first per the brand, with an English
+      // toggle in the navbar. Persisted per visitor.
+      uiLang: 'es',
+      setUiLang: (uiLang) => set({ uiLang }),
       setCurrentSong: (song) => set({ currentSong: song, isPlaying: true, progress: 0 }),
       setIsPlaying: (playing) => set({ isPlaying: playing }),
       setProgress: (progress) => set({ progress }),
@@ -75,6 +81,6 @@ export const useAudioStore = create<AudioStore>()(
         if (prev) set({ currentSong: prev, isPlaying: true, progress: 0 });
       },
     }),
-    { name: 'melaos-audio-store', partialize: (s) => ({ likedIds: s.likedIds, volume: s.volume, tier: s.tier }) }
+    { name: 'melaos-audio-store', partialize: (s) => ({ likedIds: s.likedIds, volume: s.volume, tier: s.tier, uiLang: s.uiLang }) }
   )
 );

@@ -2,19 +2,33 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, Globe } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 export default function Navbar() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const { t, lang, setLang } = useT();
 
   const runSearch = () => {
     if (!query.trim()) return;
     router.push(`/explore?q=${encodeURIComponent(query.trim())}`);
     setSearchOpen(false);
   };
+
+  const LangToggle = ({ className = '' }: { className?: string }) => (
+    <button
+      onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+      className={`flex items-center gap-1.5 border border-[#333] rounded-full px-3 py-1.5 text-xs font-bold text-[#F28C28] hover:border-[#F28C28] transition-colors ${className}`}
+      title={lang === 'es' ? 'Switch to English' : 'Cambiar a español'}
+      aria-label="Toggle language"
+    >
+      <Globe className="w-3.5 h-3.5" />
+      {lang === 'es' ? 'ES' : 'EN'}
+    </button>
+  );
 
   return (
     <>
@@ -35,7 +49,7 @@ export default function Navbar() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') runSearch(); }}
-                placeholder="Search songs, artists..."
+                placeholder={t('nav.search')}
                 style={{ fontSize: '16px' }}
                 className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2 pl-10 pr-4 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"
               />
@@ -45,27 +59,29 @@ export default function Navbar() {
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/explore" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
-              Explore
+              {t('nav.explore')}
             </Link>
             <Link href="/library" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
-              Library
+              {t('nav.library')}
             </Link>
             <Link href="/pricing" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
-              Pricing
+              {t('nav.pricing')}
             </Link>
             <Link href="/learn" target="_blank" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
-              Learn
+              {t('nav.learn')}
             </Link>
             <Link href="/studio" className="btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full transition-all hover:scale-105">
-              Create
+              {t('nav.create')}
             </Link>
             <Link href="/auth" className="text-gray-400 hover:text-white text-sm font-medium">
-              Sign In
+              {t('nav.signin')}
             </Link>
+            <LangToggle />
           </div>
 
-          {/* Mobile: search icon + hamburger */}
+          {/* Mobile: language + search icon + hamburger */}
           <div className="flex md:hidden items-center gap-1 ml-auto">
+            <LangToggle className="mr-1" />
             <button
               onClick={() => setSearchOpen(s => !s)}
               className="touch-target text-gray-400 hover:text-white transition-colors"
@@ -92,7 +108,7 @@ export default function Navbar() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') runSearch(); }}
-              placeholder="Search songs, artists..."
+              placeholder={t('nav.search')}
               style={{ fontSize: '16px' }}
               className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2 pl-10 pr-4 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"
             />
@@ -107,14 +123,14 @@ export default function Navbar() {
             <div className="flex justify-center py-2">
               <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-24 w-auto" />
             </div>
-            {[
-              ['Explore', '/explore'],
-              ['Library', '/library'],
-              ['Pricing', '/pricing'],
-              ['Learn', '/learn'],
-              ['Dashboard', '/dashboard'],
-              ['Sign In', '/auth'],
-            ].map(([label, href]) => (
+            {([
+              [t('nav.explore'), '/explore'],
+              [t('nav.library'), '/library'],
+              [t('nav.pricing'), '/pricing'],
+              [t('nav.learn'), '/learn'],
+              [t('nav.dashboard'), '/dashboard'],
+              [t('nav.signin'), '/auth'],
+            ] as [string, string][]).map(([label, href]) => (
               <Link
                 key={href}
                 href={href}
@@ -130,7 +146,7 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               className="btn-orange text-white font-bold text-base px-6 py-4 rounded-full text-center mt-2"
             >
-              Create Now
+              {t('nav.createNow')}
             </Link>
           </div>
         </div>

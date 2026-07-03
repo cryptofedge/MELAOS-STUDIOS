@@ -1,17 +1,8 @@
+'use client';
 import Link from 'next/link';
 import { Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
 import GradientText from '@/components/GradientText';
-
-const features = [
-  { icon: Music2, title: '1 free song, daily', desc: 'Generate 1 track every day at no cost. Full quality, no strings attached.' },
-  { icon: Sparkles, title: 'Free AI music generator', desc: 'Powered by MELAOS v5 — our most advanced generation model to date.' },
-  { icon: Share2, title: 'Share it with the world', desc: 'Publish instantly to your profile. Let fans discover your sound from anywhere.' },
-  { icon: SlidersHorizontal, title: 'Granular creation controls', desc: 'Dial in BPM, genre, mood, vocal style, and more with our pro parameter suite.' },
-  { icon: Shield, title: 'Commercial rights to your songs', desc: 'Pro and Premier subscribers own full commercial rights to every song they create.' },
-  { icon: LayoutGrid, title: 'Your complete creative workspace', desc: 'Multitrack DAW, lyrics editor, stem mixer — everything in one place.' },
-  { icon: Layers, title: 'Extract stems. Drop into your DAW.', desc: 'Separate vocals, drums, bass, and more. Export to Ableton, FL, Logic seamlessly.' },
-  { icon: Infinity, title: 'Create everyday. Keep it all.', desc: 'Your entire library lives in the cloud. Unlimited storage on Pro and Premier.' },
-];
+import { useT } from '@/lib/i18n';
 
 const heroSongs = [
   { title: 'Midnight Frequencies', artist: 'NovaSynth', gradient: 'from-blue-600 to-purple-800', coverArt: '/covers/1.jpg', delay: '0s' },
@@ -20,6 +11,19 @@ const heroSongs = [
 ];
 
 export default function HomePage() {
+  const { t } = useT();
+
+  const features = [
+    { icon: Music2, title: t('home.f1.title'), desc: t('home.f1.desc') },
+    { icon: Sparkles, title: t('home.f2.title'), desc: t('home.f2.desc') },
+    { icon: Share2, title: t('home.f3.title'), desc: t('home.f3.desc') },
+    { icon: SlidersHorizontal, title: t('home.f4.title'), desc: t('home.f4.desc') },
+    { icon: Shield, title: t('home.f5.title'), desc: t('home.f5.desc') },
+    { icon: LayoutGrid, title: t('home.f6.title'), desc: t('home.f6.desc') },
+    { icon: Layers, title: t('home.f7.title'), desc: t('home.f7.desc') },
+    { icon: Infinity, title: t('home.f8.title'), desc: t('home.f8.desc') },
+  ];
+
   return (
     <div className="overflow-x-hidden">
       {/* Hero */}
@@ -37,18 +41,18 @@ export default function HomePage() {
 
           <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
             <Sparkles className="w-3.5 h-3.5 text-[#F28C28]" />
-            Introducing MELAOS v5 — Our most powerful model
+            {t('home.badge')}
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 tracking-tight">
-            Make any song<br />
+            {t('home.title1')}<br />
             <GradientText className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-none" animationSpeed={5}>
-              you can imagine
+              {t('home.title2')}
             </GradientText>
           </h1>
 
           <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed px-2">
-            Start with a simple prompt or dive into our pro editing tools. Your next track is just a step away.
+            {t('home.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -56,17 +60,17 @@ export default function HomePage() {
               href="/studio"
               className="btn-orange text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform inline-block w-full sm:w-auto text-center"
             >
-              Create
+              {t('home.cta.create')}
             </Link>
             <Link
               href="/explore"
               className="border border-[#333] text-gray-300 hover:text-white hover:border-[#555] font-semibold text-base sm:text-lg px-8 py-3 sm:py-4 rounded-full transition-all w-full sm:w-auto text-center"
             >
-              Explore Music
+              {t('home.cta.explore')}
             </Link>
           </div>
 
-          <p className="text-gray-600 text-sm mt-4">No credit card required · 1 free song daily</p>
+          <p className="text-gray-600 text-sm mt-4">{t('home.noCard')}</p>
         </div>
 
         {/* Floating song cards */}
@@ -96,11 +100,11 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 px-4 max-w-7xl mx-auto">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4">
-            Everything you need to make music{' '}
-            <span className="gradient-text">your way</span>
+            {t('home.features.title1')}{' '}
+            <span className="gradient-text">{t('home.features.title2')}</span>
           </h2>
           <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
-            From instant generation to professional-grade editing tools, MELAOS has it all.
+            {t('home.features.subtitle')}
           </p>
         </div>
 
@@ -123,10 +127,10 @@ export default function HomePage() {
       {/* CTA strip */}
       <section className="py-16 sm:py-20 px-4">
         <div className="max-w-3xl mx-auto text-center bg-gradient-to-br from-[#1A1A1A] to-[#111] border border-[#333] rounded-3xl p-8 sm:p-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">Ready to start creating?</h2>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base">Join 500,000+ artists making music with MELAOS STUDIOS · Eclat Universe.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">{t('home.ready.title')}</h2>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base">{t('home.ready.subtitle')}</p>
           <Link href="/studio" className="btn-orange text-white font-bold text-base px-8 py-3 rounded-full hover:scale-105 transition-transform inline-block">
-            Start for Free
+            {t('home.ready.cta')}
           </Link>
         </div>
       </section>
@@ -134,7 +138,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[#1A1A1A] py-8 px-4 text-center text-gray-600 text-sm">
         <p>© 2026 <span className="text-[#F28C28]">MELAOS STUDIOS</span> · An <span className="text-[#AE06ED]">Eclat Universe</span> Brand · FEDGE 2.O</p>
-        <p className="mt-2 text-gray-700">Where Sound Meets Soul</p>
+        <p className="mt-2 text-gray-700">{t('home.footer.tagline')}</p>
       </footer>
     </div>
   );
