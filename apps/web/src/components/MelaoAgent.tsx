@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Music2, Sparkles, GripHorizontal } from 'lucide-react';
+import { X, Send, Music2, Sparkles, GripHorizontal, Mic, Volume2, VolumeX } from 'lucide-react';
 import { useAudioStore } from '@/lib/store';
 
 interface Message {
@@ -69,6 +69,59 @@ export default function MelaoAgent() {
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Voice mode — talk to Melao and he talks back. Speech-to-text via the
+  // browser's Web Speech API; replies spoken with SpeechSynthesis in the
+  // conversation's language. No external services.
+  const [listening, setListening] = useState(false);
+  const [voiceReplies, setVoiceReplies] = useState(false);
+
+  // On phones the chat becomes a full-width bottom sheet instead of a
+  // small draggable panel (dragging a 320px box around a 375px screen
+  // was unusable).
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  const recognitionRef = useRef<any>(null);
+  const voiceRepliesRef = useRef(false);
+  voiceRepliesRef.current = voiceReplies;
+
+  const speak = useCallback((text: string, speakLang: Lang) => {
+    if (!voiceRepliesRef.current || typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = speakLang === 'es' ? 'es-US' : 'en-US';
+    u.rate = 1.05;
+    const voices = window.speechSynthesis.getVoices();
+    const match = voices.find(v => v.lang.startsWith(speakLang === 'es' ? 'es' : 'en'));
+    if (match) u.voice = match;
+    window.speechSynthesis.speak(u);
+  }, []);
+
+  const toggleListening = useCallback(() => {
+    if (listening) { recognitionRef.current?.stop(); return; }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = lang === 'es' ? 'es-US' : 'en-US';
+    rec.onresult = (e: any) => {
+      const transcript = e.results?.[0]?.[0]?.transcript?.trim();
+      if (transcript) sendText(transcript);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setListening(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listening, lang]);
 
   // Floating position — starts anchored bottom-right, then user can drag
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -147,8 +200,8 @@ export default function MelaoAgent() {
     dragging.current = false;
   }, []);
 
-  async function send() {
-    const text = input.trim();
+  async function sendText(raw: string) {
+    const text = raw.trim();
     if (!text) return;
     // Auto-switch language when the user's message is clearly ES or EN
     const replyLang = detectLang(text, lang);
@@ -175,8 +228,11 @@ export default function MelaoAgent() {
     setTimeout(() => {
       setTyping(false);
       setMessages(m => [...m, { role: 'melao', text: reply }]);
+      speak(reply, replyLang);
     }, 500 + Math.random() * 500);
   }
+
+  function send() { sendText(input); }
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
@@ -215,7 +271,14 @@ export default function MelaoAgent() {
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
           className="fixed z-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#333]"
-          style={{
+          style={isMobile ? {
+            left: 8,
+            right: 8,
+            bottom: 88,
+            height: 'min(65dvh, 480px)',
+            background: '#111',
+            touchAction: 'none',
+          } : {
             width: PANEL_W,
             height: PANEL_H,
             background: '#111',
@@ -308,14 +371,36 @@ export default function MelaoAgent() {
 
           {/* Input */}
           <div className="px-3 py-2 border-t border-[#222] flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setVoiceReplies(v => !v)}
+              style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
+                voiceReplies ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/10' : 'border-[#333] text-gray-500 hover:text-white'
+              }`}
+              title={voiceReplies ? 'Melao voice: ON' : 'Melao voice: OFF'}
+              aria-label="Toggle spoken replies"
+            >
+              {voiceReplies ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={lang === 'es' ? 'Háblale a Melao...' : 'Talk to Melao...'}
+              placeholder={listening ? (lang === 'es' ? 'Escuchando...' : 'Listening...') : (lang === 'es' ? 'Háblale a Melao...' : 'Talk to Melao...')}
               style={{ fontSize: '16px' }}
-              className="flex-1 bg-[#1a1a1a] text-white text-sm rounded-full px-4 py-2 outline-none border border-[#333] focus:border-orange-500 placeholder-gray-600 transition-colors"
+              className="flex-1 min-w-0 bg-[#1a1a1a] text-white text-sm rounded-full px-4 py-2 outline-none border border-[#333] focus:border-orange-500 placeholder-gray-600 transition-colors"
             />
+            <button
+              onClick={toggleListening}
+              style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
+                listening ? 'border-[#FF2D78] text-[#FF2D78] bg-[#FF2D78]/15 animate-pulse' : 'border-[#333] text-gray-500 hover:text-white'
+              }`}
+              title={listening ? 'Stop listening' : 'Speak to Melao'}
+              aria-label="Speak to Melao"
+            >
+              <Mic className="w-4 h-4" />
+            </button>
             <button
               onClick={send}
               disabled={!input.trim()}
