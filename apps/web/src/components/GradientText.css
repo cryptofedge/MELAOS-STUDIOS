@@ -47,4 +47,10 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+  /* background-clip:text only paints inside the element's box — with tight
+     line-heights, descenders (the "y"/"g" tails) fall outside it and render
+     transparent, i.e. "cut off". Pad the paint box outward and pull the
+     layout back in with matching negative margins so nothing shifts. */
+  padding: 0.12em 0.06em 0.22em;
+  margin: -0.12em -0.06em -0.22em;
 }
