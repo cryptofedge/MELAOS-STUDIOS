@@ -147,7 +147,7 @@ export default function MelaoAgent() {
     dragging.current = false;
   }, []);
 
-  function send() {
+  async function send() {
     const text = input.trim();
     if (!text) return;
     // Auto-switch language when the user's message is clearly ES or EN
@@ -156,10 +156,26 @@ export default function MelaoAgent() {
     setMessages(m => [...m, { role: 'user', text }]);
     setInput('');
     setTyping(true);
+    // Ask Melao's brain (server-side knowledge base trained by the real
+    // Melao — see apps/web/brain/). Falls back to the local scripted
+    // responses if the backend is unreachable.
+    let reply: string;
+    try {
+      const res = await fetch('/api/melao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, lang: replyLang }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.answer) throw new Error('brain unavailable');
+      reply = data.answer;
+    } catch {
+      reply = getMelaoResponse(text, replyLang);
+    }
     setTimeout(() => {
       setTyping(false);
-      setMessages(m => [...m, { role: 'melao', text: getMelaoResponse(text, replyLang) }]);
-    }, 900 + Math.random() * 600);
+      setMessages(m => [...m, { role: 'melao', text: reply }]);
+    }, 500 + Math.random() * 500);
   }
 
   function handleKey(e: React.KeyboardEvent) {
