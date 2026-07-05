@@ -329,6 +329,35 @@ export default function StudioPage() {
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const objectUrlRef  = useRef<string | null>(null);
 
+  // ── 12-band master equalizer ────────────────────────────
+  // Real BiquadFilterNodes inserted into the playback chain (source → EQ
+  // bands → analyser → speakers), so the sliders genuinely shape the sound.
+  // Lowest band is a low-shelf, highest a high-shelf, the rest peaking.
+  const EQ_BANDS = [31, 62, 125, 250, 500, 1000, 2000, 4000, 6000, 8000, 12000, 16000];
+  const [masterEq, setMasterEq] = useState<number[]>(Array(12).fill(0)); // gain in dB, -12..+12
+  const masterEqRef = useRef(masterEq);
+  masterEqRef.current = masterEq;
+  const eqFiltersRef = useRef<BiquadFilterNode[]>([]);
+
+  const setEqBand = (i: number, gain: number) => {
+    setMasterEq(eq => { const next = [...eq]; next[i] = gain; return next; });
+    const f = eqFiltersRef.current[i];
+    if (f) f.gain.value = gain;
+  };
+
+  const applyEqPreset = (gains: number[]) => {
+    setMasterEq(gains);
+    gains.forEach((g, i) => { const f = eqFiltersRef.current[i]; if (f) f.gain.value = g; });
+  };
+
+  const EQ_PRESETS: Record<string, number[]> = {
+    Flat:   Array(12).fill(0),
+    Bass:   [7, 6, 5, 3, 1, 0, 0, 0, 0, 0, 1, 2],
+    Vocal:  [-2, -1, 0, 1, 2, 4, 4, 3, 2, 1, 0, -1],
+    Bright: [0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 5, 6],
+    Club:   [5, 4, 2, 0, -1, 0, 1, 3, 4, 3, 2, 1],
+  };
+
   // Chrome silently refuses to load audio from data: URLs larger than ~2MB
   // (readyState stays 0 forever, no error) — and a full-length song's base64
   // payload is well past that. Re-materialize the API's data URL as a Blob
@@ -537,8 +566,21 @@ export default function StudioPage() {
         const source = audioCtxRef.current.createMediaElementSource(audioRef.current);
         const analyser = audioCtxRef.current.createAnalyser();
         analyser.fftSize = 64;
-        source.connect(analyser);
-        analyser.connect(audioCtxRef.current.destination);
+        // Build the 12-band EQ chain: source → band1 → … → band12 → analyser.
+        // Gains restored from the current slider state so EQ settings
+        // survive regeneration.
+        const ctx = audioCtxRef.current;
+        eqFiltersRef.current = EQ_BANDS.map((freq, i) => {
+          const f = ctx.createBiquadFilter();
+          f.type = i === 0 ? 'lowshelf' : i === EQ_BANDS.length - 1 ? 'highshelf' : 'peaking';
+          f.frequency.value = freq;
+          if (f.type === 'peaking') f.Q.value = 1.1;
+          f.gain.value = masterEqRef.current[i] ?? 0;
+          return f;
+        });
+        const chainHead = eqFiltersRef.current.reduce((prev: AudioNode, f) => { prev.connect(f); return f; }, source as AudioNode);
+        chainHead.connect(analyser);
+        analyser.connect(ctx.destination);
         analyserRef.current = analyser;
       } catch {
         analyserRef.current = null; // meters fall back to a static look — playback is unaffected
@@ -1319,6 +1361,51 @@ export default function StudioPage() {
             className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#FF2D78] hover:border-[#FF2D78]/50 transition-colors uppercase tracking-wider">
             Reset Mix
           </button>
+        </div>
+      </div>
+
+      {/* 12-Band Master Equalizer — real BiquadFilter chain on the master out */}
+      <div className="border-b shrink-0 px-3 py-2" style={{ borderColor: '#0D0D20', background: '#020209' }}>
+        <div className="flex items-center gap-2 mb-2">
+          <SlidersHorizontal className="w-3 h-3" style={{ color: '#00FFD1', filter: 'drop-shadow(0 0 3px #00FFD1)' }} />
+          <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#00FFD1' }}>12-Band EQ</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            {Object.keys(EQ_PRESETS).map(name => (
+              <button key={name} onClick={() => applyEqPreset(EQ_PRESETS[name])}
+                className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50 transition-colors uppercase tracking-wider">
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-end gap-1 min-w-max">
+          {EQ_BANDS.map((freq, i) => {
+            const gain = masterEq[i];
+            const label = freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
+            return (
+              <div key={freq} className="flex flex-col items-center" style={{ width: '38px' }}>
+                <span className="text-[7px] font-mono mb-0.5" style={{ color: gain === 0 ? '#556' : gain > 0 ? '#00FFD1' : '#FF2D78' }}>
+                  {gain > 0 ? '+' : ''}{gain}
+                </span>
+                <input
+                  type="range" min={-12} max={12} step={1} value={gain}
+                  onChange={e => setEqBand(i, Number(e.target.value))}
+                  onClick={e => e.stopPropagation()}
+                  aria-label={`EQ band ${label}Hz`}
+                  className="eq-slider"
+                  style={{
+                    writingMode: 'vertical-lr',
+                    direction: 'rtl',
+                    width: '18px',
+                    height: '68px',
+                    accentColor: '#00FFD1',
+                    cursor: 'ns-resize',
+                  }}
+                />
+                <span className="text-[7px] font-mono mt-1" style={{ color: '#8888BB' }}>{label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
