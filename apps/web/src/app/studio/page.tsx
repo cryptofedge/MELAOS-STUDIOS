@@ -335,6 +335,7 @@ export default function StudioPage() {
   // Lowest band is a low-shelf, highest a high-shelf, the rest peaking.
   const EQ_BANDS = [31, 62, 125, 250, 500, 1000, 2000, 4000, 6000, 8000, 12000, 16000];
   const [masterEq, setMasterEq] = useState<number[]>(Array(12).fill(0)); // gain in dB, -12..+12
+  const [eqOpen, setEqOpen] = useState(false);
   const masterEqRef = useRef(masterEq);
   masterEqRef.current = masterEq;
   const eqFiltersRef = useRef<BiquadFilterNode[]>([]);
@@ -1348,7 +1349,13 @@ export default function StudioPage() {
         <Cpu className="w-3 h-3" style={{ color: '#F28C28', filter: 'drop-shadow(0 0 3px #F28C28)' }} />
         <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#F28C28' }}>Mixing Board</span>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-[8px] font-mono font-bold" style={{ color: '#9999CC' }}>EQ · PAN · FADER</span>
+          <button onClick={() => setEqOpen(o => !o)}
+            className={`flex items-center gap-1 text-[8px] font-bold px-2 py-0.5 rounded border transition-all uppercase tracking-wider ${
+              eqOpen ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/10' : 'border-[#1a1a3a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
+            }`}
+            style={{ boxShadow: eqOpen ? '0 0 8px rgba(0,255,209,0.3)' : 'none' }}>
+            <SlidersHorizontal className="w-2.5 h-2.5" /> 12-Band EQ
+          </button>
           <button onClick={() => setSolo({})}
             className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#007AFF] hover:border-[#007AFF]/50 transition-colors uppercase tracking-wider">
             Clear Solo
@@ -1364,50 +1371,76 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* 12-Band Master Equalizer — real BiquadFilter chain on the master out */}
-      <div className="border-b shrink-0 px-3 py-2" style={{ borderColor: '#0D0D20', background: '#020209' }}>
-        <div className="flex items-center gap-2 mb-2">
-          <SlidersHorizontal className="w-3 h-3" style={{ color: '#00FFD1', filter: 'drop-shadow(0 0 3px #00FFD1)' }} />
-          <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#00FFD1' }}>12-Band EQ</span>
-          <div className="ml-auto flex items-center gap-1.5">
-            {Object.keys(EQ_PRESETS).map(name => (
-              <button key={name} onClick={() => applyEqPreset(EQ_PRESETS[name])}
-                className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50 transition-colors uppercase tracking-wider">
-                {name}
-              </button>
-            ))}
+      {/* 12-Band Master Equalizer — collapsible; real BiquadFilter chain on
+          the master out. Hidden by default so it doesn't crowd the mixer;
+          toggled from the header. */}
+      {eqOpen && (
+        <div className="border-b shrink-0 px-4 py-3"
+          style={{
+            borderColor: '#00FFD122',
+            background: 'radial-gradient(ellipse at top, #071a1a 0%, #030310 70%)',
+            boxShadow: 'inset 0 6px 20px rgba(0,255,209,0.06)',
+          }}>
+          {/* Presets row */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#00FFD1', textShadow: '0 0 6px rgba(0,255,209,0.5)' }}>
+              Master EQ
+            </span>
+            <span className="text-[7px] font-mono" style={{ color: '#556' }}>±12 dB</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              {Object.keys(EQ_PRESETS).map(name => {
+                const active = JSON.stringify(masterEq) === JSON.stringify(EQ_PRESETS[name]);
+                return (
+                  <button key={name} onClick={() => applyEqPreset(EQ_PRESETS[name])}
+                    className={`text-[8px] font-bold px-2.5 py-1 rounded-full border transition-all uppercase tracking-wider ${
+                      active ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/15' : 'border-[#1a2a2a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
+                    }`}
+                    style={{ boxShadow: active ? '0 0 8px rgba(0,255,209,0.35)' : 'none' }}>
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Fader bank inside a rack-style panel */}
+          <div className="flex items-stretch justify-center gap-1.5 rounded-xl px-3 py-3 min-w-max mx-auto"
+            style={{ background: 'linear-gradient(180deg, #060613, #02020a)', border: '1px solid #10101f', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 24px rgba(0,0,0,0.6)' }}>
+            {/* dB scale on the left */}
+            <div className="flex flex-col justify-between items-end pr-1 py-0.5" style={{ height: '92px' }}>
+              {['+12', '0', '-12'].map(v => (
+                <span key={v} className="text-[6px] font-mono leading-none" style={{ color: '#445' }}>{v}</span>
+              ))}
+            </div>
+            {EQ_BANDS.map((freq, i) => {
+              const gain = masterEq[i];
+              const label = freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
+              return (
+                <div key={freq} className="flex flex-col items-center justify-end" style={{ width: '34px' }}>
+                  <span className="text-[8px] font-mono font-bold mb-1 leading-none tabular-nums"
+                    style={{ color: gain === 0 ? '#556' : gain > 0 ? '#00FFD1' : '#FF2D78', textShadow: gain !== 0 ? `0 0 4px ${gain > 0 ? '#00FFD1' : '#FF2D78'}66` : 'none' }}>
+                    {gain > 0 ? '+' : ''}{gain}
+                  </span>
+                  {/* Fader with center detent line */}
+                  <div className="relative flex items-center justify-center" style={{ height: '92px' }}>
+                    <div className="absolute w-5 h-px" style={{ background: '#2a3a3a', top: '50%' }} />
+                    <input
+                      type="range" min={-12} max={12} step={1} value={gain}
+                      onChange={e => setEqBand(i, Number(e.target.value))}
+                      onClick={e => e.stopPropagation()}
+                      onDoubleClick={() => setEqBand(i, 0)}
+                      aria-label={`EQ band ${label}Hz`}
+                      title={`${label}Hz — double-click to reset`}
+                      className="eq-slider"
+                      style={{ writingMode: 'vertical-lr' as any, direction: 'rtl', width: '22px', height: '92px' }}
+                    />
+                  </div>
+                  <span className="text-[7px] font-mono mt-1.5 leading-none" style={{ color: '#7788aa' }}>{label}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
-        <div className="flex items-end gap-1 min-w-max">
-          {EQ_BANDS.map((freq, i) => {
-            const gain = masterEq[i];
-            const label = freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
-            return (
-              <div key={freq} className="flex flex-col items-center" style={{ width: '38px' }}>
-                <span className="text-[7px] font-mono mb-0.5" style={{ color: gain === 0 ? '#556' : gain > 0 ? '#00FFD1' : '#FF2D78' }}>
-                  {gain > 0 ? '+' : ''}{gain}
-                </span>
-                <input
-                  type="range" min={-12} max={12} step={1} value={gain}
-                  onChange={e => setEqBand(i, Number(e.target.value))}
-                  onClick={e => e.stopPropagation()}
-                  aria-label={`EQ band ${label}Hz`}
-                  className="eq-slider"
-                  style={{
-                    writingMode: 'vertical-lr',
-                    direction: 'rtl',
-                    width: '18px',
-                    height: '68px',
-                    accentColor: '#00FFD1',
-                    cursor: 'ns-resize',
-                  }}
-                />
-                <span className="text-[7px] font-mono mt-1" style={{ color: '#8888BB' }}>{label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* Channel strips — same pinned-first order as the track sidebar */}
       <div className="flex gap-0 py-2 px-1 min-w-max">
