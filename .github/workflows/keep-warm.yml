@@ -1,0 +1,59 @@
+name: Keep the site warm
+
+# Render's free plan spins an instance down after ~15 minutes of inactivity,
+# and the next visitor pays a cold boot — they wait, or they get a 503.
+# For a public site that first impression is the whole impression.
+#
+# This pings the site on a schedule so the instance never idles out. A free
+# Render service gets 750 instance-hours a month and staying awake for a full
+# month costs ~730, so one always-on service fits inside the allowance.
+#
+# This is a workaround, not a fix. The real fix is a paid instance that never
+# sleeps. Two things to know about relying on this:
+#   - GitHub disables scheduled workflows after 60 days without repo activity
+#   - Scheduled runs are best-effort and can be delayed when Actions is busy
+# If either bites, the site sleeps again and the next visitor waits.
+
+on:
+  schedule:
+    # Every 10 minutes. Render idles at ~15, so this leaves margin for a
+    # delayed run without letting the instance drop.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the site
+        run: |
+          URL="${{ vars.SITE_URL || 'https://melaosstudios.com/' }}"
+          echo "Pinging $URL"
+
+          # A cold instance can take ~60s to boot, so allow for it and retry
+          # rather than reporting failure on the wake-up request itself.
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' \
+                        --max-time 90 --retry 0 \
+                        -H 'User-Agent: melaos-keepwarm/1.0' \
+                        "$URL" || echo "000")
+
+            echo "attempt $attempt: HTTP $code"
+
+            if [ "$code" = "200" ]; then
+              echo "Site is awake."
+              exit 0
+            fi
+
+            [ $attempt -lt 3 ] && sleep 20
+          done
+
+          echo "::warning::Site did not return 200 after 3 attempts (last: $code)"
+          # Do not fail the workflow. A red X every 10 minutes trains you to
+          # ignore it, and this job is a nicety, not a health gate.
+          exit 0
