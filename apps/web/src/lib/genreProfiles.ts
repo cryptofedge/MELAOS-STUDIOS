@@ -19,7 +19,7 @@ export interface GenreProfile {
 
 export const GENRES = [
   'Hip-Hop', 'Trap', 'Drill', 'R&B', 'Soul', 'Pop', 'Electronic', 'Afrobeats',
-  'Reggaeton', 'Dembow', 'Bachata', 'Salsa', 'Merengue', 'Cumbia', 'Reggae', 'Latin Trap',
+  'Reggaeton', 'Dembow', 'Bachata', 'Salsa', 'Merengue', 'Típico', 'Cumbia', 'Reggae', 'Latin Trap',
 ] as const;
 
 export const MOODS = [
@@ -118,6 +118,17 @@ export const GENRE_PROFILES: Record<string, GenreProfile> = {
     descriptor: 'fast two-step tambora drum, güira scraper, accordion or synth horns, driving Dominican groove',
     lineage: 'in the lineage of Juan Luis Guerra and Wilfrido Vargas-style merengue',
     artStyle: 'festive carnival colors, Dominican flag motifs, energetic motion, bright sunlight',
+  },
+  // Típico (perico ripiao) is its own tradition, not a merengue sub-flavour.
+  // The accordion leads — it plays the hook, answers the vocal and takes the
+  // solo — and the güira sits dry and forward. Lose the accordion and the
+  // genre is gone, which is why it needs a profile of its own.
+  'Típico': {
+    label: 'Merengue Típico',
+    bpmRange: [140, 170], defaultBpm: 155,
+    descriptor: 'lead diatonic accordion carrying the melody, fast dry güira, driving tambora two-step, saxophone counter-lines, marimba bass',
+    lineage: 'in the lineage of El Blachy and Yovanny Polanco-style merengue típico from the Cibao',
+    artStyle: 'Dominican countryside, accordion and güira, warm rural sunlight, festive village dance',
   },
   Cumbia: {
     label: 'Cumbia',

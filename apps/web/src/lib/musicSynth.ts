@@ -24,6 +24,9 @@ const PROGRESSIONS: Record<string, number[][]> = {
   bachata:   [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.D4,NOTES.F4,NOTES.A4], [NOTES.E3,NOTES.G3,NOTES.B3], [NOTES.A3,NOTES.C4,NOTES.E4]],
   salsa:     [[NOTES.D4,NOTES.F4,NOTES.A4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.D4,NOTES.F4,NOTES.A4]],
   merengue:  [[NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4]],
+  // Típico is its own tradition — major-key, accordion-led, I-V-I-IV the way
+  // perico ripiao actually moves. It borrows from nothing else here.
+  tipico:    [[NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.F3,NOTES.A3,NOTES.C4]],
   cumbia:    [[NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.C4,NOTES.E4,NOTES.G4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.C4,NOTES.E4,NOTES.G4]],
   reggae:    [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.D4,NOTES.F4,NOTES.A4]],
   latintrap: [[NOTES.A3,NOTES.C4,NOTES.E4], [NOTES.F3,NOTES.A3,NOTES.C4], [NOTES.G3,NOTES.B3,NOTES.D4], [NOTES.E3,NOTES.G3,NOTES.B3]],
@@ -44,6 +47,7 @@ const BASS_ROOTS: Record<string, number[]> = {
   bachata:   [NOTES.A3/2, NOTES.D3/2, NOTES.E3/2, NOTES.A3/2],
   salsa:     [NOTES.D3/2, NOTES.G3/2, NOTES.C3, NOTES.D3/2],
   merengue:  [NOTES.C3, NOTES.F3/2, NOTES.G3/2, NOTES.C3],
+  tipico:    [NOTES.C3, NOTES.G3/2, NOTES.C3, NOTES.F3/2],
   cumbia:    [NOTES.F3/2, NOTES.C3, NOTES.G3/2, NOTES.C3],
   reggae:    [NOTES.A3/2, NOTES.F3/2, NOTES.G3/2, NOTES.D3/2],
   latintrap: [NOTES.A3/2, NOTES.F3/2, NOTES.G3/2, NOTES.E3/2],
@@ -64,6 +68,8 @@ const MELODY_SCALES: Record<string, number[]> = {
   bachata:   [NOTES.A4, NOTES.B4, NOTES.D5, NOTES.E5, NOTES.F5],
   salsa:     [NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5, NOTES.F5],
   merengue:  [NOTES.F4, NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5],
+  // Bright upper-register major run — the range a diatonic accordion sits in.
+  tipico:    [NOTES.G4, NOTES.A4, NOTES.C5, NOTES.D5, NOTES.E5],
   cumbia:    [NOTES.F4, NOTES.G4, NOTES.A4, NOTES.C5, NOTES.E5],
   reggae:    [NOTES.E4, NOTES.G4, NOTES.A4, NOTES.B4, NOTES.D5],
   latintrap: [NOTES.A4, NOTES.C5, NOTES.D5, NOTES.F5, NOTES.G5],
@@ -216,7 +222,10 @@ export async function generateTrack(
 
   // "R&B" sanitizes to "rb" once symbols are stripped, but the tables below are
   // keyed "rnb" — alias it so R&B doesn't silently fall back to Hip-Hop.
-  const GENRE_ALIASES: Record<string, string> = { rb: 'rnb' };
+  // "Típico" loses its accent to the a-z strip below and arrives as "tpico",
+  // which would otherwise fall through to the hip-hop default. Point it at
+  // the típico tables — it does not inherit hip-hop's or merengue's.
+  const GENRE_ALIASES: Record<string, string> = { rb: 'rnb', tpico: 'tipico' };
   const rawKey = genre.toLowerCase().replace(/[^a-z]/g, '');
   const genreKey = (GENRE_ALIASES[rawKey] ?? rawKey) as keyof typeof PROGRESSIONS;
   const prog = PROGRESSIONS[genreKey] ?? PROGRESSIONS.hiphop;

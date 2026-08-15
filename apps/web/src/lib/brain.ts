@@ -29,6 +29,23 @@ export async function loadBrainText(): Promise<{ soul: string; memory: string }>
   return cache;
 }
 
+type Section = { title: string; keywords: string; en: string };
+
+async function sections(): Promise<Section[]> {
+  const { memory } = await loadBrainText();
+  if (!memory) return [];
+  return memory.split(/^## /m).slice(1).map(block => {
+    const title = block.split('\n')[0].trim();
+    const keywords = (/keywords:\s*(.+)/i.exec(block)?.[1] ?? '').toLowerCase();
+    // English answer only — the lyric writer is told the target language
+    // separately, and the Spanish duplicate just doubles the prompt.
+    const en = (/^EN:\s*([\s\S]*?)(?=^ES:|$)/m.exec(block)?.[1] ?? '').trim();
+    return { title, keywords, en };
+  }).filter(s => s.title && s.en);
+}
+
+const ALWAYS_RELEVANT = ['song structure', 'making a beat'];
+
 /**
  * The production sections relevant to one genre, for the songwriter.
  *
@@ -37,26 +54,33 @@ export async function loadBrainText(): Promise<{ soul: string; memory: string }>
  * match the genre, plus the ones about songwriting itself.
  */
 export async function craftNotesFor(genre: string): Promise<string> {
-  const { memory } = await loadBrainText();
-  if (!memory) return '';
-
   const wanted = genre.toLowerCase();
-  const alwaysRelevant = ['song structure', 'making a beat'];
+  return (await sections())
+    .filter(s =>
+      s.keywords.includes(wanted) ||
+      s.title.toLowerCase().includes(wanted) ||
+      ALWAYS_RELEVANT.includes(s.title.toLowerCase()))
+    .map(s => `${s.title}: ${s.en}`)
+    .join('\n\n');
+}
 
-  const sections = memory.split(/^## /m).slice(1);
-  const picked: string[] = [];
-
-  for (const section of sections) {
-    const title = section.split('\n')[0].trim();
-    const keywords = /keywords:\s*(.+)/i.exec(section)?.[1]?.toLowerCase() ?? '';
-    const matchesGenre = keywords.includes(wanted) || title.toLowerCase().includes(wanted);
-    if (!matchesGenre && !alwaysRelevant.includes(title.toLowerCase())) continue;
-
-    // Only the English answer — the lyric writer is told the target language
-    // separately, and the Spanish duplicate just doubles the prompt.
-    const en = /^EN:\s*([\s\S]*?)(?=^ES:|$)/m.exec(section)?.[1]?.trim();
-    if (en) picked.push(`${title}: ${en}`);
-  }
-
-  return picked.join('\n\n');
+/**
+ * Anything the brain knows about a specific influence — who they are, where
+ * they came from, who they came up under, what they released.
+ *
+ * Keyed on the name rather than the genre, so picking El Blachy on a
+ * reggaeton track still carries his Cibao típico background into the writing.
+ * Melao adds an artist section to MEMORY.md and generation uses it that day.
+ */
+export async function craftNotesForInfluence(name: string): Promise<string> {
+  const wanted = name.toLowerCase();
+  // Title match only. Matching on keywords too would pull in general topics
+  // that merely mention the artist — the "Artist and producer influences"
+  // feature doc lists names, and handing that back as an artist's background
+  // is worse than having none. An artist gets a background when Melao writes
+  // them a "## <Artist Name>" section, and not before.
+  return (await sections())
+    .filter(s => s.title.toLowerCase() === wanted)
+    .map(s => `About ${s.title}: ${s.en}`)
+    .join('\n\n');
 }

@@ -1,6 +1,6 @@
 import 'server-only';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { craftNotesFor } from '@/lib/brain';
+import { craftNotesFor, craftNotesForInfluence } from '@/lib/brain';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Writes lyrics from the user's prompt.
@@ -54,9 +54,14 @@ export async function writeLyrics(opts: {
     opts.vocals === 'male'   ? 'a male vocalist'   :
     'a vocalist';
 
-  // Melao's own craft notes for this genre, straight out of the brain the
-  // chat bot answers from. A song made here should follow what he teaches.
-  const craft = await craftNotesFor(opts.genre);
+  // Melao's own craft notes, straight out of the brain the chat bot answers
+  // from. A song made here should follow what he teaches — and when an
+  // influence is set, whatever the brain knows about that artist too:
+  // background, region, who they came up under, what they released.
+  const [craft, influenceNotes] = await Promise.all([
+    craftNotesFor(opts.genre),
+    opts.influenceName ? craftNotesForInfluence(opts.influenceName) : Promise.resolve(''),
+  ]);
 
   const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({
@@ -66,6 +71,12 @@ export async function writeLyrics(opts: {
       `not poems that get read — singable lines, natural stresses, a hook that repeats.\n\n` +
       (craft
         ? `MELAO'S OWN NOTES ON THIS KIND OF RECORD — follow them:\n${craft}\n\n`
+        : '') +
+      (influenceNotes
+        ? `BACKGROUND ON THE INFLUENCE — use it for authentic detail (region, ` +
+          `tradition, the world this artist comes from). Do not name the artist ` +
+          `in the lyrics and do not reuse any of their song titles as lines:\n` +
+          `${influenceNotes}\n\n`
         : '') +
       `Output ONLY the lyrics. No title, no commentary, no markdown, no chords, ` +
       `no explanation of your choices.\n\n` +
