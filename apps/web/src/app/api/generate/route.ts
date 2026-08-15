@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildGenreTags } from '@/lib/genreProfiles';
 import { writeLyrics, songwriterAvailable } from '@/lib/songwriter';
+import { findInfluence, detectInfluences, type Influence } from '@/lib/artistInfluences';
 
 // Hosted ACE-Step 1.5 via Replicate — a real, already-trained, MIT-licensed
 // music foundation model (open-source, ~11k GitHub stars, actively
@@ -19,11 +20,28 @@ const REPLICATE_API = 'https://api.replicate.com/v1';
 // knowledge for the chosen genre — instrumentation, rhythm, and the
 // legendary producer lineage that defines the sound — so ACE-Step gets a
 // genuinely informed prompt instead of just a bare genre word.
-function buildTags(prompt: string, genre: string, mood: string, bpm: number, lyricsLanguage: string) {
+// An explicitly picked influence wins; otherwise names mentioned in the prompt
+// itself are honoured, so "a bachata like Romeo Santos" works without anyone
+// opening a dropdown.
+function resolveInfluences(prompt: string, picked?: string): Influence[] {
+  const explicit = picked ? findInfluence(picked) : undefined;
+  if (explicit) return [explicit];
+  return detectInfluences(prompt, 2);
+}
+
+function buildTags(
+  prompt: string, genre: string, mood: string, bpm: number,
+  lyricsLanguage: string, influences: Influence[]
+) {
   const enriched = buildGenreTags(genre, mood, bpm);
   const base = prompt.trim();
   const langTag = lyricsLanguage && lyricsLanguage !== 'English' ? `, ${lyricsLanguage} vocals` : '';
-  return (base ? `${base}, ${enriched}${langTag}` : `${enriched}${langTag}`).slice(0, 350);
+
+  // Influence tags lead: they are the most specific instruction available, and
+  // the tag budget is only 350 characters, so what matters must survive the cut.
+  const infTag = influences.length ? `${influences.map(i => i.tag).join(', ')}, ` : '';
+
+  return (base ? `${base}, ${infTag}${enriched}${langTag}` : `${infTag}${enriched}${langTag}`).slice(0, 350);
 }
 
 // ACE-Step's lyrics field doubles as the vocals on/off switch: [instrumental]
@@ -35,7 +53,7 @@ function buildTags(prompt: string, genre: string, mood: string, bpm: number, lyr
 // to what was asked for.
 async function buildLyrics(
   lyrics: string, vocals: string, genre: string, mood: string,
-  prompt: string, language: string
+  prompt: string, language: string, influences: Influence[]
 ) {
   if (vocals === 'none') return '[instrumental]';
 
@@ -43,7 +61,12 @@ async function buildLyrics(
   if (trimmed.length >= 10) return trimmed.slice(0, 2000);
 
   if (songwriterAvailable() && prompt.trim()) {
-    const written = await writeLyrics({ prompt, genre, mood, language, vocals });
+    const lead = influences[0];
+    const written = await writeLyrics({
+      prompt, genre, mood, language, vocals,
+      influenceStyle: lead?.style,
+      influenceName: lead?.name,
+    });
     if (written) return written;
   }
 
@@ -115,11 +138,12 @@ export async function POST(req: NextRequest) {
   const {
     prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120,
     vocals = 'male', duration = 30, lyrics = '', lyricsLanguage = 'English',
-    tier = 'free',
+    tier = 'free', influence = '',
   } = body;
 
-  const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage);
-  const finalLyrics = await buildLyrics(lyrics, vocals, genre, mood, prompt, lyricsLanguage);
+  const influences = resolveInfluences(prompt, influence);
+  const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage, influences);
+  const finalLyrics = await buildLyrics(lyrics, vocals, genre, mood, prompt, lyricsLanguage, influences);
   // Free tier is capped at a sub-minute preview; paid tiers get full songs.
   // (Note: tier is client-reported until real auth lands — this cap is a
   // product gate, not a security boundary.)
@@ -149,5 +173,12 @@ export async function POST(req: NextRequest) {
     audioUrl: `data:${mimeType};base64,${b64}`,
     title,
     duration: dur,
+    // The words that were actually sung. Without this the studio's lyrics
+    // panel stays empty and there is no way to read, edit or reuse what the
+    // songwriter wrote. Omitted for instrumentals, which have none.
+    lyrics: finalLyrics === '[instrumental]' ? '' : finalLyrics,
+    // Surfaced so the studio can show what steered the track — especially when
+    // it was picked up from the prompt rather than chosen from the list.
+    influences: influences.map(i => i.name),
   });
 }

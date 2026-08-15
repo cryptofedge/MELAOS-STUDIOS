@@ -10,6 +10,7 @@ import { generateTrack } from '@/lib/musicSynth';
 import { useAudioStore, TIER_MAX_DURATION } from '@/lib/store';
 import { useT } from '@/lib/i18n';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
+import { influenceGroups, findInfluence } from '@/lib/artistInfluences';
 import StudioWaveform from '@/components/StudioWaveform';
 import type WaveSurfer from 'wavesurfer.js';
 
@@ -238,6 +239,11 @@ export default function StudioPage() {
   const [lyrics,       setLyrics]       = useState('');
   const [projectName,  setProjectName]  = useState('Untitled Project');
   const [lyricsLang,   setLyricsLang]   = useState('English');
+  const [influence,    setInfluence]    = useState('');
+  const [synthFallback, setSynthFallback] = useState(false);
+  // Influences the server actually applied — may have come from the prompt
+  // rather than the picker, so it is worth showing back.
+  const [usedInfluences, setUsedInfluences] = useState<string[]>([]);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [editTool,     setEditTool]     = useState<'zoom' | 'trim' | 'selector' | 'grabber' | 'scrub' | 'pencil'>('selector');
   const [pinnedTracks, setPinnedTracks] = useState<Record<string, boolean>>({});
@@ -528,6 +534,7 @@ export default function StudioPage() {
             vocals: instrumental ? 'none' : vocalGender,
             lyrics,
             lyricsLanguage: lyricsLang,
+            influence,
             duration: maxDuration,
             tier,
           }),
@@ -538,7 +545,14 @@ export default function StudioPage() {
         const json = await res.json();
         if (!json.audioUrl) throw new Error('AI generator returned no audio');
         resolvedAudioUrl = json.audioUrl;
+        // Show the words that were actually sung, and what steered the sound.
+        if (json.lyrics) setLyrics(json.lyrics);
+        setUsedInfluences(Array.isArray(json.influences) ? json.influences : []);
       } catch {
+        // The local synth cannot sing and never sees the prompt, so say so
+        // rather than passing a generic loop off as the generated song.
+        setSynthFallback(true);
+        setUsedInfluences([]);
         resolvedAudioUrl = await generateTrack(genre, mood, genBpm, vocalGender);
       }
 
@@ -756,6 +770,34 @@ export default function StudioPage() {
               </button>
             ))}
           </div>
+          {/* Influence — the sound this track leans toward. Naming an artist in
+              the description alone also works; this is for when you want to be
+              explicit. */}
+          <div className="mt-3">
+            <label className="text-[10px] font-bold text-[#00FFD1] mb-1 block tracking-[0.15em] uppercase">
+              ◈ Influence
+            </label>
+            <select
+              value={influence} onChange={e => setInfluence(e.target.value)}
+              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,255,209,0.15)' }}
+              className="w-full border border-[#00FFD1]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#00FFD1] transition-all"
+            >
+              <option value="" style={{ background: '#0A0A14' }}>No specific influence</option>
+              {influenceGroups().map(g => (
+                <optgroup key={g.label} label={g.label} style={{ background: '#0A0A14' }}>
+                  {g.artists.map(a => (
+                    <option key={a.name} value={a.name} style={{ background: '#0A0A14' }}>{a.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <p className="text-[10px] text-[#9999CC] mt-1">
+              {influence
+                ? findInfluence(influence)?.style
+                : 'Or just name one in your description — "a bachata like Romeo Santos".'}
+            </p>
+          </div>
+
           {/* Language of the sung lyrics. Also lives in the Lyrics tab, but it
               belongs here too — most people never open that tab. */}
           {!instrumental && (

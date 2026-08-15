@@ -38,6 +38,9 @@ export async function writeLyrics(opts: {
   mood: string;
   language: string;
   vocals: string;
+  /** Human description of a chosen songwriter's approach, from STYLES.md. */
+  influenceStyle?: string;
+  influenceName?: string;
 }): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
@@ -67,11 +70,19 @@ export async function writeLyrics(opts: {
     generationConfig: { maxOutputTokens: 3000, temperature: 1.0 },
   });
 
+  // Borrow the writing approach, never the artist's actual words.
+  const influenceLine = opts.influenceStyle
+    ? `Writing approach: ${opts.influenceStyle}` +
+      (opts.influenceName ? ` — the craft ${opts.influenceName} is known for.` : '.') +
+      ` Take the approach only. Write entirely original lines; never reuse existing lyrics.\n`
+    : '';
+
   const ask =
     `Write song lyrics about: ${subject}\n\n` +
     `Genre: ${opts.genre}\n` +
     `Mood: ${opts.mood}\n` +
     `Sung by: ${voice}\n` +
+    influenceLine +
     `Language: ${opts.language} — write the lyrics entirely in ${opts.language}.\n\n` +
     `The lyrics must be about the subject above. That is the whole point of the song.`;
 
