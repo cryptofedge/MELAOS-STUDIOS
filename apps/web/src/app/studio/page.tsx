@@ -235,7 +235,7 @@ export default function StudioPage() {
   const [audioUrl,     setAudioUrl]     = useState<string | null>(null);
   const [waveformPeaks,setWaveformPeaks]= useState<number[] | null>(null);
   const [audioEl,      setAudioEl]      = useState<HTMLAudioElement | null>(null);
-  const [lyrics,       setLyrics]       = useState(DEFAULT_LYRICS);
+  const [lyrics,       setLyrics]       = useState('');
   const [projectName,  setProjectName]  = useState('Untitled Project');
   const [lyricsLang,   setLyricsLang]   = useState('English');
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
@@ -756,6 +756,25 @@ export default function StudioPage() {
               </button>
             ))}
           </div>
+          {/* Language of the sung lyrics. Also lives in the Lyrics tab, but it
+              belongs here too — most people never open that tab. */}
+          {!instrumental && (
+            <div className="mt-3">
+              <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">
+                ◈ {t('studio.language')}
+              </label>
+              <select
+                value={lyricsLang} onChange={e => setLyricsLang(e.target.value)}
+                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(242,140,40,0.15)' }}
+                className="w-full border border-[#F28C28]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#F28C28] transition-all"
+              >
+                {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A14' }}>{l}</option>)}
+              </select>
+              <p className="text-[10px] text-[#9999CC] mt-1">
+                Melao writes the lyrics from your description in this language.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -767,7 +786,7 @@ export default function StudioPage() {
             value={lyrics}
             onChange={e => setLyrics(e.target.value)}
             rows={4}
-            placeholder={"[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n..."}
+            placeholder={"Leave blank — Melao writes the lyrics from your description.\n\n[Verse 1]\nOr write your own here...\n\n[Chorus]\n..."}
             className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
@@ -804,12 +823,13 @@ export default function StudioPage() {
             value={lyrics}
             onChange={e => setLyrics(e.target.value)}
             rows={12}
-            placeholder={"[Verse]\nWrite your lyrics here...\n\n[Chorus]\nThe hook everyone remembers...\n\n[Bridge]\n..."}
+            placeholder={"Leave blank — Melao writes the lyrics from your description, in the language you picked.\n\n[Verse]\nOr write your own here...\n\n[Chorus]\nThe hook everyone remembers...\n\n[Bridge]\n..."}
             className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
           <p className="text-[10px] text-[#9999CC] mt-1.5">
             Pick a genre, mood, and BPM below, then hit Generate — these lyrics become the vocal track.
+            Leave this empty and Melao writes them from your description instead.
           </p>
         </div>
       )}

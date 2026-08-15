@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildGenreTags } from '@/lib/genreProfiles';
+import { writeLyrics, songwriterAvailable } from '@/lib/songwriter';
 
 // Hosted ACE-Step 1.5 via Replicate — a real, already-trained, MIT-licensed
 // music foundation model (open-source, ~11k GitHub stars, actively
@@ -27,11 +28,28 @@ function buildTags(prompt: string, genre: string, mood: string, bpm: number, lyr
 
 // ACE-Step's lyrics field doubles as the vocals on/off switch: [instrumental]
 // or [inst] anywhere in it suppresses vocals entirely.
-function buildLyrics(lyrics: string, vocals: string, genre: string, mood: string) {
+//
+// Everything sung comes from this field — the style tags only shape the
+// backing track. So when the user has not written lyrics, they have to be
+// written from the prompt, or the vocal ends up singing something unrelated
+// to what was asked for.
+async function buildLyrics(
+  lyrics: string, vocals: string, genre: string, mood: string,
+  prompt: string, language: string
+) {
   if (vocals === 'none') return '[instrumental]';
+
   const trimmed = (lyrics || '').trim();
   if (trimmed.length >= 10) return trimmed.slice(0, 2000);
-  return `[verse]\n${mood} ${genre} energy in the air tonight\nFeel the rhythm, feel it right`;
+
+  if (songwriterAvailable() && prompt.trim()) {
+    const written = await writeLyrics({ prompt, genre, mood, language, vocals });
+    if (written) return written;
+  }
+
+  // Last resort only: no prompt to work from, or the songwriter was
+  // unreachable. Anything sung here is generic by definition.
+  return `[Verse]\n${mood} ${genre} energy in the air tonight\nFeel the rhythm, feel it right`;
 }
 
 async function runReplicate(token: string, version: string, input: Record<string, unknown>) {
@@ -101,7 +119,7 @@ export async function POST(req: NextRequest) {
   } = body;
 
   const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage);
-  const finalLyrics = buildLyrics(lyrics, vocals, genre, mood);
+  const finalLyrics = await buildLyrics(lyrics, vocals, genre, mood, prompt, lyricsLanguage);
   // Free tier is capped at a sub-minute preview; paid tiers get full songs.
   // (Note: tier is client-reported until real auth lands — this cap is a
   // product gate, not a security boundary.)
