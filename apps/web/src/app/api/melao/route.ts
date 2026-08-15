@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ANSWERS, GREETINGS, KnowledgeEntry } from '@/lib/melaoKnowledge';
+import { askMelao, geminiConfigured } from '@/lib/melaoBrain';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 // ─────────────────────────────────────────────────────────────────────────
-// Melao's backend — answers come from his BRAIN (apps/web/brain/MEMORY.md,
-// same SOUL/MEMORY architecture as FEDGE 2.O), not the internet. Melao
-// trains the bot by editing MEMORY.md sections; this route parses them.
-// Runtime teachings can also be added via the train action (persisted to
-// a JSON file; export and merge into MEMORY.md for permanence).
+// Melao's backend — his BRAIN (apps/web/brain/SOUL.md + MEMORY.md, the same
+// SOUL/MEMORY architecture as FEDGE 2.O) is the source of truth. Gemini
+// reads the brain as grounding and answers in Melao's voice, so questions
+// the keyword index never anticipated still get a real reply.
+//
+// If Gemini is unavailable or unconfigured, the original keyword retrieval
+// answers instead — the bot degrades, it does not break.
+//
+// Melao trains the bot by editing MEMORY.md sections; this route parses
+// them. Runtime teachings can also be added via the train action (persisted
+// to a JSON file; export and merge into MEMORY.md for permanence).
 // ─────────────────────────────────────────────────────────────────────────
 
 const BRAIN_FILE = path.join(process.cwd(), 'brain', 'MEMORY.md');
+const SOUL_FILE = path.join(process.cwd(), 'brain', 'SOUL.md');
 const TRAINING_FILE = path.join(process.cwd(), 'melao-training.json');
-const TRAIN_KEY = process.env.MELAO_TRAIN_KEY || 'melao2026';
+
+// No default key. An unset MELAO_TRAIN_KEY disables training entirely rather
+// than leaving a publicly known password able to rewrite what the bot says.
+const TRAIN_KEY = process.env.MELAO_TRAIN_KEY;
 
 let brainCache: KnowledgeEntry[] | null = null;
 let trainedCache: KnowledgeEntry[] | null = null;
+let rawBrainCache: { soul: string; memory: string } | null = null;
 
 // Parse MEMORY.md: each "## Topic" section with `keywords:` / `EN:` / `ES:` lines.
 function parseBrain(md: string): KnowledgeEntry[] {
@@ -45,6 +57,17 @@ async function loadBrain(): Promise<KnowledgeEntry[]> {
     brainCache = [];
   }
   return brainCache!;
+}
+
+// Raw brain text, for grounding the model rather than keyword matching.
+async function loadRawBrain(): Promise<{ soul: string; memory: string }> {
+  if (rawBrainCache) return rawBrainCache;
+  const [soul, memory] = await Promise.all([
+    fs.readFile(SOUL_FILE, 'utf8').catch(() => ''),
+    fs.readFile(BRAIN_FILE, 'utf8').catch(() => ''),
+  ]);
+  rawBrainCache = { soul, memory };
+  return rawBrainCache;
 }
 
 async function loadTrained(): Promise<KnowledgeEntry[]> {
@@ -100,6 +123,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === 'train' || body.action === 'delete') {
+    if (!TRAIN_KEY) {
+      return NextResponse.json(
+        { error: 'Training is disabled — MELAO_TRAIN_KEY is not set on the server.' },
+        { status: 503 }
+      );
+    }
     if (body.key !== TRAIN_KEY) return NextResponse.json({ error: 'Wrong training key' }, { status: 401 });
     const trained = await loadTrained();
     if (body.action === 'train') {
@@ -128,6 +157,15 @@ export async function POST(req: NextRequest) {
   if (!message.trim()) return NextResponse.json({ error: 'Empty message' }, { status: 400 });
   const lang: 'en' | 'es' = body.lang === 'es' || body.lang === 'en' ? body.lang : detectLang(message);
   const [brain, trained] = await Promise.all([loadBrain(), loadTrained()]);
+
+  // Gemini answers grounded in the brain. Falls through to keyword retrieval
+  // if it is unconfigured or the call fails.
+  if (geminiConfigured()) {
+    const { soul, memory } = await loadRawBrain();
+    const answer = await askMelao(message, { soul, memory, trained, lang });
+    if (answer) return NextResponse.json({ answer, topic: null, source: 'gemini', lang });
+  }
+
   const result = findAnswer(message, brain, trained, lang);
   return NextResponse.json({ ...result, lang });
 }
