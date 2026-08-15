@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ANSWERS, GREETINGS, KnowledgeEntry } from '@/lib/melaoKnowledge';
 import { askMelao, geminiConfigured } from '@/lib/melaoBrain';
+import { loadBrainText } from '@/lib/brain';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -19,7 +20,6 @@ import path from 'path';
 // ─────────────────────────────────────────────────────────────────────────
 
 const BRAIN_FILE = path.join(process.cwd(), 'brain', 'MEMORY.md');
-const SOUL_FILE = path.join(process.cwd(), 'brain', 'SOUL.md');
 const TRAINING_FILE = path.join(process.cwd(), 'melao-training.json');
 
 // No default key. An unset MELAO_TRAIN_KEY disables training entirely rather
@@ -28,7 +28,6 @@ const TRAIN_KEY = process.env.MELAO_TRAIN_KEY;
 
 let brainCache: KnowledgeEntry[] | null = null;
 let trainedCache: KnowledgeEntry[] | null = null;
-let rawBrainCache: { soul: string; memory: string } | null = null;
 
 // Parse MEMORY.md: each "## Topic" section with `keywords:` / `EN:` / `ES:` lines.
 function parseBrain(md: string): KnowledgeEntry[] {
@@ -57,17 +56,6 @@ async function loadBrain(): Promise<KnowledgeEntry[]> {
     brainCache = [];
   }
   return brainCache!;
-}
-
-// Raw brain text, for grounding the model rather than keyword matching.
-async function loadRawBrain(): Promise<{ soul: string; memory: string }> {
-  if (rawBrainCache) return rawBrainCache;
-  const [soul, memory] = await Promise.all([
-    fs.readFile(SOUL_FILE, 'utf8').catch(() => ''),
-    fs.readFile(BRAIN_FILE, 'utf8').catch(() => ''),
-  ]);
-  rawBrainCache = { soul, memory };
-  return rawBrainCache;
 }
 
 async function loadTrained(): Promise<KnowledgeEntry[]> {
@@ -161,7 +149,7 @@ export async function POST(req: NextRequest) {
   // Gemini answers grounded in the brain. Falls through to keyword retrieval
   // if it is unconfigured or the call fails.
   if (geminiConfigured()) {
-    const { soul, memory } = await loadRawBrain();
+    const { soul, memory } = await loadBrainText();
     const answer = await askMelao(message, { soul, memory, trained, lang });
     if (answer) return NextResponse.json({ answer, topic: null, source: 'gemini', lang });
   }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { KnowledgeEntry } from '@/lib/melaoKnowledge';
+import { INFLUENCES } from '@/lib/artistInfluences';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Melao's reasoning layer.
@@ -21,6 +22,24 @@ export function geminiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
+// The studio's actual influence roster, so Melao can answer "do you have
+// Romeo Santos?" by checking rather than guessing. Names only — the sonic
+// tags are for the music model, not for chat.
+function rosterSummary(): string {
+  const group = (region: string, role: string) =>
+    INFLUENCES.filter(i => i.region === region && i.role === role)
+      .map(i => i.name)
+      .sort((a, b) => a.localeCompare(b))
+      .join(', ');
+
+  return [
+    `Latin artists (${INFLUENCES.filter(i => i.region === 'Latin' && i.role === 'artist').length}): ${group('Latin', 'artist')}`,
+    `Latin producers (${INFLUENCES.filter(i => i.region === 'Latin' && i.role === 'producer').length}): ${group('Latin', 'producer')}`,
+    `American artists (${INFLUENCES.filter(i => i.region === 'American' && i.role === 'artist').length}): ${group('American', 'artist')}`,
+    `American producers (${INFLUENCES.filter(i => i.region === 'American' && i.role === 'producer').length}): ${group('American', 'producer')}`,
+  ].join('\n\n');
+}
+
 function buildSystemPrompt(soul: string, memory: string, trained: KnowledgeEntry[], lang: 'en' | 'es') {
   const teachings = trained.length
     ? trained
@@ -37,6 +56,19 @@ ${memory}
 ---
 # LIVE TEACHINGS FROM MELAO
 ${teachings}
+
+---
+# INFLUENCE ROSTER IN THE STUDIO (${INFLUENCES.length} total)
+Artists and producers a track can be steered toward. Someone can name one
+straight in their description — "a bachata like Romeo Santos" — or pick from
+the Influence menu. It shapes the arrangement and how the lyrics are written.
+This is a style reference, not an impersonation: it borrows the sound and the
+craft, never a voice and never anyone's actual lyrics. Say so if asked.
+
+${rosterSummary()}
+
+If someone asks about a name that is NOT on this list, say it is not in the
+studio yet and suggest the closest one that is.
 
 ---
 # HOW TO ANSWER

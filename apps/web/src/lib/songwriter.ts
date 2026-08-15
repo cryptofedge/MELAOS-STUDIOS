@@ -1,5 +1,6 @@
 import 'server-only';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { craftNotesFor } from '@/lib/brain';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Writes lyrics from the user's prompt.
@@ -53,12 +54,19 @@ export async function writeLyrics(opts: {
     opts.vocals === 'male'   ? 'a male vocalist'   :
     'a vocalist';
 
+  // Melao's own craft notes for this genre, straight out of the brain the
+  // chat bot answers from. A song made here should follow what he teaches.
+  const craft = await craftNotesFor(opts.genre);
+
   const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({
     model: MODEL,
     systemInstruction:
       `You are a songwriter at MELAOS STUDIOS. You write lyrics that get sung, ` +
       `not poems that get read — singable lines, natural stresses, a hook that repeats.\n\n` +
+      (craft
+        ? `MELAO'S OWN NOTES ON THIS KIND OF RECORD — follow them:\n${craft}\n\n`
+        : '') +
       `Output ONLY the lyrics. No title, no commentary, no markdown, no chords, ` +
       `no explanation of your choices.\n\n` +
       `Use plain section tags on their own lines, exactly like:\n` +
