@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.melaosstudios.app",
+      "sha256_cert_fingerprints": [
+        "97:A3:F1:ED:ED:77:22:37:70:4A:79:F9:5D:14:E1:1A:13:A6:29:B0:91:80:01:9A:56:CB:90:EF:1E:D5:E4:7E",
+        "A0:4E:BF:C9:20:EE:40:0C:B6:88:F6:8D:96:70:73:D4:B4:D4:15:E9:B0:59:74:FE:7A:18:E6:88:7F:45:A3:38"
+      ]
+    }
+  }
+]

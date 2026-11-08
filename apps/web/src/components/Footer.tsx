@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useT } from '@/lib/i18n';
 
 // Site-wide footer — rendered from the root layout so every page carries
@@ -12,6 +13,12 @@ export default function Footer() {
         <span className="text-[#E91E8C]">Milciades "Melao" Holguin</span> · Rafael Fellito Rodriguez
       </p>
       <p className="mt-2 text-gray-700">{t('home.footer.tagline')}</p>
+      {/* Google Play requires the privacy policy to be reachable from inside the app. */}
+      <p className="mt-3">
+        <Link href="/privacy" className="text-gray-500 hover:text-[#F28C28] underline underline-offset-2">
+          {t('footer.privacy')}
+        </Link>
+      </p>
     </footer>
   );
 }

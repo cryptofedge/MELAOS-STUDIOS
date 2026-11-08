@@ -4,27 +4,40 @@ import { Play, Pause, Heart, Share2, MoreHorizontal, Search, Plus, Music2, ListM
 import { mockSongs, formatPlays, mockPlaylists } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 import { genreArtStyle } from '@/lib/genreProfiles';
+import ReportButton from '@/components/ReportButton';
 
 /* ── Cover Art Modal ─────────────────────────────────────── */
 function CoverArtModal({ song, onClose }: { song: { title: string; genre: string; tags: string[] }; onClose: () => void }) {
   const [artUrl, setArtUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const generate = useCallback(() => {
+  const [artError, setArtError] = useState<string | null>(null);
+
+  const style = genreArtStyle(song.genre);
+  const tags = song.tags.slice(0, 3).join(', ');
+  const artPrompt = `album cover art for "${song.title}", ${style}, ${tags}, professional music artwork, square format, no text, no words`;
+
+  const generate = useCallback(async () => {
     setLoading(true);
     setArtUrl(null);
-    const style = genreArtStyle(song.genre);
-    const tags = song.tags.slice(0, 3).join(', ');
-    const artPrompt = `album cover art for "${song.title}", ${style}, ${tags}, professional music artwork, square format, no text, no words`;
-    const seed = Math.floor(Math.random() * 999999);
-    // Routed through our own API so the image is same-origin — Pollinations
-    // 403s direct browser requests for CORS-mode loads.
-    const url = `/api/cover-art?prompt=${encodeURIComponent(artPrompt)}&seed=${seed}`;
-    const img = new window.Image();
-    img.onload = () => { setArtUrl(url); setLoading(false); };
-    img.onerror = () => setLoading(false);
-    img.src = url;
-  }, [song]);
+    setArtError(null);
+    // POST to our own API, which returns the image as a data URL. The API
+    // has no GET, so a generation can never be triggered by a plain link.
+    try {
+      const res = await fetch('/api/cover-art', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: artPrompt }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.imageUrl) throw new Error(data.error || 'Image generation failed');
+      setArtUrl(data.imageUrl);
+    } catch (err: any) {
+      setArtError(err?.message || 'Image generation failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [artPrompt]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={onClose}>
@@ -63,12 +76,20 @@ function CoverArtModal({ song, onClose }: { song: { title: string; genre: string
             </div>
           </div>
         )}
+        {artUrl && !loading && (
+          <div className="flex justify-end">
+            <ReportButton kind="cover-art" getContext={() => ({ title: song.title, genre: song.genre, coverPrompt: artPrompt })} />
+          </div>
+        )}
         {!artUrl && !loading && (
           <div onClick={generate}
             className="aspect-square rounded-xl border-2 border-dashed border-[#2a1a3a] flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-[#E91E8C]/40 transition-colors group">
             <Image className="w-10 h-10 text-gray-700 group-hover:text-[#E91E8C]/50 transition-colors" />
             <p className="text-[10px] text-gray-600 group-hover:text-[#E91E8C]/60 font-mono tracking-widest">CLICK TO GENERATE</p>
           </div>
+        )}
+        {artError && !loading && (
+          <p className="text-[10px] font-mono text-[#FF2D78] tracking-wider">◈ {artError}</p>
         )}
 
         {/* Buttons */}

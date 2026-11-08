@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ANSWERS, GREETINGS, KnowledgeEntry } from '@/lib/melaoKnowledge';
 import { askMelao, geminiConfigured } from '@/lib/melaoBrain';
 import { loadBrainText } from '@/lib/brain';
+import { CHAT_LIMIT, consume, clientIp } from '@/lib/rateLimit';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -147,8 +148,10 @@ export async function POST(req: NextRequest) {
   const [brain, trained] = await Promise.all([loadBrain(), loadTrained()]);
 
   // Gemini answers grounded in the brain. Falls through to keyword retrieval
-  // if it is unconfigured or the call fails.
-  if (geminiConfigured()) {
+  // if it is unconfigured, the call fails, or this visitor (or the whole
+  // site) is over the daily Gemini allowance. The chat keeps answering either
+  // way; only the paid path stops.
+  if (geminiConfigured() && consume(CHAT_LIMIT, clientIp(req.headers)).ok) {
     const { soul, memory } = await loadBrainText();
     const answer = await askMelao(message, { soul, memory, trained, lang });
     if (answer) return NextResponse.json({ answer, topic: null, source: 'gemini', lang });

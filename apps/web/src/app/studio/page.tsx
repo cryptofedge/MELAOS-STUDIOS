@@ -12,6 +12,7 @@ import { useT } from '@/lib/i18n';
 import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/genreProfiles';
 import { influenceGroups, findInfluence } from '@/lib/artistInfluences';
 import StudioWaveform from '@/components/StudioWaveform';
+import ReportButton from '@/components/ReportButton';
 import type WaveSurfer from 'wavesurfer.js';
 
 const TRACKS = [
@@ -261,8 +262,13 @@ export default function StudioPage() {
   const [instrumental,   setInstrumental]   = useState(false);
   const [coverArtUrl,    setCoverArtUrl]    = useState<string | null>(null);
   const [coverArtLoading,setCoverArtLoading]= useState(false);
+  const [coverArtError,  setCoverArtError]  = useState<string | null>(null);
   const [coverArtPrompt, setCoverArtPrompt] = useState('');
   const [refImage,       setRefImage]       = useState<string | null>(null);
+  // For the Report buttons: whether the lyrics came from the AI songwriter,
+  // and the exact prompt the current cover art was made from.
+  const [lyricsFromAi,   setLyricsFromAi]   = useState(false);
+  const [lastCoverPrompt,setLastCoverPrompt]= useState('');
   const refImageInputRef = useRef<HTMLInputElement>(null);
   const tier = useAudioStore(s => s.tier);
   const maxDuration = TIER_MAX_DURATION[tier];
@@ -425,6 +431,7 @@ export default function StudioPage() {
       if (e.key !== 'Tab') return;
       const tag = (document.activeElement?.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return; // don't hijack form navigation
+      if (document.activeElement?.closest('[role="dialog"]')) return; // e.g. the Report dialog
       if (!waveformPeaks) return;
       e.preventDefault();
       jumpToTransient(e.shiftKey ? -1 : 1);
@@ -523,6 +530,10 @@ export default function StudioPage() {
       // one model for both instrumental and vocal tracks); fall back to the
       // client-side synth if it's unavailable, slow, or out of credit.
       let resolvedAudioUrl: string;
+      // Set when the server refuses because of a usage limit. That is shown
+      // as an error instead of falling back to the synth: the AI is not
+      // down, the artist just has to wait, and a synth loop would hide that.
+      let limitMessage: string | null = null;
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 170_000);
@@ -541,14 +552,20 @@ export default function StudioPage() {
           signal: controller.signal,
         });
         clearTimeout(timeout);
+        if (res.status === 429) {
+          const j = await res.json().catch(() => ({}));
+          limitMessage = j.error || 'Generation limit reached. Try again later.';
+          throw new Error(limitMessage!);
+        }
         if (!res.ok) throw new Error('AI generator unavailable');
         const json = await res.json();
         if (!json.audioUrl) throw new Error('AI generator returned no audio');
         resolvedAudioUrl = json.audioUrl;
         // Show the words that were actually sung, and what steered the sound.
-        if (json.lyrics) setLyrics(json.lyrics);
+        if (json.lyrics) { setLyrics(json.lyrics); setLyricsFromAi(true); }
         setUsedInfluences(Array.isArray(json.influences) ? json.influences : []);
       } catch {
+        if (limitMessage) throw new Error(limitMessage);
         // The local synth cannot sing and never sees the prompt, so say so
         // rather than passing a generic loop off as the generated song.
         setSynthFallback(true);
@@ -621,7 +638,7 @@ export default function StudioPage() {
       setGenerating(false);
       setGenError(err.message || 'Generation failed');
     }
-  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, instrumental, tier, maxDuration]);
+  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, influence, instrumental, tier, maxDuration]);
 
   // Sync play/pause with real audio when available. The audio element is
   // routed through an AudioContext (for the analyser meters), and browsers
@@ -652,6 +669,7 @@ export default function StudioPage() {
   const handleGenerateCoverArt = useCallback(async () => {
     setCoverArtLoading(true);
     setCoverArtUrl(null);
+    setCoverArtError(null);
     const moodMap: Record<string, string> = {
       'Energetic':  'high energy explosive dynamic',
       'Dark':       'dark shadowy brooding cinematic',
@@ -668,6 +686,7 @@ export default function StudioPage() {
     const style = genreArtStyle(genre);
     const moodStr = moodMap[mood] || mood.toLowerCase();
     const artPrompt = `album cover art, ${base}, ${style}, ${moodStr} mood, ${genBpm} BPM, professional music artwork, square format, no text, no words`;
+    setLastCoverPrompt(refImage ? `${artPrompt} [+ uploaded reference image]` : artPrompt);
     try {
       // Routed through our own API (Higgsfield) so the image comes back as a
       // same-origin data URL — a remote-origin <img> would taint the
@@ -692,7 +711,10 @@ export default function StudioPage() {
       };
       img.onerror = () => { setCoverArtLoading(false); };
       img.src = data.imageUrl;
-    } catch {
+    } catch (err: any) {
+      // Shown under the art box: a usage limit or a rejected reference image
+      // would otherwise look like the button did nothing.
+      setCoverArtError(err?.message || 'Image generation failed');
       setCoverArtLoading(false);
     }
   }, [genre, mood, genBpm, prompt, coverArtPrompt, refImage]);
@@ -840,7 +862,12 @@ export default function StudioPage() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-[10px] font-bold text-[#F28C28] tracking-[0.15em] uppercase">◈ Lyrics</label>
-            <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
+            <span className="flex items-center gap-3">
+              {lyricsFromAi && lyrics.trim() && (
+                <ReportButton kind="lyrics" getContext={() => ({ lyrics, prompt, genre, mood })} />
+              )}
+              <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
+            </span>
           </div>
           <div className="mb-2">
             <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">◈ {t('studio.language')}</label>
@@ -1010,16 +1037,24 @@ export default function StudioPage() {
               >
                 {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause</> : <><Play className="w-3.5 h-3.5 ml-0.5" /> {t('studio.play')}</>}
               </button>
-              <a
-                href={audioUrl}
-                download="melaos-track.mp3"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[9px] font-mono text-center tracking-wider hover:underline transition-colors"
-                style={{ color: '#007AFF' }}
-              >
-                ◈ {t('studio.download')}
-              </a>
+              <div className="flex items-center justify-center gap-4">
+                <a
+                  href={audioUrl}
+                  download="melaos-track.mp3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[9px] font-mono text-center tracking-wider hover:underline transition-colors"
+                  style={{ color: '#007AFF' }}
+                >
+                  ◈ {t('studio.download')}
+                </a>
+                <ReportButton kind="song" getContext={() => ({
+                  title: `${genre} · ${mood} · ${genBpm}bpm${synthFallback ? ' (local synth, not AI)' : ''}`,
+                  prompt, genre, mood,
+                  lyrics: instrumental ? '[instrumental]' : lyrics,
+                  influences: usedInfluences.join(', '),
+                })} />
+              </div>
             </div>
           )}
         </div>
@@ -1111,6 +1146,12 @@ export default function StudioPage() {
             </div>
           </div>
         )}
+        {/* Always visible (the hover overlay above never shows on touch screens) */}
+        {coverArtUrl && !coverArtLoading && (
+          <div className="flex justify-end mt-2">
+            <ReportButton kind="cover-art" getContext={() => ({ coverPrompt: lastCoverPrompt, genre, mood })} />
+          </div>
+        )}
 
         {!coverArtUrl && !coverArtLoading && (
           <div
@@ -1120,6 +1161,10 @@ export default function StudioPage() {
             <span className="text-3xl opacity-20 group-hover:opacity-40 transition-opacity">🎨</span>
             <p className="text-[10px] text-[#8888BB] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
           </div>
+        )}
+
+        {coverArtError && !coverArtLoading && (
+          <p className="text-[10px] font-mono text-[#FF2D78] tracking-wider">◈ ERROR: {coverArtError}</p>
         )}
       </div>
     </div>
@@ -1837,6 +1882,11 @@ export default function StudioPage() {
               style={{ background: '#050510', borderColor: '#0D0D20' }}>
               <Mic2 className="w-3 h-3" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 3px #AE06ED)' }} />
               <span className="text-[9px] font-black tracking-[0.2em] uppercase" style={{ color: '#AE06ED' }}>Lyrics</span>
+              {lyricsFromAi && lyrics.trim() && (
+                <span className="ml-auto">
+                  <ReportButton kind="lyrics" getContext={() => ({ lyrics, prompt, genre, mood })} />
+                </span>
+              )}
             </div>
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
               style={{ fontSize: '11px', background: 'transparent', color: '#C4C4E8', letterSpacing: '0.03em', resize: 'none' }}
