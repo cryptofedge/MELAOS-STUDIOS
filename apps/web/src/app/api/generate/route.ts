@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildGenreTags } from '@/lib/genreProfiles';
 import { writeLyrics, songwriterAvailable } from '@/lib/songwriter';
 import { findInfluence, detectInfluences, type Influence } from '@/lib/artistInfluences';
+import { GENERATE_LIMIT, consume, clientIp, limitedResponse } from '@/lib/rateLimit';
+
+// Seconds. Matches TIER_MAX_DURATION.free in the client store.
+const FREE_MAX_DURATION = 50;
 
 // Hosted ACE-Step 1.5 via Replicate — a real, already-trained, MIT-licensed
 // music foundation model (open-source, ~11k GitHub stars, actively
@@ -135,20 +139,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const {
-    prompt = '', genre = 'Hip-Hop', mood = 'Energetic', bpm = 120,
-    vocals = 'male', duration = 30, lyrics = '', lyricsLanguage = 'English',
-    tier = 'free', influence = '',
-  } = body;
+  // Counted after the config check, so a missing token does not use up
+  // anyone's allowance.
+  const limit = consume(GENERATE_LIMIT, clientIp(req.headers));
+  if (!limit.ok) return limitedResponse(limit, 'song generation');
+
+  // Everything here ends up in a paid model's input, so it is coerced to the
+  // type the code expects and capped. An uncapped prompt goes straight to
+  // Gemini as the song's subject, billed per token.
+  const str = (v: unknown, fallback: string, max: number) =>
+    (typeof v === 'string' ? v : fallback).slice(0, max);
+  const prompt = str(body.prompt, '', 1000);
+  const genre = str(body.genre, 'Hip-Hop', 40);
+  const mood = str(body.mood, 'Energetic', 40);
+  const vocals = str(body.vocals, 'male', 10);
+  const lyrics = str(body.lyrics, '', 4000);
+  const lyricsLanguage = str(body.lyricsLanguage, 'English', 40);
+  const influence = str(body.influence, '', 100);
+  const bpm = Math.min(Math.max(Math.round(Number(body.bpm)) || 120, 40), 240);
 
   const influences = resolveInfluences(prompt, influence);
   const tags = buildTags(prompt, genre, mood, bpm, lyricsLanguage, influences);
   const finalLyrics = await buildLyrics(lyrics, vocals, genre, mood, prompt, lyricsLanguage, influences);
-  // Free tier is capped at a sub-minute preview; paid tiers get full songs.
-  // (Note: tier is client-reported until real auth lands — this cap is a
-  // product gate, not a security boundary.)
-  const tierCap = tier === 'pro' || tier === 'premier' ? 240 : 50;
-  const dur = Math.min(Math.max(Number(duration) || 30, 10), tierCap);
+  // Everyone gets the free-tier length. The tier used to come from the
+  // request body, so anyone could send tier: 'premier' and get 4-minute songs
+  // on our Replicate bill. Paid lengths come back when the tier is read from
+  // a verified login instead of from the browser.
+  const dur = Math.min(Math.max(Number(body.duration) || 30, 10), FREE_MAX_DURATION);
   const title = tags.substring(0, 50);
 
   const result = await runReplicate(token, ACE_STEP_VERSION, {

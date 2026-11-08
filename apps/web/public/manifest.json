@@ -1,14 +1,20 @@
 {
+  "id": "/",
   "name": "MELAOS STUDIOS",
   "short_name": "MELAOS",
   "description": "Where Sound Meets Soul — AI Music Generation Studio",
+  "lang": "es",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0A0A0A",
   "theme_color": "#F28C28",
   "orientation": "portrait-primary",
+  "categories": ["music", "entertainment"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

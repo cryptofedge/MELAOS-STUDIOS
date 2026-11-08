@@ -49,6 +49,7 @@ const DICT = {
     'home.ready.subtitle': 'Únete a más de 500,000 artistas haciendo música con MELAOS STUDIOS · Eclat Universe.',
     'home.ready.cta': 'Empieza Gratis',
     'home.footer.tagline': 'Donde el Sonido Encuentra el Alma',
+    'footer.privacy': 'Política de privacidad',
     // Studio
     'studio.describe': 'Describe Tu Canción',
     'studio.genre': 'Género',
@@ -112,6 +113,7 @@ const DICT = {
     'home.ready.subtitle': 'Join 500,000+ artists making music with MELAOS STUDIOS · Eclat Universe.',
     'home.ready.cta': 'Start for Free',
     'home.footer.tagline': 'Where Sound Meets Soul',
+    'footer.privacy': 'Privacy Policy',
     'studio.describe': 'Describe Your Song',
     'studio.genre': 'Genre',
     'studio.mood': 'Mood',

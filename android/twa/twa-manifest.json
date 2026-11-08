@@ -1,0 +1,56 @@
+{
+  "packageId": "com.melaosstudios.app",
+  "host": "melaosstudios.com",
+  "name": "MELAOS STUDIOS",
+  "launcherName": "MELAOS",
+  "display": "standalone",
+  "themeColor": "#0A0A0A",
+  "themeColorDark": "#0A0A0A",
+  "navigationColor": "#0A0A0A",
+  "navigationColorDark": "#0A0A0A",
+  "navigationDividerColor": "#0A0A0A",
+  "navigationDividerColorDark": "#0A0A0A",
+  "backgroundColor": "#0A0A0A",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://melaosstudios.com/icon-512.png",
+  "maskableIconUrl": "https://melaosstudios.com/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\Fellito Rodriguez\\MELAOS-android-signing\\melaos-upload.keystore",
+    "alias": "melaos"
+  },
+  "appVersionName": "1.0.1",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://melaosstudios.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://melaosstudios.com/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "Google Play app signing key",
+      "value": "97:A3:F1:ED:ED:77:22:37:70:4A:79:F9:5D:14:E1:1A:13:A6:29:B0:91:80:01:9A:56:CB:90:EF:1E:D5:E4:7E"
+    },
+    {
+      "name": "upload key (melaos-upload.keystore)",
+      "value": "A0:4E:BF:C9:20:EE:40:0C:B6:88:F6:8D:96:70:73:D4:B4:D4:15:E9:B0:59:74:FE:7A:18:E6:88:7F:45:A3:38"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.1"
+}

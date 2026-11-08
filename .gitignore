@@ -6,3 +6,15 @@ next-env.d.ts
 .env
 .env.local
 *.log
+
+# Android app (Bubblewrap TWA in android/twa): build outputs and signing keys
+# never go to git. The upload keystore lives outside the repo on purpose.
+android/twa/.gradle/
+android/twa/build/
+android/twa/app/build/
+android/twa/local.properties
+android/twa/*.apk
+android/twa/*.aab
+android/twa/*.idsig
+*.keystore
+*.jks

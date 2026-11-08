@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Music2, Sparkles, GripHorizontal, Mic, Volume2, VolumeX } from 'lucide-react';
 import { useAudioStore } from '@/lib/store';
+import ReportButton from '@/components/ReportButton';
 
 interface Message {
   role: 'user' | 'melao';
@@ -350,6 +351,15 @@ export default function MelaoAgent() {
                   }>
                   {m.text}
                 </div>
+                {/* Report a reply (Play's AI-content rule); not the canned greeting */}
+                {m.role === 'melao' && i > 0 && (
+                  <ReportButton iconOnly kind="chat"
+                    className="self-end ml-1 p-1 text-gray-600 hover:text-[#FF2D78] transition-colors"
+                    getContext={() => ({
+                      reply: m.text,
+                      message: messages[i - 1]?.role === 'user' ? messages[i - 1].text : '',
+                    })} />
+                )}
               </div>
             ))}
             {typing && (
