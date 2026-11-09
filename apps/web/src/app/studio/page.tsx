@@ -431,6 +431,24 @@ export default function StudioPage() {
     setTimeMs(Math.floor(newTime * 1000));
   }, [waveformPeaks]);
 
+  // An idea started on the home page arrives in the URL: fill the fields
+  // with it, and on phones open the AI tab so it is the first thing seen.
+  // Read from window.location (not useSearchParams) so the page can stay
+  // statically rendered.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const p = q.get('prompt');
+    const g = q.get('genre');
+    const v = q.get('vocals');
+    const l = q.get('lang');
+    if (p) setPrompt(p.slice(0, 500));
+    if (g && (GENRES as readonly string[]).includes(g)) setGenre(g);
+    if (v === 'none') setInstrumental(true);
+    else if (v === 'male' || v === 'female') { setInstrumental(false); setVocalGender(v); }
+    if (l && LYRICS_LANGUAGES.includes(l)) setLyricsLang(l);
+    if (p || g) setMobileTab('ai');
+  }, []);
+
   // Ask the server which song engines it can run.
   useEffect(() => {
     fetch('/api/generate')
@@ -743,14 +761,14 @@ export default function StudioPage() {
     <div className="p-4 flex flex-col gap-4">
       {/* Simple / Advanced / Lyrics toggle */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-stretch border border-line rounded-xs overflow-hidden" role="tablist">
+        <div className="flex items-stretch rounded-full bg-ink-2 p-1 gap-1" role="tablist">
           {([['simple', t('studio.simple')], ['advanced', t('studio.advanced')], ['lyrics', t('studio.lyrics')]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setAiTab(key)}
               role="tab" aria-selected={aiTab === key}
               style={{ minHeight: '36px', touchAction: 'manipulation' }}
-              className={`px-3.5 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors border-r border-line last:border-r-0 ${
+              className={`px-4 rounded-full text-[12.5px] font-semibold transition-colors ${
                 aiTab === key
-                  ? 'bg-ink-3 text-melaos-orange shadow-[inset_0_-1px_0_#F28C28]'
+                  ? 'bg-white text-[#08080A]'
                   : 'text-fog hoverable:hover:text-white'
               }`}>
               {label}
@@ -1784,7 +1802,7 @@ export default function StudioPage() {
 
   /* ─────────────────────────────────────────────────────── */
   return (
-    <div className="h-[calc(100dvh_-_var(--nav-h)_-_var(--player-h))] flex flex-col overflow-hidden relative"
+    <div className="h-[calc(100dvh_-_var(--nav-h)_-_var(--chrome-bottom)_-_var(--panel-gap))] flex flex-col overflow-hidden relative"
       style={{ background: 'linear-gradient(180deg, #050507 0%, #0A0A0E 50%, #050507 100%)' }}>
       <DotGrid />
       <ScanLines />
@@ -1819,22 +1837,21 @@ export default function StudioPage() {
       {/* ── MOBILE (< lg) ─────────────────────────────────── */}
       <div className="lg:hidden relative z-10 flex flex-col flex-1 overflow-hidden">
         {/* Tab bar */}
-        <div className="flex border-b border-line shrink-0 bg-ink-1" role="tablist">
+        <div className="flex gap-1 p-1.5 m-2 rounded-full bg-ink-2 shrink-0" role="tablist">
           {(['timeline', 'ai', 'mix'] as const).map(tab => {
             const Icon = tab === 'ai' ? Sparkles : tab === 'mix' ? SlidersHorizontal : Clock3;
             const active = mobileTab === tab;
             return (
               <button key={tab} onClick={() => setMobileTab(tab)}
                 role="tab" aria-selected={active}
-                style={{ minHeight: '48px', touchAction: 'manipulation' }}
-                className={`relative flex-1 flex items-center justify-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.14em] border-r border-line last:border-r-0 transition-colors ${
-                  active ? 'bg-ink-3 text-melaos-orange' : 'text-fog'
+                style={{ minHeight: '42px', touchAction: 'manipulation' }}
+                className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-full text-[12.5px] font-semibold transition-colors ${
+                  active ? 'bg-white text-[#08080A]' : 'text-fog'
                 }`}>
                 <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
                 <span>
                   {tab === 'ai' ? 'AI Generate' : tab === 'mix' ? 'Mixer' : 'Timeline'}
                 </span>
-                {active && <span className="absolute inset-x-0 bottom-0 h-[2px] bg-melaos-orange" />}
               </button>
             );
           })}

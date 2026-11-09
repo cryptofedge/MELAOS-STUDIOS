@@ -131,11 +131,11 @@ export default function ReportButton({ kind, getContext, className, iconOnly }: 
       <div
         role="dialog" aria-modal="true" aria-labelledby={titleId}
         onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md bg-ink-1 border border-line-strong rounded-t-[4px] sm:rounded-[4px] p-5 sm:p-6 text-left max-h-[90dvh] overflow-y-auto"
+        className="w-full sm:max-w-md bg-ink-2 border border-line-strong rounded-t-[26px] sm:rounded-[26px] p-5 sm:p-6 text-left max-h-[90dvh] overflow-y-auto"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <h2 id={titleId} className="display font-light text-lg text-white flex items-center gap-2.5">
+          <h2 id={titleId} className="display text-lg text-white flex items-center gap-2.5">
             <Flag className="w-4 h-4 text-melaos-hot" strokeWidth={1.75} /> {tx.title}
           </h2>
           <button onClick={() => setOpen(false)} aria-label={tx.close}
@@ -155,11 +155,11 @@ export default function ReportButton({ kind, getContext, className, iconOnly }: 
         ) : (
           <>
             <p className="text-sm text-fog mb-4 leading-relaxed">{tx.intro(tx.what[kind])}</p>
-            <fieldset className="flex flex-col gap-px bg-line border border-line mb-5">
+            <fieldset className="flex flex-col gap-1.5 mb-5">
               {REPORT_REASONS.map((r, i) => (
                 <label key={r}
-                  className={`flex items-center gap-3 px-3 min-h-[44px] cursor-pointer text-sm transition-colors ${
-                    reason === r ? 'bg-melaos-hot/10 text-white shadow-[inset_2px_0_0_#FF2D78]' : 'bg-ink-1 text-fog hoverable:hover:bg-ink-2 hoverable:hover:text-white'
+                  className={`flex items-center gap-3 px-3.5 min-h-[44px] rounded-xl cursor-pointer text-sm transition-colors ${
+                    reason === r ? 'bg-melaos-hot/15 text-white ring-1 ring-melaos-hot' : 'bg-ink-3 text-fog hoverable:hover:bg-ink-4 hoverable:hover:text-white'
                   }`}>
                   <input type="radio" name={`${titleId}-reason`} value={r} checked={reason === r}
                     onChange={() => { setReason(r); setError(null); }}

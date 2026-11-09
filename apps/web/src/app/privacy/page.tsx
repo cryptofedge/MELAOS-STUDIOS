@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, CalendarDays } from 'lucide-react';
 
 // Public privacy policy. Google Play requires a privacy policy URL for every
 // app, reachable on the web and from inside the app (footer link). Both
@@ -24,8 +24,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 };
 
-// Links in the policy text: orange, with a quiet underline that brightens on hover.
-const LINK = 'text-melaos-orange underline underline-offset-4 decoration-melaos-orange/40 hoverable:hover:decoration-melaos-orange';
+// Links in the policy text: light brand pink (readable on the dark panel),
+// with a quiet underline that brightens on hover.
+const LINK = 'font-medium text-[#ff7cc0] underline underline-offset-4 decoration-[#ff7cc0]/40 hoverable:hover:decoration-[#ff7cc0]';
 
 const Email = () => (
   <a href={`mailto:${CONTACT_EMAIL}`} className={LINK}>{CONTACT_EMAIL}</a>
@@ -35,41 +36,35 @@ const A = ({ href, children }: { href: string; children: ReactNode }) => (
   <a href={href} target="_blank" rel="noopener noreferrer" className={LINK}>{children}</a>
 );
 
-// Each article resets the counter; each section shows its number (01, 02, …)
-// in the left gutter. The number is decoration, hidden from screen readers.
-function Section({ title, children }: { title: string; children: ReactNode }) {
+// A policy section: a plain heading over paragraphs in the reading column.
+// `highlight` puts it on a soft rounded card (used for the summary).
+function Section({ title, children, highlight = false }: { title: string; children: ReactNode; highlight?: boolean }) {
   return (
-    <section className="[counter-increment:policy] border-t border-line-soft pt-6 pb-10 sm:pb-12 last:pb-0">
-      <div className="flex items-baseline gap-4">
-        <span aria-hidden className="w-8 shrink-0 font-mono text-[11px] text-fog-dim tabular-nums before:content-[counter(policy,decimal-leading-zero)]" />
-        <h3 className="display font-light text-white text-lg sm:text-[22px] leading-snug">{title}</h3>
-      </div>
-      <div className="mt-4 sm:mt-5 sm:pl-12">
-        <div className="max-w-[68ch] space-y-4 text-fog text-base sm:text-[17px] leading-relaxed [&_strong]:font-medium">{children}</div>
-      </div>
+    <section className={highlight ? 'panel p-5 sm:p-7' : undefined}>
+      <h3 className="display text-white text-lg sm:text-xl leading-snug">{title}</h3>
+      <div className="mt-3 max-w-[68ch] space-y-4 text-fog text-base sm:text-[17px] leading-relaxed [&_strong]:font-semibold">{children}</div>
     </section>
   );
 }
 
-const List = ({ children }: { children: ReactNode }) => <ul className="list-[square] pl-5 space-y-2.5 marker:text-melaos-orange/60">{children}</ul>;
+const List = ({ children }: { children: ReactNode }) => <ul className="list-disc pl-5 space-y-2.5 marker:text-melaos-pink">{children}</ul>;
 
-// Article layout: on phones the heading stacks above the sections; on desktop
-// it becomes a sticky left rail beside a reading column.
-const ARTICLE = 'grid lg:grid-cols-12 gap-x-8 scroll-mt-[calc(var(--nav-h)+1.5rem)] [counter-reset:policy]';
-const RAIL = 'lg:col-span-4 lg:self-start lg:sticky lg:top-[calc(var(--nav-h)+2.5rem)] lg:border-t lg:border-line-soft lg:pt-6 pb-8 lg:pb-0';
-const ARTICLE_TITLE = 'display font-light text-white leading-[1.08] text-[clamp(1.6rem,3.2vw,2.5rem)]';
-const EFFECTIVE = 'mt-4 label tabular-nums flex items-center gap-2';
+// Article layout: the title and effective date, then the sections in one
+// comfortable reading column. Jump links land below the top bar.
+const ARTICLE = 'scroll-mt-24';
+const ARTICLE_TITLE = 'display text-white text-2xl sm:text-3xl leading-tight';
+const EFFECTIVE = 'mt-3 inline-flex items-center gap-2 rounded-full bg-white/[0.06] border border-line-soft px-3.5 py-1.5 text-[13px] font-medium text-fog tabular-nums';
+const SECTIONS = 'mt-8 sm:mt-10 space-y-8 sm:space-y-10';
 
 function Spanish() {
   return (
     <article id="es" lang="es" className={ARTICLE}>
-      <header className={RAIL}>
-        <p className="label mb-4">01 — Español</p>
+      <header>
         <h2 className={ARTICLE_TITLE}>Política de privacidad</h2>
-        <p className={EFFECTIVE}><span className="inline-block w-4 h-px bg-melaos-orange" aria-hidden />Vigente desde el {EFFECTIVE_ES}</p>
+        <p className={EFFECTIVE}><CalendarDays className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden />Vigente desde el {EFFECTIVE_ES}</p>
       </header>
 
-      <div className="lg:col-span-8">
+      <div className={SECTIONS}>
 
         <Section title="Quiénes somos">
           <p>
@@ -79,7 +74,7 @@ function Spanish() {
           </p>
         </Section>
 
-        <Section title="En resumen">
+        <Section title="En resumen" highlight>
           <List>
             <li>No hay cuentas reales todavía: no te pedimos nombre, correo ni contraseña. La pantalla «Entrar» es una vista previa y lo que escribas allí no se envía ni se guarda.</li>
             <li>Lo que escribes o subes para crear música se envía a proveedores de IA para generar el resultado.</li>
@@ -149,13 +144,12 @@ function Spanish() {
 function English() {
   return (
     <article id="en" lang="en" className={ARTICLE}>
-      <header className={RAIL}>
-        <p className="label mb-4">02 — English</p>
+      <header>
         <h2 className={ARTICLE_TITLE}>Privacy Policy</h2>
-        <p className={EFFECTIVE}><span className="inline-block w-4 h-px bg-melaos-orange" aria-hidden />Effective {EFFECTIVE_EN}</p>
+        <p className={EFFECTIVE}><CalendarDays className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden />Effective {EFFECTIVE_EN}</p>
       </header>
 
-      <div className="lg:col-span-8">
+      <div className={SECTIONS}>
 
         <Section title="Who we are">
           <p>
@@ -165,7 +159,7 @@ function English() {
           </p>
         </Section>
 
-        <Section title="In short">
+        <Section title="In short" highlight>
           <List>
             <li>There are no real accounts yet: we do not ask for your name, email or password. The “Sign In” screen is a preview; nothing typed there is sent or stored.</li>
             <li>What you type or upload to create music is sent to AI providers to generate the result.</li>
@@ -232,40 +226,28 @@ function English() {
   );
 }
 
-// Language jump links: a two-cell ruled strip.
-const JUMP = 'group bg-ink-0 min-h-[52px] px-4 flex items-center justify-between gap-3 transition-colors hoverable:hover:bg-ink-1';
-const JUMP_TEXT = 'font-mono text-[11px] tracking-[0.14em] uppercase text-[#ECECF1] transition-colors hoverable:group-hover:text-melaos-orange';
-const JUMP_ICON = 'w-4 h-4 shrink-0 text-fog-dim transition-colors hoverable:group-hover:text-melaos-orange';
+// Language jump links: two glass pills.
+const JUMP = 'btn btn-ghost !px-4';
+const JUMP_ICON = 'w-4 h-4 shrink-0 text-fog';
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-10 sm:pt-16 pb-16 sm:pb-24">
-      <header className="grid lg:grid-cols-12 gap-8 items-end border-b border-line-soft pb-8 sm:pb-10">
-        <div className="lg:col-span-8">
-          <p className="label mb-4 flex items-center gap-2"><span className="inline-block w-6 h-px bg-melaos-orange" aria-hidden />Legal</p>
-          <h1 className="display font-light text-white leading-[1] text-[clamp(2rem,7vw,4.5rem)]">
-            Privacidad <span className="text-fog-faint">·</span> <span className="font-medium text-melaos-orange">Privacy</span>
-          </h1>
-        </div>
-        <nav className="lg:col-span-4 grid grid-cols-2 gap-px bg-line-soft border border-line-soft">
-          <a href="#es" className={JUMP}>
-            <span className="flex items-baseline gap-3">
-              <span aria-hidden className="font-mono text-[11px] text-fog-dim tabular-nums">01</span>
-              <span className={JUMP_TEXT}>Español</span>
-            </span>
-            <ArrowDown className={JUMP_ICON} strokeWidth={1.5} aria-hidden />
+    <div className="mx-auto max-w-[800px] px-safe md:px-8 py-6 sm:py-10">
+      <header>
+        <h1 className="display text-white text-3xl sm:text-4xl lg:text-5xl leading-[1.05]">
+          Privacidad <span className="text-fog-faint">·</span> <span className="text-brand pr-[0.04em]">Privacy</span>
+        </h1>
+        <nav className="mt-6 flex flex-wrap gap-2">
+          <a href="#es" lang="es" className={JUMP}>
+            Español <ArrowDown className={JUMP_ICON} strokeWidth={2} aria-hidden />
           </a>
-          <a href="#en" className={JUMP}>
-            <span className="flex items-baseline gap-3">
-              <span aria-hidden className="font-mono text-[11px] text-fog-dim tabular-nums">02</span>
-              <span className={JUMP_TEXT}>English</span>
-            </span>
-            <ArrowDown className={JUMP_ICON} strokeWidth={1.5} aria-hidden />
+          <a href="#en" lang="en" className={JUMP}>
+            English <ArrowDown className={JUMP_ICON} strokeWidth={2} aria-hidden />
           </a>
         </nav>
       </header>
       <div className="mt-10 sm:mt-14"><Spanish /></div>
-      <hr className="my-16 sm:my-24 border-line-soft" />
+      <hr className="my-14 sm:my-20 border-line-soft" />
       <English />
     </div>
   );

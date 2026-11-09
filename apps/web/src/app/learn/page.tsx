@@ -70,82 +70,91 @@ const LESSONS: Lesson[] = [
   },
 ];
 
-// Reading styles for the lesson HTML (injected below). Body copy in fog at
-// 16–17px with relaxed leading; the "law-box" notes become ruled callouts
-// with an orange left edge.
+// Reading styles for the lesson HTML (injected below): body copy in fog at
+// 16–17px with relaxed leading; the "law-box" notes become rounded callout
+// cards with a soft brand tint.
 const LESSON_PROSE = [
   'text-fog text-base sm:text-[17px] leading-relaxed',
-  '[&_p]:mb-5',
-  '[&_strong]:text-white [&_strong]:font-medium',
-  '[&_a]:text-melaos-orange [&_a]:underline [&_a]:underline-offset-4',
-  '[&_.law-box]:my-6 [&_.law-box]:bg-ink-1 [&_.law-box]:border [&_.law-box]:border-line [&_.law-box]:border-l-2 [&_.law-box]:border-l-melaos-orange',
-  '[&_.law-box]:px-4 sm:[&_.law-box]:px-5 [&_.law-box]:py-4 sm:[&_.law-box]:py-5',
-  '[&_.law-box]:text-[15px] sm:[&_.law-box]:text-base [&_.law-box]:leading-relaxed [&_.law-box]:text-[#ECECF1]/85',
+  '[&_p]:mb-4',
+  '[&_strong]:text-white [&_strong]:font-semibold',
+  '[&_a]:text-[#ff7cc0] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4 [&_a]:decoration-[#ff7cc0]/40',
+  '[&_.law-box]:my-5 [&_.law-box]:rounded-2xl [&_.law-box]:border [&_.law-box]:border-line',
+  '[&_.law-box]:bg-ink-3 [&_.law-box]:bg-[linear-gradient(135deg,rgba(242,140,40,0.10),rgba(233,30,140,0.07)_50%,rgba(174,6,237,0.10))]',
+  '[&_.law-box]:p-4 sm:[&_.law-box]:p-5',
+  '[&_.law-box]:text-[15px] sm:[&_.law-box]:text-base [&_.law-box]:leading-relaxed [&_.law-box]:text-[#E4E4EA]',
   '[&>*:first-child]:!mt-0 [&>*:last-child]:!mb-0',
 ].join(' ');
+
+// Tag colors for the lesson chips, in turn.
+const TAG_COLORS = ['tag-pink', 'tag-orange', 'tag-cyan'];
 
 export default function LearnPage() {
   const [openId, setOpenId] = useState<string | null>('ai_music');
 
   return (
-    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-10 sm:pt-16 pb-16 sm:pb-24">
-      <div className="grid lg:grid-cols-12 gap-10 lg:gap-8">
-        {/* Intro: stacked on phones and tablets, a sticky left rail on desktop */}
-        <header className="lg:col-span-4 lg:self-start lg:sticky lg:top-[calc(var(--nav-h)+2.5rem)] lg:border-t lg:border-line-soft lg:pt-6">
-          <div>
-            <p className="label mb-4">01 — Lessons</p>
-            <h1 className="display font-light text-white leading-[1] text-[clamp(2.4rem,7vw,4rem)]">
-              Learn
-            </h1>
-            <p className="mt-5 text-fog text-base sm:text-[17px] leading-relaxed max-w-[34rem]">
-              Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
-              this is what you need to know to actually own and get paid for what you make.
-            </p>
-          </div>
-          <Link href="/studio"
-            className="hidden sm:inline-flex mt-8 btn btn-primary">
-            <Plus className="w-4 h-4" strokeWidth={1.75} /> Create
-          </Link>
-        </header>
-
-        {/* Lessons: a ruled index; each row opens into the reading column */}
-        <div className="lg:col-span-8 border-t border-line-soft">
-          {LESSONS.map((lesson, i) => {
-            const open = openId === lesson.id;
-            return (
-              <div
-                key={lesson.id}
-                className="border-b border-line-soft"
-              >
-                <button
-                  onClick={() => setOpenId(open ? null : lesson.id)}
-                  aria-expanded={open}
-                  className="group w-full min-h-[56px] flex items-start gap-4 sm:gap-6 py-5 sm:py-6 text-left touch-manipulation"
-                >
-                  <span className={`w-6 shrink-0 pt-[7px] font-mono text-[11px] tabular-nums transition-colors ${open ? 'text-melaos-orange' : 'text-fog-dim hoverable:group-hover:text-white'}`}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block display font-light text-white text-[17px] sm:text-[22px] leading-snug">{lesson.title}</span>
-                    <span className="block mt-2.5 label !text-melaos-orange">{lesson.tag}</span>
-                  </span>
-                  <ChevronDown
-                    className={`w-[18px] h-[18px] mt-1 shrink-0 transition-[transform,color] ${open ? 'rotate-180 text-melaos-orange' : 'text-fog-dim hoverable:group-hover:text-white'}`}
-                    strokeWidth={1.5}
-                  />
-                </button>
-                {open && (
-                  <div className="pb-10 sm:pl-12">
-                    <div
-                      className={`lesson-body max-w-[68ch] ${LESSON_PROSE}`}
-                      dangerouslySetInnerHTML={{ __html: lesson.body }}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+    <div className="mx-auto max-w-[880px] px-safe md:px-8 py-6 sm:py-10">
+      <header className="flex items-end justify-between gap-6">
+        <div>
+          <h1 className="display text-3xl sm:text-4xl lg:text-5xl leading-[1.05]">
+            <span className="text-brand pr-[0.04em]">Learn</span>
+          </h1>
+          <p className="mt-4 max-w-[60ch] text-fog text-base sm:text-[17px] leading-relaxed">
+            Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
+            this is what you need to know to actually own and get paid for what you make.
+          </p>
         </div>
+        <Link href="/studio"
+          className="hidden sm:inline-flex shrink-0 btn btn-primary">
+          <Plus className="w-4 h-4" strokeWidth={2} /> Create
+        </Link>
+      </header>
+
+      {/* Lessons: rounded cards that open in place */}
+      <div className="mt-8 sm:mt-10 space-y-3">
+        {LESSONS.map((lesson, i) => {
+          const open = openId === lesson.id;
+          return (
+            <div
+              key={lesson.id}
+              className={`panel overflow-hidden transition-colors ${open ? 'border-line-strong' : ''}`}
+            >
+              <button
+                onClick={() => setOpenId(open ? null : lesson.id)}
+                aria-expanded={open}
+                className="group w-full min-h-[64px] flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[17px] text-left touch-manipulation transition-colors hoverable:hover:bg-white/[0.03] focus-visible:outline-offset-[-3px]"
+              >
+                <span aria-hidden className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-[14px] bg-ink-3 flex items-center justify-center text-xl sm:text-[22px] leading-none">
+                  {lesson.icon}
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block display text-white text-base sm:text-lg leading-snug">{lesson.title}</span>
+                  <span className="mt-2 flex">
+                    <span className={`tag normal-case tracking-normal text-[11px] ${TAG_COLORS[i % TAG_COLORS.length]}`}>{lesson.tag}</span>
+                  </span>
+                </span>
+                <span
+                  aria-hidden
+                  className={`w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${
+                    open ? 'bg-white text-[#08080A]' : 'bg-white/[0.06] text-fog hoverable:group-hover:text-white'
+                  }`}
+                >
+                  <ChevronDown
+                    className={`w-[18px] h-[18px] transition-transform ${open ? 'rotate-180' : ''}`}
+                    strokeWidth={2}
+                  />
+                </span>
+              </button>
+              {open && (
+                <div className="px-4 pb-6 sm:pl-[84px] sm:pr-6 sm:pb-7">
+                  <div
+                    className={`lesson-body max-w-[68ch] ${LESSON_PROSE}`}
+                    dangerouslySetInnerHTML={{ __html: lesson.body }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

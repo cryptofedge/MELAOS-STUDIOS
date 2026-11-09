@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Play, Pause, Heart, MoreHorizontal, ArrowRight, Search, Plus } from 'lucide-react';
+import { Play, Pause, Heart, MoreHorizontal, Search, Plus } from 'lucide-react';
 import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 import { GENRES } from '@/lib/genreProfiles';
@@ -20,9 +20,10 @@ const STAFF_PICKS: Song[] = [
   { id: 's7', title: 'Lucid Dreaming', artist: 'Varletine', artistId: 'sp7', coverColor: '#A855F7', coverGradient: 'linear-gradient(135deg,#7C3AED,#EC4899)', coverArt: '/covers/s7.jpg', duration: 234, durationFormatted: '3:54', plays: 410000, likes: 72000, genre: 'Electronic', mood: 'Euphoric', bpm: 124, isPublic: true, createdAt: '2026-06-28', tags: ['staffpick'] },
 ];
 
-// One cell of a ruled strip or grid. The parent draws the hairlines; the
-// caller passes the width (rows) or the cell borders (grids).
-function SongArtCard({ song, version, className = '' }: { song: Song; version?: string; className?: string }) {
+// A square rounded cover with the title, artist and play count under it.
+// Used in the carousels (the caller passes the width) and in the grids.
+// `rank` puts a "#1"-style chart tag on the cover.
+function SongArtCard({ song, version, rank, className = '' }: { song: Song; version?: string; rank?: number; className?: string }) {
   const { setCurrentSong, currentSong, isPlaying, likedIds, toggleLikedSong } = useAudioStore();
   const [hovered, setHovered] = useState(false);
   const isActive = currentSong?.id === song.id && isPlaying;
@@ -31,92 +32,95 @@ function SongArtCard({ song, version, className = '' }: { song: Song; version?: 
 
   return (
     <div
-      className={`group cursor-pointer bg-ink-0 p-2.5 sm:p-3 transition-colors hoverable:hover:bg-ink-1 ${className}`}
+      className={`group cursor-pointer ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => setCurrentSong(song)}
     >
       <div
-        className="relative aspect-square overflow-hidden bg-ink-2"
+        className="relative aspect-square overflow-hidden rounded-2xl bg-ink-2"
         style={{ background: song.coverGradient }}
       >
         {song.coverArt && (
-          <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-[1.03]" />
+          <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-[1.04]" />
         )}
         {/* Overlay: controls on a bottom scrim */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex items-end justify-between transition-opacity focus-within:opacity-100 ${hovered || isActive ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`absolute inset-0 flex items-end justify-between p-1 bg-gradient-to-t from-black/80 via-black/10 to-transparent transition-opacity focus-within:opacity-100 ${hovered || isActive ? 'opacity-100' : 'opacity-0'}`}>
           <button
             onClick={e => { e.stopPropagation(); toggleLikedSong(song.id); }}
             aria-label="Like"
             aria-pressed={isLiked}
-            className={`w-11 h-11 flex items-center justify-center transition-colors ${isLiked ? 'text-melaos-pink' : 'text-white hoverable:hover:text-melaos-pink'}`}>
-            <Heart className="w-4 h-4" strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isLiked ? 'text-melaos-pink' : 'text-white hoverable:hover:text-melaos-pink'}`}>
+            <Heart className="w-[18px] h-[18px]" strokeWidth={2} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={e => e.stopPropagation()}
             aria-label={isActive ? 'Pause' : 'Play'}
-            className="btn btn-primary !w-11 !min-h-[44px] !px-0">
+            className="btn btn-primary !w-11 !min-h-[44px] !px-0 shadow-[0_6px_18px_rgba(0,0,0,0.35)]">
             {isActive ? <Pause className="w-4 h-4 fill-current" strokeWidth={0} /> : <Play className="w-4 h-4 fill-current" strokeWidth={0} />}
           </button>
-          <button onClick={e => e.stopPropagation()} aria-label="More" className="w-11 h-11 flex items-center justify-center text-white transition-colors hoverable:hover:text-melaos-orange">
-            <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
+          <button onClick={e => e.stopPropagation()} aria-label="More" className="w-11 h-11 rounded-full flex items-center justify-center text-white transition-colors hoverable:hover:bg-white/10">
+            <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
           </button>
         </div>
-        {/* Version badge */}
-        {version && (
-          <div className="absolute top-2 left-2 rounded-xs bg-ink-0/80 px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.14em] uppercase text-melaos-orange">
-            {version}
+        {/* Chart rank and version tags */}
+        {(!!rank || !!version) && (
+          <div className="absolute top-2 left-2 flex gap-1">
+            {!!rank && <span className="tag tag-white tabular-nums">#{rank}</span>}
+            {version && <span className="tag bg-black/60 text-[#ffb26b]">{version}</span>}
           </div>
         )}
         {/* Playing indicator */}
         {isActive && (
-          <div className="absolute top-2 right-2 flex gap-0.5 items-end rounded-xs bg-ink-0/75 px-1.5 py-1">
+          <div className="absolute top-2 right-2 flex gap-0.5 items-end rounded-full bg-black/60 px-2 py-1.5">
             {[3,5,4,6,3].map((h, i) => (
               <div key={i} className="waveform-bar" style={{ height: `${h * 3}px`, backgroundColor: '#F28C28' }} />
             ))}
           </div>
         )}
       </div>
-      <p className="mt-3 text-white text-[13px] sm:text-sm font-medium truncate">{song.title}</p>
+      <p className={`mt-2.5 text-[13px] sm:text-sm font-semibold truncate transition-colors ${isCurrent ? 'text-[#ff7cc0]' : 'text-white'}`}>{song.title}</p>
       <p className="mt-0.5 text-fog text-xs truncate">{song.artist}</p>
-      <p className="mt-2 flex items-center gap-1.5 font-mono text-[10.5px] text-fog-dim tabular-nums">
-        <Play className="w-2.5 h-2.5 fill-current" strokeWidth={0} aria-hidden /> {formatPlays(song.plays)}
-        <span className="text-fog-faint" aria-hidden>·</span>
-        <Heart className="w-2.5 h-2.5" strokeWidth={1.75} aria-hidden /> {formatPlays(song.likes)}
+      <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-fog-dim tabular-nums">
+        <Play className="w-3 h-3 fill-current" strokeWidth={0} aria-hidden /> {formatPlays(song.plays)}
+        <span className="mx-0.5" aria-hidden>·</span>
+        <Heart className="w-3 h-3" strokeWidth={2} aria-hidden /> {formatPlays(song.likes)}
       </p>
     </div>
   );
 }
 
-// Numbered row header: "01 — Title", hairline under it, optional action.
-function RowHead({ index, title, action }: { index: string; title: string; action?: ReactNode }) {
+// Section header: bold title, optional pill action on the right.
+function RowHead({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div className="flex items-end justify-between gap-4 border-b border-line-soft pb-4 mb-5 sm:mb-6">
-      <div className="flex items-baseline gap-3 sm:gap-4 min-w-0">
-        <span className="label tabular-nums shrink-0" aria-hidden>{index} —</span>
-        <h2 className="display font-light text-white leading-tight text-[clamp(1.15rem,2.6vw,1.75rem)] min-w-0 break-words">{title}</h2>
-      </div>
+    <div className="flex items-center justify-between gap-4 mb-3 sm:mb-4">
+      <h2 className="display text-white text-xl sm:text-2xl leading-tight min-w-0 break-words">{title}</h2>
       {action}
     </div>
   );
 }
 
-function HorizontalRow({ index, title, songs, seeAll }: { index: string; title: string; songs: any[]; seeAll?: string }) {
+function HorizontalRow({ title, songs, seeAll, ranked = false }: { title: string; songs: any[]; seeAll?: string; ranked?: boolean }) {
   return (
-    <section className="mb-12 sm:mb-16">
+    <section>
       <RowHead
-        index={index}
         title={title}
         action={seeAll && (
-          <button className="btn btn-quiet !px-0 shrink-0">
-            See all <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+          // A 34px pill; the ::after strip makes the tap target 44px tall.
+          <button className="btn btn-ghost !min-h-[34px] !px-3.5 text-xs shrink-0 relative after:absolute after:inset-x-0 after:-inset-y-[5px]">
+            See all
           </button>
         )}
       />
-      <div className="-mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto snap-x snap-mandatory scroll-px-4 md:scroll-px-0 scrollbar-hide">
-        <div className="flex w-max gap-px bg-line-soft border border-line-soft empty:hidden">
-          {songs.map(s => <SongArtCard key={s.id} song={s} className="snap-start shrink-0 w-[160px] sm:w-[176px] lg:w-[188px]" />)}
-        </div>
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto snap-x scrollbar-hide scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 md:scroll-px-0 empty:hidden">
+        {songs.map((s, i) => (
+          <SongArtCard
+            key={s.id}
+            song={s}
+            rank={ranked ? i + 1 : undefined}
+            className="snap-start shrink-0 w-[148px] xs:w-[156px] sm:w-[176px] lg:w-[192px]"
+          />
+        ))}
       </div>
     </section>
   );
@@ -147,81 +151,81 @@ function ExploreContent() {
   const topRow = sorted.slice(0, 6);
   const newRow = [...mockSongs].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0,6);
 
+  // Grid of covers (search results, All Tracks).
+  const gridClass = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-7 empty:hidden';
+
   return (
-    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-8 sm:pt-12 pb-16 sm:pb-24">
-      {/* Page header */}
-      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-line-soft pb-6 sm:pb-8">
-        <div className="flex-1 min-w-[16rem]">
-          <span className="block w-6 h-px bg-melaos-orange mb-5 sm:mb-6" aria-hidden />
-          <h1 className="display font-light text-white leading-none text-[clamp(2.25rem,6vw,3.75rem)]">Explore</h1>
-          <p className="mt-4 max-w-xl text-fog text-sm sm:text-base leading-relaxed">Discover the latest and trending music from Eclat Universe artists</p>
+    <div className="mx-auto max-w-[1280px] px-safe md:px-8 py-6 sm:py-8">
+      {/* Page header, over a soft brand glow */}
+      <header className="relative">
+        <div className="brand-glow -top-20 inset-x-0 h-[240px] sm:h-[280px] opacity-40" aria-hidden />
+        <div className="relative flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl">Explore</h1>
+            <p className="mt-2 sm:mt-3 max-w-xl text-fog text-sm sm:text-base leading-relaxed">Discover the latest and trending music from Eclat Universe artists</p>
+          </div>
+          <a href="/studio"
+            className="hidden sm:inline-flex btn btn-primary shrink-0">
+            <Plus className="w-4 h-4" strokeWidth={2} /> Create
+          </a>
         </div>
-        <a href="/studio"
-          className="hidden sm:inline-flex btn btn-primary shrink-0">
-          <Plus className="w-4 h-4" strokeWidth={1.75} /> Create
-        </a>
+
+        {/* Inline search (mirrors navbar search, lets users refine on this page) */}
+        <div className="relative max-w-xl mt-5 sm:mt-6">
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-fog-dim" strokeWidth={2} />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            placeholder="Search songs, artists..."
+            className="field !rounded-full h-12 !py-0 pl-11 pr-5 text-[15px]"
+          />
+        </div>
       </header>
 
-      {/* Inline search (mirrors navbar search, lets users refine on this page) */}
-      <div className="relative max-w-md mt-6 sm:mt-8">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fog-dim" strokeWidth={1.75} />
-        <input
-          type="text"
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          placeholder="Search songs, artists..."
-          className="field h-11 !py-0 pl-10 text-sm"
-        />
-      </div>
-
       {searchResults ? (
-        <section className="mt-10 sm:mt-14">
+        <section className="mt-8 sm:mt-10">
           <RowHead
-            index="01"
             title={searchResults.length > 0 ? `Results for "${searchInput}"` : `No results for "${searchInput}"`}
           />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 border-l border-t border-line-soft empty:hidden">
-            {searchResults.map(song => <SongArtCard key={song.id} song={song} className="border-r border-b border-line-soft" />)}
+          <div className={gridClass}>
+            {searchResults.map(song => <SongArtCard key={song.id} song={song} />)}
           </div>
         </section>
       ) : (
-      <div className="mt-10 sm:mt-14">
+      <div className="mt-8 sm:mt-10 space-y-10 sm:space-y-12">
       {/* Staff Picks — always shown at top */}
-      <HorizontalRow index="01" title="Staff Picks" songs={STAFF_PICKS} seeAll="#" />
+      <HorizontalRow title="Staff Picks" songs={STAFF_PICKS} seeAll="#" />
 
-      <div className="mb-12 sm:mb-16">
-        {/* Tab bar */}
+      <div>
+        {/* Tab bar: pill segmented control (full width on phones) */}
         <div className="-mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto scrollbar-hide">
-          <div className="flex w-max min-w-full gap-6 sm:gap-8 border-b border-line-soft">
+          <div className="flex w-full sm:w-max gap-1 rounded-full bg-ink-2 p-1">
             {tabs.map(tab => {
               const active = activeTab === tab;
               return (
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   aria-pressed={active}
-                  className={`relative -mb-px h-11 min-w-touch font-mono text-[11px] tracking-[0.16em] uppercase whitespace-nowrap touch-manipulation transition-colors ${
-                    active ? 'text-white' : 'text-fog hoverable:hover:text-white'
+                  className={`flex-1 sm:flex-none h-11 min-w-touch px-2 sm:px-5 rounded-full text-sm font-semibold whitespace-nowrap touch-manipulation transition-colors ${
+                    active ? 'bg-white text-[#08080A]' : 'text-fog hoverable:hover:text-white'
                   }`}>
                   {tab}
-                  {active && <span className="absolute inset-x-0 bottom-0 h-px bg-melaos-orange" aria-hidden />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Genre selector: a ruled strip; scrolls on phones and tablets, wraps on desktop */}
-        <div className="mt-5 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto snap-x scroll-px-4 md:scroll-px-0 scrollbar-hide">
-          <div className="flex w-max lg:w-auto lg:flex-wrap pl-px pt-px">
+        {/* Genre chips: scroll on phones and tablets, wrap on desktop.
+            Each chip is 36px; its ::after strip makes the tap target 44px. */}
+        <div className="mt-3 -mx-4 px-4 md:-mx-1 md:px-1 py-1 overflow-x-auto snap-x scroll-px-4 md:scroll-px-1 scrollbar-hide">
+          <div className="flex w-max lg:w-auto lg:flex-wrap gap-2">
             {genres.map(genre => {
               const active = activeGenre === genre;
               return (
                 <button key={genre} onClick={() => setActiveGenre(genre)}
                   aria-pressed={active}
-                  className={`snap-start -ml-px -mt-px h-11 px-4 border font-mono text-[11px] tracking-[0.12em] uppercase whitespace-nowrap touch-manipulation transition-colors ${
-                    active
-                      ? 'relative z-[1] border-melaos-orange/70 bg-melaos-orange/10 text-melaos-orange'
-                      : 'border-line bg-ink-0 text-fog hoverable:hover:bg-ink-1 hoverable:hover:text-white'
-                  }`}>
+                  className={`chip ${active ? 'chip-on' : ''} relative snap-start shrink-0 touch-manipulation after:absolute after:inset-x-0 after:-inset-y-1`}>
                   {genre}
                 </button>
               );
@@ -230,20 +234,20 @@ function ExploreContent() {
         </div>
       </div>
 
-      {/* Trending row */}
-      <HorizontalRow index="02" title="Trending This Week" songs={topRow} seeAll="#" />
+      {/* Trending row: a chart, so each cover gets its rank */}
+      <HorizontalRow title="Trending This Week" songs={topRow} seeAll="#" ranked />
 
       {/* New releases */}
-      <HorizontalRow index="03" title="Fresh Drops" songs={newRow} seeAll="#" />
+      <HorizontalRow title="Fresh Drops" songs={newRow} seeAll="#" />
 
       {/* Full grid */}
       <section>
-        <RowHead index="04" title="All Tracks" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 border-l border-t border-line-soft empty:hidden">
-          {sorted.map(song => <SongArtCard key={song.id} song={song} className="border-r border-b border-line-soft" />)}
+        <RowHead title="All Tracks" />
+        <div className={gridClass}>
+          {sorted.map(song => <SongArtCard key={song.id} song={song} />)}
         </div>
         {sorted.length === 0 && (
-          <div className="border border-line-soft rule-grid py-20 px-6 text-center">
+          <div className="panel py-16 px-6 text-center">
             <p className="text-fog text-base">No songs found in this genre yet.</p>
           </div>
         )}

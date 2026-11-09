@@ -3,29 +3,28 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────────────
-   MELAOS design system
-   Near-black inks, hairline rules, one signal color (orange). The logo's
-   gradient (orange → pink → magenta) appears only as thin lines and in the
-   3D hero. Type: Unbounded for display, IBM Plex Sans for reading, IBM
-   Plex Mono for labels and readouts. Fonts load in app/layout.tsx.
+   MELAOS design system — built for 13–27 year-olds.
+   An app, not a brochure: dark neutral surfaces, rounded cards and pill
+   buttons, cover art carrying most of the color, and the logo's gradient
+   (orange → pink → magenta) on the main actions and as a glow. One type
+   family, Sora (loaded in layout.tsx). See DESIGN.md.
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Font families come from the Fontsource packages imported in layout.tsx. */
-  --font-display: 'Unbounded Variable';
-  --font-sans: 'IBM Plex Sans';
-  --font-mono: 'IBM Plex Mono';
+  --font-display: 'Sora Variable';
+  --font-sans: 'Sora Variable';
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
-  --ink-0: #050507;
-  --ink-1: #0a0a0e;
-  --ink-2: #101016;
-  --ink-3: #17171f;
-  --ink-4: #1f1f29;
-  --line: #22222c;
-  --line-strong: #33333f;
-  --fog: #9a9aa6;
-  --fog-dim: #6b6b78;
-  --text: #ececf1;
+  --ink-0: #08080a;
+  --ink-1: #111114;
+  --ink-2: #18181c;
+  --ink-3: #202026;
+  --ink-4: #2a2a31;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --fog: #a1a1ad;
+  --fog-dim: #8b8b97;
+  --text: #f4f4f6;
 
   --orange: #f28c28;
   --pink: #e91e8c;
@@ -34,7 +33,7 @@
   --cyan: #00ffd1;
   --blue: #007aff;
   --hot: #ff2d78;
-  --brand-gradient: linear-gradient(90deg, #f28c28 0%, #e91e8c 55%, #ae06ed 100%);
+  --brand-gradient: linear-gradient(100deg, #f28c28 0%, #e91e8c 55%, #ae06ed 100%);
 
   /* Notches, Dynamic Island, Android cutouts and home-indicator bars.
      Needs viewport-fit=cover (set in layout.tsx). */
@@ -42,12 +41,18 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
-  --nav-h: calc(56px + var(--safe-top));
-  /* Bottom padding for pages: just the home-bar inset, plus the player's
-     height while a song is loaded (AudioPlayer sets data-player on <html>). */
-  --player-h: var(--safe-bottom);
 
-  --chamfer: 10px;
+  /* App frame. Phones and tablets: a top bar and a bottom tab bar.
+     Computers (lg and up): a side menu and no top or bottom bar. */
+  --nav-h: calc(56px + var(--safe-top));
+  --tabs-h: calc(64px + var(--safe-bottom));
+  --side-w: 0px;
+  /* Margin around the rounded page panel on computers. */
+  --panel-gap: 0px;
+  /* Extra room while a song is loaded (AudioPlayer sets data-player). */
+  --player-h: 0px;
+  /* Bottom padding every page needs to clear the bars and the player. */
+  --chrome-bottom: calc(var(--tabs-h) + var(--player-h));
 
   /* Kept for older inline styles. */
   --bg-primary: var(--ink-0);
@@ -56,9 +61,21 @@
   --border: var(--line);
 }
 
-html[data-player='on'] { --player-h: calc(104px + var(--safe-bottom)); }
-@media (min-width: 768px) {
-  html[data-player='on'] { --player-h: calc(72px + var(--safe-bottom)); }
+html[data-player='on'] { --player-h: 66px; }
+
+@media (min-width: 1024px) {
+  :root {
+    --nav-h: 0px;
+    --tabs-h: var(--safe-bottom);
+    --side-w: 76px;
+    --panel-gap: 20px;
+  }
+  html[data-player='on'] { --player-h: 76px; }
+}
+@media (min-width: 1280px) {
+  :root { --side-w: 240px; }
+  /* The studio needs the width: the side menu stays a slim icon rail there. */
+  html[data-route='studio'] { --side-w: 76px; }
 }
 
 *, *::before, *::after {
@@ -89,24 +106,23 @@ body {
 }
 
 ::selection {
-  background: rgba(242, 140, 40, 0.35);
+  background: rgba(233, 30, 140, 0.4);
   color: #fff;
 }
 
 :focus-visible {
-  outline: 1.5px solid var(--orange);
+  outline: 2px solid var(--pink);
   outline-offset: 2px;
 }
 
-/* Scrollbars: thin hairlines that warm up on hover. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-color: var(--ink-4) transparent;
 }
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a44; }
 
 input, select, textarea {
   -webkit-appearance: none;
@@ -120,109 +136,25 @@ input, select, textarea {
 
 /* ── Components ───────────────────────────────────────────────────────── */
 @layer components {
-  /* Small uppercase label in mono: section indices, field names, readouts. */
+  /* Small label: section kickers, field names, metadata. */
   .label {
-    font-family: var(--font-mono), ui-monospace, monospace;
-    font-size: 10.5px;
-    line-height: 1.2;
-    letter-spacing: 0.18em;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fog-dim);
   }
 
+  /* Headlines: Sora, heavy and tight. */
   .display {
     font-family: var(--font-display), system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: -0.035em;
   }
 
-  /* Primary action: solid signal orange, dark text, chamfered corners. */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-height: 44px;
-    padding: 0 1.25rem;
-    font-family: var(--font-mono), ui-monospace, monospace;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    touch-action: manipulation;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
-    user-select: none;
-  }
-  .btn:active { transform: translateY(1px); }
-  .btn:disabled { opacity: 0.4; pointer-events: none; }
-
-  .btn-primary {
-    background: var(--orange);
-    color: #0a0a0e;
-    clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
-  }
-  .btn-ghost {
-    border: 1px solid var(--line-strong);
-    color: var(--text);
-    border-radius: 2px;
-    background: transparent;
-  }
-  .btn-quiet {
-    color: var(--fog);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .btn-primary:hover { background: #ff9c3f; }
-    .btn-ghost:hover { border-color: var(--orange); color: #fff; }
-    .btn-quiet:hover { color: #fff; }
-  }
-
-  /* Surfaces. */
-  .panel {
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-  }
-  .panel-raised {
-    background: linear-gradient(180deg, var(--ink-2), var(--ink-1));
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  }
-
-  /* HUD frame: four corner ticks drawn on top of whatever the element is. */
-  .hud { position: relative; }
-  .hud::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    pointer-events: none;
-    --tick: rgba(242, 140, 40, 0.7);
-    --len: 10px;
-    background:
-      linear-gradient(var(--tick) 0 0) top left / var(--len) 1px no-repeat,
-      linear-gradient(var(--tick) 0 0) top left / 1px var(--len) no-repeat,
-      linear-gradient(var(--tick) 0 0) top right / var(--len) 1px no-repeat,
-      linear-gradient(var(--tick) 0 0) top right / 1px var(--len) no-repeat,
-      linear-gradient(var(--tick) 0 0) bottom left / var(--len) 1px no-repeat,
-      linear-gradient(var(--tick) 0 0) bottom left / 1px var(--len) no-repeat,
-      linear-gradient(var(--tick) 0 0) bottom right / var(--len) 1px no-repeat,
-      linear-gradient(var(--tick) 0 0) bottom right / 1px var(--len) no-repeat;
-  }
-
-  /* Faint measuring grid, like graph paper on a console. */
-  .rule-grid {
-    background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 56px 56px;
-  }
-
-  /* 1px line in the logo's gradient. */
-  .brand-rule {
-    height: 1px;
-    background: var(--brand-gradient);
-  }
-
+  /* Words in the brand gradient (one phrase per headline at most). */
   .text-brand {
     background: var(--brand-gradient);
     -webkit-background-clip: text;
@@ -230,64 +162,234 @@ input, select, textarea {
     -webkit-text-fill-color: transparent;
   }
 
+  /* Buttons: rounded pills, 44px minimum touch height. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border-radius: 9999px;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    touch-action: manipulation;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease, filter 0.15s ease;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; pointer-events: none; }
+
+  /* The main action: the logo's gradient. */
+  .btn-primary {
+    background: var(--brand-gradient);
+    color: #fff;
+  }
+  /* Secondary: soft glass. */
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text);
+  }
+  /* Solid white, e.g. "Entrar". */
+  .btn-white {
+    background: #fff;
+    color: #08080a;
+  }
+  .btn-quiet {
+    color: var(--fog);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover { filter: brightness(1.08) saturate(1.05); }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.14); }
+    .btn-white:hover { background: #e9e9ee; }
+    .btn-quiet:hover { color: #fff; }
+  }
+
+  /* Surfaces: rounded cards on the main panel. */
+  .panel {
+    background: var(--ink-2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+  }
+  .panel-raised {
+    background: var(--ink-2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  }
+  /* Frosted glass, for things floating over the glow. */
+  .glass {
+    background: rgba(24, 24, 28, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  /* Pill chips: genres, filters, small tags. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    padding: 0 0.9rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: #d9d9e0;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .chip-on {
+    background: #fff;
+    border-color: #fff;
+    color: #08080a;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .chip:not(.chip-on):hover { background: rgba(255, 255, 255, 0.1); }
+  }
+
+  /* Tiny colored tags: HOT / NUEVO / TRENDING. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .tag-orange { background: rgba(242, 140, 40, 0.16); color: #ffb26b; }
+  .tag-pink { background: rgba(233, 30, 140, 0.16); color: #ff7cc0; }
+  .tag-cyan { background: rgba(0, 255, 209, 0.12); color: #7dfce6; }
+  .tag-white { background: #fff; color: #08080a; }
+
   /* Form fields. */
   .field {
     width: 100%;
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
     color: var(--text);
-    padding: 0.65rem 0.85rem;
-    transition: border-color 0.15s ease;
+    padding: 0.7rem 1rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
   }
   .field::placeholder { color: var(--fog-dim); }
-  .field:focus { outline: none; border-color: var(--orange); }
+  .field:focus { outline: none; border-color: rgba(233, 30, 140, 0.7); background: rgba(255, 255, 255, 0.07); }
 
-  /* Live dot for readouts. */
   .live-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 9999px;
     background: var(--cyan);
-    box-shadow: 0 0 0 3px rgba(0, 255, 209, 0.12);
   }
+
+  /* Soft brand-colored light behind hero areas. */
+  .brand-glow {
+    position: absolute;
+    pointer-events: none;
+    background:
+      radial-gradient(40% 55% at 32% 50%, rgba(242, 140, 40, 0.5), transparent 70%),
+      radial-gradient(40% 55% at 60% 42%, rgba(233, 30, 140, 0.45), transparent 70%),
+      radial-gradient(35% 50% at 80% 60%, rgba(174, 6, 237, 0.4), transparent 70%);
+    filter: blur(36px);
+  }
+
+  .brand-rule {
+    height: 2px;
+    background: var(--brand-gradient);
+  }
+
+  /* Retired from the previous design; kept as no-ops so old markup is safe. */
+  .hud::before { content: none; }
+  .rule-grid { background-image: none; }
 }
 
-/* ── Older class names still used across pages, restyled to the system ── */
+/* ── App frame: side menu and phone tab bar (Navbar.tsx) ── */
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: 14px;
+  color: var(--fog);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.side-item-on { background: var(--ink-2); color: #fff; }
+.side-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--ink-2);
+  color: inherit;
+}
+.side-item-on .side-icon:not(.bg-brand) { background: #fff; color: #08080a; }
+@media (hover: hover) and (pointer: fine) {
+  .side-item:hover { background: var(--ink-2); color: #fff; }
+}
+/* Labels and wide parts show only in the full menu (xl, outside the studio);
+   the rail parts only in the slim icon rail. */
+@media (max-width: 1279.98px) { .side-full { display: none !important; } }
+html[data-route='studio'] .side-full { display: none !important; }
+@media (min-width: 1280px) {
+  html:not([data-route='studio']) .side-rail { display: none !important; }
+}
+.side-rail.side-item { justify-content: center; }
+@media (max-width: 1279.98px) { .side-item { justify-content: center; padding: 4px; } }
+html[data-route='studio'] .side-item { justify-content: center; padding: 4px; }
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  font-size: 10.5px;
+  font-weight: 500;
+  touch-action: manipulation;
+}
+
+/* ── Older class names still used across pages, mapped to the system ── */
 .btn-orange {
-  background: var(--orange);
-  color: #0a0a0e !important;
+  background: var(--brand-gradient);
+  color: #fff !important;
+  border-radius: 9999px !important;
   font-weight: 600;
-  clip-path: polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer));
-  border-radius: 0 !important;
-  transition: background-color 0.15s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .btn-orange:hover { background: #ff9c3f; transform: none !important; }
+  .btn-orange:hover { filter: brightness(1.08); transform: none !important; }
 }
-
 .gradient-text {
-  color: var(--orange);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-
-.hero-gradient {
-  background: var(--ink-0);
-}
-
-.card-hover {
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
+.hero-gradient { background: var(--ink-0); }
+.card-hover { transition: background-color 0.15s ease, border-color 0.15s ease; }
 @media (hover: hover) and (pointer: fine) {
-  .card-hover:hover { border-color: rgba(242, 140, 40, 0.5); background-color: var(--ink-2); }
+  .card-hover:hover { background-color: var(--ink-3); }
 }
-
 .float-card { animation: none; }
 
 .waveform-bar {
   display: inline-block;
-  width: 2px;
+  width: 3px;
   margin: 0 1px;
-  border-radius: 1px;
+  border-radius: 3px;
   transform-origin: bottom;
   animation: waveformAnim 0.9s ease-in-out infinite;
 }
@@ -298,16 +400,11 @@ input, select, textarea {
 .waveform-bar:nth-child(6) { animation-delay: 0.05s; }
 .waveform-bar:nth-child(7) { animation-delay: 0.25s; }
 .waveform-bar:nth-child(8) { animation-delay: 0.35s; }
-
 .timeline-waveform { animation: waveformAnim 1.2s ease-in-out infinite; }
 
 @keyframes waveformAnim {
   0%, 100% { transform: scaleY(1); }
   50% { transform: scaleY(0.3); }
-}
-@keyframes heroFloat {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, calc(-50% - 8px)); }
 }
 @keyframes gradientShift {
   0%, 100% { background-position: 0% 50%; }
@@ -322,34 +419,33 @@ input, select, textarea {
   outline: none;
 }
 .eq-slider::-webkit-slider-runnable-track {
-  width: 3px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, var(--orange) 0%, var(--line-strong) 50%, var(--line) 100%);
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--pink) 0%, var(--ink-4) 55%, var(--ink-3) 100%);
 }
 .eq-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 22px;
-  height: 10px;
-  margin-left: -9.5px;
-  border-radius: 1px;
-  background: linear-gradient(180deg, #3a3a46, #15151c);
-  border: 1px solid #55555f;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 4px rgba(0, 0, 0, 0.6);
+  height: 12px;
+  margin-left: -9px;
+  border-radius: 6px;
+  background: #f4f4f6;
+  border: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   cursor: ns-resize;
 }
-.eq-slider:hover::-webkit-slider-thumb { border-color: var(--orange); }
 .eq-slider::-moz-range-track {
-  width: 3px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, var(--orange), var(--line) 100%);
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--pink), var(--ink-3) 100%);
 }
 .eq-slider::-moz-range-thumb {
   width: 22px;
-  height: 10px;
-  border-radius: 1px;
-  background: linear-gradient(180deg, #3a3a46, #15151c);
-  border: 1px solid #55555f;
+  height: 12px;
+  border-radius: 6px;
+  background: #f4f4f6;
+  border: 0;
   cursor: ns-resize;
 }
 
@@ -379,7 +475,6 @@ input, select, textarea {
   backdrop-filter: blur(12px);
 }
 
-/* Full-height sections that respect mobile browser bars. */
 .min-h-dvh-safe {
   min-height: 100vh;
   min-height: 100dvh;
@@ -390,18 +485,6 @@ input, select, textarea {
 .px-safe {
   padding-left: max(1rem, var(--safe-left));
   padding-right: max(1rem, var(--safe-right));
-}
-
-/* Film grain: a fixed, static noise layer that takes the digital edge off
-   flat blacks. Pointer events pass through. */
-.grain {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 60;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* Respect "reduce motion" on iOS, Android, macOS and Windows. */

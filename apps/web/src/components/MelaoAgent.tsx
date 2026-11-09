@@ -142,6 +142,13 @@ export default function MelaoAgent() {
   const btnDragOffset = useRef({ x: 0, y: 0 });
   const BTN_SIZE = 56;
 
+  // The side menu (computers) and the tab bar (phones) open and close Melao.
+  useEffect(() => {
+    const toggle = () => setOpen(o => !o);
+    window.addEventListener('melao:toggle', toggle);
+    return () => window.removeEventListener('melao:toggle', toggle);
+  }, []);
+
   // Set initial position once window is available
   useEffect(() => {
     if (typeof window !== 'undefined' && pos === null) {
@@ -252,36 +259,13 @@ export default function MelaoAgent() {
 
   // Avatar: the official M mark, cropped from the logo.
   const avatar = (size: string) => (
-    <div className={`${size} shrink-0 flex items-center justify-center bg-ink-0 border border-line`}>
+    <div className={`${size} shrink-0 flex items-center justify-center bg-ink-0 border border-line rounded-full`}>
       <Emblem className="w-[78%]" />
     </div>
   );
 
   return (
     <>
-      {/* Floating trigger button — draggable; click (no drag) toggles the panel */}
-      <button
-        onPointerDown={onBtnPointerDown}
-        onPointerMove={onBtnPointerMove}
-        onPointerUp={onBtnPointerUp}
-        onPointerLeave={() => { btnDragging.current = false; }}
-        style={{
-          minWidth: '56px',
-          minHeight: '56px',
-          touchAction: 'none',
-          cursor: 'grab',
-          clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
-          ...(btnPos
-            ? { left: btnPos.x, top: btnPos.y, right: 'auto', bottom: 'auto' }
-            : corner),
-        }}
-        className="fixed z-50 w-14 h-14 flex items-center justify-center bg-ink-1 border border-line-strong transition-colors hoverable:hover:border-melaos-orange active:cursor-grabbing"
-        aria-label="Chat with Melao"
-      >
-        <Emblem className="w-10" />
-        <span className="absolute top-1.5 right-1.5 live-dot" />
-      </button>
-
       {/* Draggable chat panel */}
       {open && pos && (
         <div
@@ -289,11 +273,11 @@ export default function MelaoAgent() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
-          className="fixed z-50 flex flex-col overflow-hidden bg-ink-1 border border-line-strong rounded-[4px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+          className="fixed z-[70] flex flex-col overflow-hidden bg-ink-2 border border-line-strong rounded-[22px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
           style={isMobile ? {
             left: 'max(8px, var(--safe-left))',
             right: 'max(8px, var(--safe-right))',
-            bottom: 'calc(var(--player-h) + 84px)',
+            bottom: 'calc(var(--chrome-bottom) + 10px)',
             height: 'min(62dvh, 480px)',
             touchAction: 'none',
           } : {
@@ -308,12 +292,12 @@ export default function MelaoAgent() {
           {/* Drag handle header */}
           <div
             onPointerDown={onPointerDown}
-            className="flex items-center gap-3 px-3 py-2.5 border-b border-line shrink-0 cursor-grab active:cursor-grabbing select-none bg-ink-0"
+            className="flex items-center gap-3 px-3.5 py-3 border-b border-line shrink-0 cursor-grab active:cursor-grabbing select-none"
           >
             {avatar('w-9 h-9')}
             <div className="flex-1 min-w-0">
-              <p className="display text-white text-sm leading-none">Melao</p>
-              <p className="label mt-1.5 flex items-center gap-1.5 !text-[9.5px]">
+              <p className="display text-white text-[15px] leading-none">Melao</p>
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-fog">
                 <span className="live-dot !w-[5px] !h-[5px]" />
                 Eclat Universe · FEDGE 2.O
               </p>
@@ -323,7 +307,7 @@ export default function MelaoAgent() {
                 onPointerDown={e => e.stopPropagation()}
                 onClick={() => setLang(l => l === 'en' ? 'es' : 'en')}
                 style={{ touchAction: 'manipulation' }}
-                className="h-7 px-2 border border-line rounded-xs font-mono text-[10px] tracking-[0.14em] text-melaos-orange hoverable:hover:border-melaos-orange transition-colors"
+                className="h-8 px-3 rounded-full bg-ink-3 text-[11px] font-semibold text-white hoverable:hover:bg-ink-4 transition-colors"
                 title={lang === 'en' ? 'Cambiar a español' : 'Switch to English'}
                 aria-label="Toggle language"
               >
@@ -347,10 +331,10 @@ export default function MelaoAgent() {
             {messages.map((m, i) => (
               <div key={i} className={`flex items-end gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {m.role === 'melao' && avatar('w-6 h-6')}
-                <div className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed rounded-[3px] ${
+                <div className={`max-w-[80%] px-3.5 py-2.5 text-sm leading-relaxed rounded-2xl ${
                   m.role === 'user'
-                    ? 'bg-melaos-orange text-[#0A0A0E]'
-                    : 'bg-ink-2 border border-line text-[#ECECF1]'
+                    ? 'bg-brand text-white rounded-br-md'
+                    : 'bg-ink-3 text-[#F4F4F6] rounded-bl-md'
                 }`}>
                   {m.text}
                 </div>
@@ -368,9 +352,9 @@ export default function MelaoAgent() {
             {typing && (
               <div className="flex items-end gap-2 justify-start">
                 {avatar('w-6 h-6')}
-                <div className="bg-ink-2 border border-line px-3 py-2.5 rounded-[3px] flex gap-1.5 items-center">
+                <div className="bg-ink-3 px-3.5 py-3 rounded-2xl rounded-bl-md flex gap-1.5 items-center">
                   {[0, 150, 300].map(d => (
-                    <span key={d} className="w-1.5 h-1.5 bg-melaos-orange animate-bounce"
+                    <span key={d} className="w-1.5 h-1.5 rounded-full bg-melaos-pink animate-bounce"
                       style={{ animationDelay: `${d}ms` }} />
                   ))}
                 </div>
@@ -380,11 +364,11 @@ export default function MelaoAgent() {
           </div>
 
           {/* Input */}
-          <div className="p-2 border-t border-line flex items-center gap-1.5 shrink-0 bg-ink-0">
+          <div className="p-2.5 border-t border-line flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => setVoiceReplies(v => !v)}
               style={{ touchAction: 'manipulation' }}
-              className={`w-10 h-10 flex items-center justify-center border rounded-xs transition-colors shrink-0 ${
+              className={`w-10 h-10 flex items-center justify-center border rounded-full transition-colors shrink-0 ${
                 voiceReplies ? 'border-melaos-cyan text-melaos-cyan' : 'border-line text-fog hoverable:hover:text-white'
               }`}
               title={voiceReplies ? 'Melao voice: ON' : 'Melao voice: OFF'}
@@ -398,12 +382,12 @@ export default function MelaoAgent() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder={listening ? (lang === 'es' ? 'Escuchando...' : 'Listening...') : (lang === 'es' ? 'Háblale a Melao...' : 'Talk to Melao...')}
-              className="field flex-1 min-w-0 h-10 !py-0 text-sm"
+              className="field flex-1 min-w-0 h-10 !py-0 !rounded-full text-sm"
             />
             <button
               onClick={toggleListening}
               style={{ touchAction: 'manipulation' }}
-              className={`w-10 h-10 flex items-center justify-center border rounded-xs transition-colors shrink-0 ${
+              className={`w-10 h-10 flex items-center justify-center border rounded-full transition-colors shrink-0 ${
                 listening ? 'border-melaos-hot text-melaos-hot bg-melaos-hot/10 animate-pulse' : 'border-line text-fog hoverable:hover:text-white'
               }`}
               title={listening ? 'Stop listening' : 'Speak to Melao'}
@@ -415,7 +399,7 @@ export default function MelaoAgent() {
             <button
               onClick={send}
               disabled={!input.trim()}
-              className="btn btn-primary !min-h-[40px] w-10 !px-0 shrink-0 [--chamfer:7px]"
+              className="btn btn-primary !min-h-[40px] w-10 !px-0 shrink-0"
               aria-label="Send message"
             >
               <Send className="w-4 h-4" strokeWidth={1.75} />
