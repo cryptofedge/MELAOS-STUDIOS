@@ -3,6 +3,13 @@ services:
     name: melaos-studios
     runtime: node
     region: oregon
+    # Free instances sleep after 15 idle minutes, and visitors then see
+    # Render's "waking up" page. An outside pinger (cron-job.org) requests
+    # https://melaosstudios.com/api/health every 5 minutes to keep it awake.
+    # Staying awake all month uses about 744 of the 750 free instance hours,
+    # which are shared by every free service in the Render workspace.
+    # Moving to a paid plan (Starter) ends the sleep and makes the pinger
+    # unnecessary.
     plan: free
     rootDir: apps/web
     buildCommand: npm install && npm run build
