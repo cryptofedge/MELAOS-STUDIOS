@@ -16,13 +16,13 @@ import ReportButton from '@/components/ReportButton';
 import type WaveSurfer from 'wavesurfer.js';
 
 const TRACKS = [
-  { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: '0 0 12px #007AFF88' },
-  { id: 't2', name: 'Drums',       type: 'drums',        color: '#AE06ED', glow: '0 0 12px #AE06ED88' },
-  { id: 't3', name: 'Bass',        type: 'bass',         color: '#F28C28', glow: '0 0 12px #F28C2888' },
-  { id: 't4', name: 'Synth',       type: 'synth',        color: '#00FFD1', glow: '0 0 12px #00FFD188' },
-  { id: 't5', name: 'Strings',     type: 'strings',      color: '#FF2D78', glow: '0 0 12px #FF2D7888' },
-  { id: 't6', name: 'Percussion',  type: 'percussion',   color: '#EAB308', glow: '0 0 12px #EAB30888' },
-  { id: 't7', name: 'FX',          type: 'fx',           color: '#6A0572', glow: '0 0 12px #6A057288' },
+  { id: 't1', name: 'Vocals',      type: 'vocals',      color: '#007AFF', glow: 'none' },
+  { id: 't2', name: 'Drums',       type: 'drums',        color: '#AE06ED', glow: 'none' },
+  { id: 't3', name: 'Bass',        type: 'bass',         color: '#F28C28', glow: 'none' },
+  { id: 't4', name: 'Synth',       type: 'synth',        color: '#00FFD1', glow: 'none' },
+  { id: 't5', name: 'Strings',     type: 'strings',      color: '#FF2D78', glow: 'none' },
+  { id: 't6', name: 'Percussion',  type: 'percussion',   color: '#EAB308', glow: 'none' },
+  { id: 't7', name: 'FX',          type: 'fx',           color: '#6A0572', glow: 'none' },
 ];
 
 const SECTIONS = ['INTRO', 'VERSE', 'CHORUS', 'VERSE', 'CHORUS', 'BRIDGE', 'OUTRO'];
@@ -142,13 +142,13 @@ function BarRuler({ compact = false }: { compact?: boolean }) {
   const BARS = 32;
   return (
     <div className="h-5 border-b flex shrink-0 relative select-none"
-      style={{ background: '#020208', borderColor: '#0D0D20' }}>
+      style={{ background: '#050507', borderColor: '#101016' }}>
       {Array.from({ length: BARS }, (_, i) => (
-        <div key={i} className="flex-1 relative border-r" style={{ borderColor: '#0D0D2088' }}>
+        <div key={i} className="flex-1 relative border-r" style={{ borderColor: '#10101688' }}>
           {i % 4 === 0 && (
-            <span className="absolute left-0.5 top-0 text-[7px] font-mono font-bold" style={{ color: '#9999CC' }}>{i + 1}</span>
+            <span className="absolute left-0.5 top-0 text-[7px] font-mono font-bold" style={{ color: '#9A9AA6' }}>{i + 1}</span>
           )}
-          <div className="absolute bottom-0 left-1/2 w-px" style={{ height: i % 4 === 0 ? '6px' : '3px', background: '#1a1a3a' }} />
+          <div className="absolute bottom-0 left-1/2 w-px" style={{ height: i % 4 === 0 ? '6px' : '3px', background: '#22222C' }} />
         </div>
       ))}
     </div>
@@ -743,14 +743,15 @@ export default function StudioPage() {
     <div className="p-4 flex flex-col gap-4">
       {/* Simple / Advanced / Lyrics toggle */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center bg-[#0A0A14] border border-[#1a1a3a] rounded-full p-0.5 gap-0.5">
+        <div className="flex items-stretch border border-line rounded-xs overflow-hidden" role="tablist">
           {([['simple', t('studio.simple')], ['advanced', t('studio.advanced')], ['lyrics', t('studio.lyrics')]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setAiTab(key)}
-              style={{ minHeight: '32px', touchAction: 'manipulation' }}
-              className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
+              role="tab" aria-selected={aiTab === key}
+              style={{ minHeight: '36px', touchAction: 'manipulation' }}
+              className={`px-3.5 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors border-r border-line last:border-r-0 ${
                 aiTab === key
-                  ? 'bg-[#AE06ED] text-white shadow-lg'
-                  : 'text-[#9999CC] hover:text-[#8888AA]'
+                  ? 'bg-ink-3 text-melaos-orange shadow-[inset_0_-1px_0_#F28C28]'
+                  : 'text-fog hoverable:hover:text-white'
               }`}>
               {label}
             </button>
@@ -761,7 +762,7 @@ export default function StudioPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
             instrumental
               ? 'border-[#00FFD1] bg-[#00FFD1]/10 text-[#00FFD1]'
-              : 'border-[#1a1a3a] text-[#9999CC] hover:border-[#8888BB]'
+              : 'border-[#22222C] text-[#9A9AA6] hover:border-[#7A7A86]'
           }`}>
           ♪ {t('studio.instrumental')}
         </button>
@@ -779,14 +780,14 @@ export default function StudioPage() {
               onChange={e => setPrompt(e.target.value)}
               rows={3}
               placeholder={t('studio.promptPlaceholder')}
-              className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
+              className="w-full bg-black/60 border border-[#AE06ED]/40 rounded-[3px] p-3 text-sm text-[#ECECF1] placeholder:text-[#9A9AA6] focus:outline-none focus:border-[#AE06ED] resize-none transition-all"
               style={{
                 fontSize: '14px',
                 background: 'rgba(0,0,0,0.6)',
-                boxShadow: 'inset 0 0 20px rgba(174,6,237,0.05)',
+                boxShadow: 'none',
               }}
             />
-            <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#9999CC]">{prompt.length}/500</div>
+            <div className="absolute bottom-2 right-2 text-[9px] font-mono text-[#9A9AA6]">{prompt.length}/500</div>
             <button
               onClick={toggleDictation}
               title={listening ? 'Stop dictation' : 'Speak your description'}
@@ -794,9 +795,9 @@ export default function StudioPage() {
               className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
                 listening
                   ? 'border-[#FF2D78] bg-[#FF2D78]/20 text-[#FF2D78] animate-pulse'
-                  : 'border-[#AE06ED]/40 bg-black/40 text-[#9999CC] hover:text-[#AE06ED] hover:border-[#AE06ED]'
+                  : 'border-[#AE06ED]/40 bg-black/40 text-[#9A9AA6] hover:text-[#AE06ED] hover:border-[#AE06ED]'
               }`}
-              style={{ boxShadow: listening ? '0 0 10px #FF2D7888' : 'none' }}
+              style={{ boxShadow: listening ? 'none' : 'none' }}
             >
               <Mic className="w-3.5 h-3.5" />
             </button>
@@ -806,7 +807,7 @@ export default function StudioPage() {
             {(STYLE_SUGGESTIONS[genre] || STYLE_SUGGESTIONS['Hip-Hop']).map(tag => (
               <button key={tag} onClick={() => setPrompt(p => p ? `${p}, ${tag}` : tag)}
                 style={{ touchAction: 'manipulation' }}
-                className="px-2 py-0.5 rounded-full bg-[#1a0a2a] border border-[#AE06ED]/30 text-[#AE06ED]/70 text-[10px] hover:border-[#AE06ED] hover:text-[#AE06ED] transition-all">
+                className="px-2 py-0.5 rounded-xs bg-[#17171F] border border-[#AE06ED]/30 text-[#AE06ED]/70 text-[10px] hover:border-[#AE06ED] hover:text-[#AE06ED] transition-all">
                 + {tag}
               </button>
             ))}
@@ -820,19 +821,19 @@ export default function StudioPage() {
             </label>
             <select
               value={influence} onChange={e => setInfluence(e.target.value)}
-              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,255,209,0.15)' }}
-              className="w-full border border-[#00FFD1]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#00FFD1] transition-all"
+              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+              className="w-full border border-[#00FFD1]/40 rounded-[3px] px-3 py-1.5 text-sm text-[#ECECF1] focus:outline-none focus:border-[#00FFD1] transition-all"
             >
-              <option value="" style={{ background: '#0A0A14' }}>No specific influence</option>
+              <option value="" style={{ background: '#0A0A0E' }}>No specific influence</option>
               {influenceGroups().map(g => (
-                <optgroup key={g.label} label={g.label} style={{ background: '#0A0A14' }}>
+                <optgroup key={g.label} label={g.label} style={{ background: '#0A0A0E' }}>
                   {g.artists.map(a => (
-                    <option key={a.name} value={a.name} style={{ background: '#0A0A14' }}>{a.name}</option>
+                    <option key={a.name} value={a.name} style={{ background: '#0A0A0E' }}>{a.name}</option>
                   ))}
                 </optgroup>
               ))}
             </select>
-            <p className="text-[10px] text-[#9999CC] mt-1">
+            <p className="text-[10px] text-[#9A9AA6] mt-1">
               {influence
                 ? findInfluence(influence)?.style
                 : 'Or just name one in your description — "a bachata like Romeo Santos".'}
@@ -847,15 +848,15 @@ export default function StudioPage() {
               </label>
               <select
                 value={engine} onChange={e => setEngine(e.target.value === 'minimax' ? 'minimax' : 'ace-step')}
-                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,255,209,0.15)' }}
-                className="w-full border border-[#00FFD1]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#00FFD1] transition-all"
+                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+                className="w-full border border-[#00FFD1]/40 rounded-[3px] px-3 py-1.5 text-sm text-[#ECECF1] focus:outline-none focus:border-[#00FFD1] transition-all"
               >
                 {engines.includes('ace-step') && (
-                  <option value="ace-step" style={{ background: '#0A0A14' }}>ACE-Step (standard)</option>
+                  <option value="ace-step" style={{ background: '#0A0A0E' }}>ACE-Step (standard)</option>
                 )}
-                <option value="minimax" style={{ background: '#0A0A14' }}>MiniMax 2.5 (beta)</option>
+                <option value="minimax" style={{ background: '#0A0A0E' }}>MiniMax 2.5 (beta)</option>
               </select>
-              <p className="text-[10px] text-[#9999CC] mt-1">
+              <p className="text-[10px] text-[#9A9AA6] mt-1">
                 {engine === 'minimax'
                   ? 'MiniMax makes a full-length song from your lyrics. Fewer per day than ACE-Step.'
                   : 'Try the same prompt on MiniMax to compare.'}
@@ -872,12 +873,12 @@ export default function StudioPage() {
               </label>
               <select
                 value={lyricsLang} onChange={e => setLyricsLang(e.target.value)}
-                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(242,140,40,0.15)' }}
-                className="w-full border border-[#F28C28]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#F28C28] transition-all"
+                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+                className="w-full border border-[#F28C28]/40 rounded-[3px] px-3 py-1.5 text-sm text-[#ECECF1] focus:outline-none focus:border-[#F28C28] transition-all"
               >
-                {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A14' }}>{l}</option>)}
+                {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A0E' }}>{l}</option>)}
               </select>
-              <p className="text-[10px] text-[#9999CC] mt-1">
+              <p className="text-[10px] text-[#9A9AA6] mt-1">
                 Melao writes the lyrics from your description in this language.
               </p>
             </div>
@@ -894,7 +895,7 @@ export default function StudioPage() {
             onChange={e => setLyrics(e.target.value)}
             rows={4}
             placeholder={"Leave blank — Melao writes the lyrics from your description.\n\n[Verse 1]\nOr write your own here...\n\n[Chorus]\n..."}
-            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-[3px] p-3 text-sm text-[#ECECF1] placeholder:text-[#9A9AA6] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
         </div>
@@ -909,24 +910,24 @@ export default function StudioPage() {
               {lyricsFromAi && lyrics.trim() && (
                 <ReportButton kind="lyrics" getContext={() => ({ lyrics, prompt, genre, mood })} />
               )}
-              <span className="text-[9px] font-mono text-[#9999CC]">{lyrics.length} chars</span>
+              <span className="text-[9px] font-mono text-[#9A9AA6]">{lyrics.length} chars</span>
             </span>
           </div>
           <div className="mb-2">
             <label className="text-[10px] font-bold text-[#F28C28] mb-1 block tracking-[0.15em] uppercase">◈ {t('studio.language')}</label>
             <select
               value={lyricsLang} onChange={e => setLyricsLang(e.target.value)}
-              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(242,140,40,0.15)' }}
-              className="w-full border border-[#F28C28]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#F28C28] transition-all"
+              style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+              className="w-full border border-[#F28C28]/40 rounded-[3px] px-3 py-1.5 text-sm text-[#ECECF1] focus:outline-none focus:border-[#F28C28] transition-all"
             >
-              {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A14' }}>{l}</option>)}
+              {LYRICS_LANGUAGES.map(l => <option key={l} value={l} style={{ background: '#0A0A0E' }}>{l}</option>)}
             </select>
           </div>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {['[Verse]', '[Chorus]', '[Bridge]', '[Outro]', '[Intro]'].map(tag => (
               <button key={tag} onClick={() => setLyrics(l => l ? `${l}\n\n${tag}\n` : `${tag}\n`)}
                 style={{ touchAction: 'manipulation' }}
-                className="px-2 py-0.5 rounded-full bg-[#1a0a00] border border-[#F28C28]/30 text-[#F28C28]/80 text-[10px] hover:border-[#F28C28] hover:text-[#F28C28] transition-all">
+                className="px-2 py-0.5 rounded-xs bg-[#1a0a00] border border-[#F28C28]/30 text-[#F28C28]/80 text-[10px] hover:border-[#F28C28] hover:text-[#F28C28] transition-all">
                 + {tag}
               </button>
             ))}
@@ -936,10 +937,10 @@ export default function StudioPage() {
             onChange={e => setLyrics(e.target.value)}
             rows={12}
             placeholder={"Leave blank — Melao writes the lyrics from your description, in the language you picked.\n\n[Verse]\nOr write your own here...\n\n[Chorus]\nThe hook everyone remembers...\n\n[Bridge]\n..."}
-            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-lg p-3 text-sm text-[#E0E0FF] placeholder:text-[#9999CC] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
+            className="w-full bg-black/60 border border-[#F28C28]/30 rounded-[3px] p-3 text-sm text-[#ECECF1] placeholder:text-[#9A9AA6] focus:outline-none focus:border-[#F28C28] resize-none transition-all font-mono leading-relaxed"
             style={{ fontSize: '13px', background: 'rgba(0,0,0,0.6)' }}
           />
-          <p className="text-[10px] text-[#9999CC] mt-1.5">
+          <p className="text-[10px] text-[#9A9AA6] mt-1.5">
             Pick a genre, mood, and BPM below, then hit Generate — these lyrics become the vocal track.
             Leave this empty and Melao writes them from your description instead.
           </p>
@@ -952,20 +953,20 @@ export default function StudioPage() {
           <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ {t('studio.genre')}</label>
           <select
             value={genre} onChange={e => setGenre(e.target.value)}
-            style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,122,255,0.15)' }}
-            className="w-full border border-[#007AFF]/40 rounded-lg px-3 py-2 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#007AFF] transition-all"
+            style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+            className="w-full border border-[#007AFF]/40 rounded-[3px] px-3 py-2 text-sm text-[#ECECF1] focus:outline-none focus:border-[#007AFF] transition-all"
           >
-            {GENRES.map(g => <option key={g} value={g} style={{ background: '#0A0A14' }}>{g}</option>)}
+            {GENRES.map(g => <option key={g} value={g} style={{ background: '#0A0A0E' }}>{g}</option>)}
           </select>
         </div>
         <div>
           <label className="text-[10px] font-bold text-[#007AFF] mb-1.5 block tracking-[0.15em] uppercase">◈ {t('studio.mood')}</label>
           <select
             value={mood} onChange={e => setMood(e.target.value)}
-            style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,122,255,0.15)' }}
-            className="w-full border border-[#007AFF]/40 rounded-lg px-3 py-2 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#007AFF] transition-all"
+            style={{ fontSize: '14px', background: 'rgba(0,0,0,0.7)', boxShadow: 'none' }}
+            className="w-full border border-[#007AFF]/40 rounded-[3px] px-3 py-2 text-sm text-[#ECECF1] focus:outline-none focus:border-[#007AFF] transition-all"
           >
-            {MOODS.map(m => <option key={m} value={m} style={{ background: '#0A0A14' }}>{m}</option>)}
+            {MOODS.map(m => <option key={m} value={m} style={{ background: '#0A0A0E' }}>{m}</option>)}
           </select>
         </div>
       </div>
@@ -974,18 +975,18 @@ export default function StudioPage() {
       <div>
         <label className="text-[10px] font-bold text-[#F28C28] mb-1.5 flex justify-between tracking-[0.15em] uppercase">
           <span>◈ BPM</span>
-          <span className="font-mono text-[#F28C28]" style={{ textShadow: '0 0 8px #F28C28' }}>{genBpm}</span>
+          <span className="font-mono text-[#F28C28]" style={{ textShadow: 'none'}}>{genBpm}</span>
         </label>
         <input
           type="range" min={60} max={200} value={genBpm}
           onChange={e => setGenBpm(Number(e.target.value))}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #F28C28 ${((genBpm - 60) / 140) * 100}%, #1a1a2e ${((genBpm - 60) / 140) * 100}%)`,
+            background: `linear-gradient(to right, #F28C28 ${((genBpm - 60) / 140) * 100}%, #17171F ${((genBpm - 60) / 140) * 100}%)`,
             accentColor: '#F28C28',
           }}
         />
-        <div className="flex justify-between text-[9px] text-[#8888BB] mt-1 font-mono">
+        <div className="flex justify-between text-[9px] text-[#7A7A86] mt-1 font-mono">
           <span>60</span><span>130</span><span>200</span>
         </div>
       </div>
@@ -998,12 +999,12 @@ export default function StudioPage() {
             <button key={v} onClick={() => setVocalGender(v)}
               style={{
                 minHeight: '40px', touchAction: 'manipulation',
-                boxShadow: vocalGender === v ? `0 0 14px ${v === 'none' ? '#666' : '#00FFD1'}88` : 'none',
+                boxShadow: vocalGender === v ? 'none' : 'none',
               }}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 py-1.5 rounded-[3px] text-xs font-bold uppercase tracking-wider transition-all border ${
                 vocalGender === v
                   ? 'bg-[#00FFD1]/10 border-[#00FFD1] text-[#00FFD1]'
-                  : 'border-[#1a1a3a] text-[#8888BB] hover:text-[#00FFD1]/60 hover:border-[#00FFD1]/30'
+                  : 'border-[#22222C] text-[#7A7A86] hover:text-[#00FFD1]/60 hover:border-[#00FFD1]/30'
               }`}
             >
               {v === 'none' ? t('studio.none') : v === 'male' ? t('studio.male') : t('studio.female')}
@@ -1015,29 +1016,26 @@ export default function StudioPage() {
       {/* Generate button */}
       <button
         onClick={handleGenerate} disabled={generating}
-        style={{
-          minHeight: '50px', touchAction: 'manipulation',
-          boxShadow: generating || genDone ? 'none' : '0 0 20px rgba(174,6,237,0.4), 0 0 40px rgba(174,6,237,0.15)',
-        }}
-        className={`w-full py-3 rounded-xl font-black text-sm tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all ${
+        style={{ minHeight: '52px', touchAction: 'manipulation' }}
+        className={`btn w-full !text-[12.5px] ${
           generating || genDone
-            ? 'bg-[#0A0A14] border border-[#8888BB] text-[#8888BB] cursor-not-allowed'
-            : 'bg-gradient-to-r from-[#6A0572] via-[#AE06ED] to-[#007AFF] text-white hover:scale-[1.02]'
+            ? 'bg-ink-1 border border-line-strong text-fog cursor-not-allowed rounded-xs'
+            : 'btn-primary'
         }`}
       >
         {generating ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> {t('studio.generating')}</>
+          <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} /> {t('studio.generating')}</>
         ) : genDone ? (
-          <><Check className="w-4 h-4 text-[#00FFD1]" style={{ filter: 'drop-shadow(0 0 4px #00FFD1)' }} />
-            <span className="text-[#00FFD1]" style={{ textShadow: '0 0 8px #00FFD1' }}>{t('studio.generated')}</span></>
+          <><Check className="w-4 h-4 text-melaos-cyan" strokeWidth={1.75} />
+            <span className="text-melaos-cyan">{t('studio.generated')}</span></>
         ) : (
-          <><Zap className="w-4 h-4" /> {t('studio.generate')}</>
+          <><Zap className="w-4 h-4" strokeWidth={1.75} /> {t('studio.generate')}</>
         )}
       </button>
 
       {/* Tier duration notice */}
       {tier === 'free' && (
-        <p className="text-[10px] text-center -mt-2" style={{ color: '#9999CC' }}>
+        <p className="text-[10px] text-center -mt-2" style={{ color: '#9A9AA6' }}>
           {t('studio.freeTier').replace('0:50', `0:${maxDuration}`)}{' '}
           <a href="/pricing" className="font-bold hover:underline" style={{ color: '#F28C28' }}>
             {t('studio.upgrade')}
@@ -1047,7 +1045,7 @@ export default function StudioPage() {
 
       {/* Error */}
       {genError && (
-        <div className="rounded-lg border border-[#FF2D78]/40 bg-[#FF2D78]/05 p-3">
+        <div className="rounded-[3px] border border-[#FF2D78]/40 bg-[#FF2D78]/05 p-3">
           <p className="text-[10px] font-mono text-[#FF2D78] tracking-wider">◈ ERROR: {genError}</p>
         </div>
       )}
@@ -1056,18 +1054,16 @@ export default function StudioPage() {
       {(generating || genDone) && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between text-[9px] font-mono"
-            style={{ color: genDone ? '#00FFD1' : '#AE06ED' }}>
+            style={{ color: genDone ? '#00FFD1' : '#F28C28' }}>
             <span>{genDone ? '◈ TRACK READY' : '◈ SYNTHESIZING'}</span>
             <span>{genProgress}%</span>
           </div>
-          <div className="h-1 bg-[#0A0A14] rounded-full overflow-hidden border border-[#1a1a3a]">
-            <div className="h-full rounded-full transition-all duration-500"
+          <div className="h-[3px] bg-line overflow-hidden">
+            <div className="h-full transition-all duration-500"
               style={{
                 width: `${genProgress}%`,
-                background: genDone
-                  ? 'linear-gradient(90deg, #00FFD1, #007AFF)'
-                  : 'linear-gradient(90deg, #6A0572, #AE06ED, #007AFF)',
-                boxShadow: genDone ? '0 0 8px #00FFD1' : '0 0 8px #AE06ED',
+                background: genDone ? '#00FFD1' : 'linear-gradient(90deg, #F28C28, #E91E8C, #AE06ED)',
+                boxShadow: genDone ? 'none' : 'none',
               }} />
           </div>
 
@@ -1075,8 +1071,8 @@ export default function StudioPage() {
             <div className="flex flex-col gap-2 mt-1">
               <button
                 onClick={() => setIsPlaying(p => !p)}
-                style={{ boxShadow: '0 0 14px #00FFD144', minHeight: '42px' }}
-                className="w-full py-2 rounded-xl font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-all"
+                style={{ boxShadow: 'none', minHeight: '42px' }}
+                className="w-full py-2 rounded-[4px] font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-all"
               >
                 {isPlaying ? <><Pause className="w-3.5 h-3.5" /> Pause</> : <><Play className="w-3.5 h-3.5 ml-0.5" /> {t('studio.play')}</>}
               </button>
@@ -1100,7 +1096,7 @@ export default function StudioPage() {
                 })} />
               </div>
               {usedEngine && (
-                <p className="text-[9px] font-mono text-center tracking-wider text-[#9999CC]">
+                <p className="text-[9px] font-mono text-center tracking-wider text-[#9A9AA6]">
                   ◈ Made with {usedEngine === 'minimax' ? 'MiniMax 2.5' : 'ACE-Step'}
                 </p>
               )}
@@ -1110,7 +1106,7 @@ export default function StudioPage() {
       )}
 
       {/* ── Cover Art Generator ── */}
-      <div className="border-t pt-4" style={{ borderColor: '#1a1a3a' }}>
+      <div className="border-t pt-4" style={{ borderColor: '#22222C' }}>
         <div className="flex items-center justify-between mb-3">
           <label className="text-[10px] font-bold text-[#E91E8C] tracking-[0.15em] uppercase">◈ {t('studio.coverArt')}</label>
           <button
@@ -1118,11 +1114,11 @@ export default function StudioPage() {
             disabled={coverArtLoading}
             style={{
               minHeight: '32px', touchAction: 'manipulation',
-              boxShadow: coverArtLoading ? 'none' : '0 0 12px rgba(233,30,140,0.35)',
+              boxShadow: coverArtLoading ? 'none' : 'none',
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${
               coverArtLoading
-                ? 'border-[#1a1a3a] text-[#8888BB] cursor-not-allowed'
+                ? 'border-[#22222C] text-[#7A7A86] cursor-not-allowed'
                 : 'border-[#E91E8C]/60 text-[#E91E8C] hover:bg-[#E91E8C]/10'
             }`}
           >
@@ -1139,30 +1135,30 @@ export default function StudioPage() {
           onChange={e => setCoverArtPrompt(e.target.value.slice(0, 300))}
           placeholder="Describe the cover art you want — e.g. neon skyline, vintage vinyl sleeve, hand-drawn graffiti portrait..."
           rows={2}
-          className="w-full bg-black/60 border border-[#E91E8C]/30 rounded-lg p-2.5 text-xs text-[#E0E0FF] placeholder:text-[#8888BB] focus:outline-none focus:border-[#E91E8C] resize-none transition-all mb-3"
+          className="w-full bg-black/60 border border-[#E91E8C]/30 rounded-[3px] p-2.5 text-xs text-[#ECECF1] placeholder:text-[#7A7A86] focus:outline-none focus:border-[#E91E8C] resize-none transition-all mb-3"
         />
 
         {/* Reference image upload */}
         <input ref={refImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleRefImageChange} />
         {refImage ? (
           <div className="relative mb-3 inline-block">
-            <img src={refImage} alt="Reference" className="h-16 w-16 object-cover rounded-lg border border-[#E91E8C]/40" />
+            <img src={refImage} alt="Reference" className="h-16 w-16 object-cover rounded-[3px] border border-[#E91E8C]/40" />
             <button onClick={() => setRefImage(null)}
               className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black border border-[#E91E8C] text-[#E91E8C] text-[9px] flex items-center justify-center hover:bg-[#E91E8C]/20"
               aria-label="Remove reference image">✕</button>
           </div>
         ) : (
           <button onClick={() => refImageInputRef.current?.click()}
-            className="w-full mb-3 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-[#1a1a3a] text-[10px] font-mono tracking-wide text-[#9999CC] hover:text-[#E91E8C] hover:border-[#E91E8C]/40 transition-colors">
+            className="w-full mb-3 flex items-center justify-center gap-1.5 py-2 rounded-[3px] border border-dashed border-[#22222C] text-[10px] font-mono tracking-wide text-[#9A9AA6] hover:text-[#E91E8C] hover:border-[#E91E8C]/40 transition-colors">
             ↑ Upload reference image
           </button>
         )}
 
         {/* Art preview */}
         {coverArtLoading && (
-          <div className="w-full aspect-square rounded-xl bg-[#0A0A14] border border-[#1a1a3a] flex flex-col items-center justify-center gap-3">
+          <div className="w-full aspect-square rounded-[4px] bg-[#0A0A0E] border border-[#22222C] flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-[#E91E8C] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[10px] font-mono text-[#9999CC] tracking-widest">AI PAINTING...</p>
+            <p className="text-[10px] font-mono text-[#9A9AA6] tracking-widest">AI PAINTING...</p>
           </div>
         )}
 
@@ -1171,24 +1167,24 @@ export default function StudioPage() {
             <img
               src={coverArtUrl}
               alt="Generated cover art"
-              className="w-full aspect-square rounded-xl object-cover border border-[#E91E8C]/30"
-              style={{ boxShadow: '0 0 24px rgba(233,30,140,0.2)' }}
+              className="w-full aspect-square rounded-[4px] object-cover border border-[#E91E8C]/30"
+              style={{ boxShadow: 'none' }}
             />
             {/* Download overlay */}
-            <div className="absolute inset-0 rounded-xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+            <div className="absolute inset-0 rounded-[4px] bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
               <a
                 href={coverArtUrl}
                 download="melaos-cover-art.jpg"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold rounded-full hover:scale-105 transition-transform"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-bold rounded-xs hover:scale-105 transition-transform"
               >
                 ↓ Save
               </a>
               <button
                 onClick={handleGenerateCoverArt}
-                className="flex items-center gap-1.5 px-4 py-2 border border-white/60 text-white text-xs font-bold rounded-full hover:scale-105 transition-transform"
+                className="flex items-center gap-1.5 px-4 py-2 border border-white/60 text-white text-xs font-bold rounded-xs hover:scale-105 transition-transform"
               >
                 ↺ New
               </button>
@@ -1205,10 +1201,10 @@ export default function StudioPage() {
         {!coverArtUrl && !coverArtLoading && (
           <div
             onClick={handleGenerateCoverArt}
-            className="w-full aspect-square rounded-xl border-2 border-dashed border-[#1a1a3a] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#E91E8C]/40 transition-colors group"
+            className="w-full aspect-square rounded-[4px] border-2 border-dashed border-[#22222C] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#E91E8C]/40 transition-colors group"
           >
             <span className="text-3xl opacity-20 group-hover:opacity-40 transition-opacity">🎨</span>
-            <p className="text-[10px] text-[#8888BB] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
+            <p className="text-[10px] text-[#7A7A86] group-hover:text-[#E91E8C]/60 transition-colors font-mono tracking-widest">CLICK TO GENERATE</p>
           </div>
         )}
 
@@ -1223,19 +1219,19 @@ export default function StudioPage() {
   const TransportBar = () => (
     <div className="h-14 border-t flex items-center px-3 gap-1 shrink-0 overflow-x-auto"
       style={{
-        background: 'linear-gradient(90deg, #050510, #0A0A1A, #050510)',
+        background: 'linear-gradient(90deg, #0A0A0E, #0C0C11, #0A0A0E)',
         borderColor: '#AE06ED33',
         boxShadow: '0 -1px 0 #AE06ED22, inset 0 1px 0 #ffffff08',
       }}>
 
       {/* Edit mode — Shuffle / Slip / Spot / Grid */}
       <div className="hidden md:flex items-center rounded overflow-hidden border shrink-0"
-        style={{ borderColor: '#1a1a3a', background: '#020208' }}>
+        style={{ borderColor: '#22222C', background: '#050507' }}>
         {(['Shuffle', 'Slip', 'Spot', 'Grid'] as const).map(m => (
           <button key={m} onClick={() => setEditMode(m)}
             style={{ minHeight: '28px', touchAction: 'manipulation' }}
             className={`px-2 text-[9px] font-bold tracking-wide transition-all ${
-              editMode === m ? 'bg-[#AE06ED]/20 text-[#AE06ED]' : 'text-[#8888BB] hover:text-[#8888AA]'
+              editMode === m ? 'bg-[#AE06ED]/20 text-[#AE06ED]' : 'text-[#7A7A86] hover:text-[#7A7A86]'
             }`}>
             {m}
           </button>
@@ -1246,23 +1242,22 @@ export default function StudioPage() {
 
       <button onClick={() => { setTimeMs(0); setPlayheadPct(0); }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#9999CC] hover:text-[#AE06ED] transition-colors">
+        className="flex items-center justify-center text-[#9A9AA6] hover:text-[#AE06ED] transition-colors">
         <SkipBack className="w-4 h-4" />
       </button>
 
       <button onClick={() => setIsPlaying(p => !p)}
         style={{
           minWidth: '40px', minHeight: '40px', touchAction: 'manipulation',
-          boxShadow: isPlaying ? '0 0 16px #AE06ED, 0 0 32px #AE06ED44' : '0 0 8px #333',
-          background: isPlaying
-            ? 'linear-gradient(135deg, #6A0572, #AE06ED)'
-            : 'linear-gradient(135deg, #111130, #1a1a3a)',
-          border: `1px solid ${isPlaying ? '#AE06ED' : '#9999CC'}`,
+          boxShadow: isPlaying ? 'none' : 'none',
+          background: isPlaying ? '#F28C28' : '#15151C',
+          border: `1px solid ${isPlaying ? '#F28C28' : '#3A3A46'}`,
+          clipPath: 'polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px)',
         }}
-        className="w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-all shrink-0">
+        className="w-9 h-9 flex items-center justify-center transition-colors shrink-0">
         {isPlaying
-          ? <Pause className="w-4 h-4 text-white" />
-          : <Play className="w-4 h-4 text-[#AE06ED] ml-0.5" />}
+          ? <Pause className="w-4 h-4 text-[#0A0A0E] fill-current" strokeWidth={0} />
+          : <Play className="w-4 h-4 text-[#F28C28] ml-0.5 fill-current" strokeWidth={0} />}
       </button>
 
       <button onClick={() => {
@@ -1270,19 +1265,19 @@ export default function StudioPage() {
           if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
         }}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#9999CC] hover:text-[#FF2D78] transition-colors">
+        className="flex items-center justify-center text-[#9A9AA6] hover:text-[#FF2D78] transition-colors">
         <Square className="w-4 h-4" />
       </button>
 
       <button style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation' }}
-        className="flex items-center justify-center text-[#9999CC] hover:text-[#FF2D78] transition-colors">
+        className="flex items-center justify-center text-[#9A9AA6] hover:text-[#FF2D78] transition-colors">
         <Circle className="w-4 h-4" />
       </button>
 
       <button onClick={() => setLooping(l => !l)}
         style={{ minWidth: '40px', minHeight: '40px', touchAction: 'manipulation',
           filter: looping ? 'drop-shadow(0 0 4px #00FFD1)' : 'none' }}
-        className={`flex items-center justify-center transition-all ${looping ? 'text-[#00FFD1]' : 'text-[#9999CC] hover:text-[#00FFD1]/60'}`}>
+        className={`flex items-center justify-center transition-all ${looping ? 'text-[#00FFD1]' : 'text-[#9A9AA6] hover:text-[#00FFD1]/60'}`}>
         <Repeat className="w-4 h-4" />
       </button>
 
@@ -1291,13 +1286,13 @@ export default function StudioPage() {
       {/* BPM */}
       <div className="flex items-center gap-1 shrink-0">
         <button onClick={() => setBpm(b => Math.max(40, b - 1))}
-          className="text-[#9999CC] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">−</button>
+          className="text-[#9A9AA6] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">−</button>
         <div className="border rounded px-2 py-0.5 text-xs font-mono min-w-[58px] text-center"
-          style={{ background: '#050510', borderColor: '#F28C2844', color: '#F28C28', textShadow: '0 0 6px #F28C28', boxShadow: '0 0 8px #F28C2822' }}>
+          style={{ background: '#0A0A0E', borderColor: '#F28C2844', color: '#F28C28', textShadow: 'none', boxShadow: 'none' }}>
           {bpm} BPM
         </div>
         <button onClick={() => setBpm(b => Math.min(300, b + 1))}
-          className="text-[#9999CC] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">+</button>
+          className="text-[#9A9AA6] hover:text-[#F28C28] w-4 h-4 flex items-center justify-center text-xs transition-colors">+</button>
       </div>
 
       <div className="h-5 w-px mx-1 shrink-0" style={{ background: 'linear-gradient(180deg, transparent, #007AFF44, transparent)' }} />
@@ -1305,11 +1300,11 @@ export default function StudioPage() {
       {/* Bars|Beats — Pro Tools' primary counter */}
       <div className="hidden sm:block font-mono text-xs px-2 py-1 rounded shrink-0 border"
         style={{
-          background: '#020208',
+          background: '#050507',
           borderColor: '#00FFD133',
           color: '#00FFD1',
-          textShadow: '0 0 8px #00FFD1',
-          boxShadow: '0 0 12px #00FFD122',
+          textShadow: 'none',
+          boxShadow: 'none',
           letterSpacing: '0.1em',
         }}>
         {formatBarsBeats(timeMs, bpm)}
@@ -1318,11 +1313,11 @@ export default function StudioPage() {
       {/* Timecode */}
       <div className="font-mono text-xs px-2 py-1 rounded shrink-0 border"
         style={{
-          background: '#020208',
+          background: '#050507',
           borderColor: '#007AFF33',
           color: '#007AFF',
-          textShadow: '0 0 8px #007AFF',
-          boxShadow: '0 0 12px #007AFF22',
+          textShadow: 'none',
+          boxShadow: 'none',
           letterSpacing: '0.1em',
         }}>
         {formatTime(timeMs)}
@@ -1333,9 +1328,9 @@ export default function StudioPage() {
       {/* Grid + Nudge */}
       <div className="hidden lg:flex items-center gap-1 shrink-0">
         <select value={gridValue} onChange={e => setGridValue(e.target.value)}
-          style={{ minHeight: '28px', background: '#020208', borderColor: '#F28C2844', color: '#F28C28' }}
+          style={{ minHeight: '28px', background: '#050507', borderColor: '#F28C2844', color: '#F28C28' }}
           className="text-[9px] font-mono rounded px-1.5 border focus:outline-none">
-          {GRID_VALUES.map(g => <option key={g} value={g} style={{ background: '#0A0A14' }}>{g}</option>)}
+          {GRID_VALUES.map(g => <option key={g} value={g} style={{ background: '#0A0A0E' }}>{g}</option>)}
         </select>
       </div>
 
@@ -1350,15 +1345,15 @@ export default function StudioPage() {
                 height: `${(i + 1) * 1.5 + 2}px`,
                 background: active
                   ? i < 7 ? '#00FFD1' : i < 10 ? '#F28C28' : '#FF2D78'
-                  : '#1a1a2e',
-                boxShadow: active ? `0 0 4px ${i < 7 ? '#00FFD1' : i < 10 ? '#F28C28' : '#FF2D78'}` : 'none',
+                  : '#17171F',
+                boxShadow: active ? 'none' : 'none',
               }} />
           );
         })}
       </div>
 
       <button onClick={() => setPanelOpen(p => !p)}
-        className="hidden lg:flex text-[#9999CC] hover:text-[#AE06ED] transition-colors items-center justify-center ml-auto">
+        className="hidden lg:flex text-[#9A9AA6] hover:text-[#AE06ED] transition-colors items-center justify-center ml-auto">
         {panelOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
       </button>
     </div>
@@ -1372,20 +1367,20 @@ export default function StudioPage() {
         onClick={() => setActiveTrack(track.id)}
         className={`border-b p-2 cursor-pointer transition-all`}
         style={{
-          borderColor: '#0D0D20',
+          borderColor: '#101016',
           background: isActive ? `${track.color}08` : 'transparent',
           boxShadow: isActive ? `inset 3px 0 0 ${track.color}` : 'inset 3px 0 0 transparent',
         }}>
         <div className="flex items-center gap-2 mb-1.5">
           <div className="w-2 h-2 rounded-full shrink-0 transition-all"
-            style={{ backgroundColor: track.color, boxShadow: isActive ? `0 0 6px ${track.color}` : 'none' }} />
+            style={{ backgroundColor: track.color, boxShadow: isActive ? 'none' : 'none' }} />
           <span className={`text-[11px] font-bold tracking-wider flex-1 truncate uppercase transition-colors`}
-            style={{ color: track.color, opacity: isActive ? 1 : 0.75, textShadow: isActive ? `0 0 6px ${track.color}44` : 'none' }}>
+            style={{ color: track.color, opacity: isActive ? 1 : 0.75, textShadow: 'none'}}>
             {track.name}
           </span>
           <button onClick={e => { e.stopPropagation(); togglePin(track.id); }}
             className="text-[10px] shrink-0 transition-colors opacity-80 hover:opacity-100"
-            style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#8888BB' }}
+            style={{ color: pinnedTracks[track.id] ? '#F28C28' : '#7A7A86' }}
             aria-label="Pin track to top" title="Pin track">📌</button>
           {audioUrl && (
             <a href={audioUrl} download={`melaos-${track.name.toLowerCase()}.mp3`}
@@ -1396,31 +1391,31 @@ export default function StudioPage() {
               <Download className="w-2.5 h-2.5" />
             </a>
           )}
-          <span className="text-[8px] font-mono font-bold shrink-0" style={{ color: '#8888BB' }}>{trackIO(track.id)}</span>
+          <span className="text-[8px] font-mono font-bold shrink-0" style={{ color: '#7A7A86' }}>{trackIO(track.id)}</span>
         </div>
         <div className="flex items-center gap-1 ml-3">
           <button onClick={e => { e.stopPropagation(); toggleRecordArm(track.id); }}
             className="text-[9px] font-black w-4 h-4 rounded-full transition-all border flex items-center justify-center shrink-0"
             style={{
               background: recordArmed[track.id] ? '#FF2D78' : 'transparent',
-              borderColor: recordArmed[track.id] ? '#FF2D78' : '#1a1a3a',
-              boxShadow: recordArmed[track.id] ? '0 0 6px #FF2D78' : 'none',
+              borderColor: recordArmed[track.id] ? '#FF2D78' : '#22222C',
+              boxShadow: recordArmed[track.id] ? 'none' : 'none',
             }} aria-label="Record enable" />
           <button onClick={e => { e.stopPropagation(); toggleMute(track.id); }}
             className="text-[9px] font-black px-1.5 py-0.5 rounded transition-all border"
             style={{
               background: muted[track.id] ? '#F28C2820' : 'transparent',
-              borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a',
-              color: muted[track.id] ? '#F28C28' : '#8888BB',
+              borderColor: muted[track.id] ? '#F28C28' : '#22222C',
+              color: muted[track.id] ? '#F28C28' : '#7A7A86',
             }}>M</button>
           <button onClick={e => { e.stopPropagation(); toggleSolo(track.id); }}
             className="text-[9px] font-black px-1.5 py-0.5 rounded transition-all border"
             style={{
               background: solo[track.id] ? '#007AFF20' : 'transparent',
-              borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a',
-              color: solo[track.id] ? '#007AFF' : '#8888BB',
+              borderColor: solo[track.id] ? '#007AFF' : '#22222C',
+              color: solo[track.id] ? '#007AFF' : '#7A7A86',
             }}>S</button>
-          <div className="flex-1 ml-1 h-0.5 rounded-full bg-[#0D0D20] cursor-pointer overflow-hidden"
+          <div className="flex-1 ml-1 h-0.5 rounded-full bg-[#101016] cursor-pointer overflow-hidden"
             onClick={e => {
               e.stopPropagation();
               const r = e.currentTarget.getBoundingClientRect();
@@ -1430,7 +1425,7 @@ export default function StudioPage() {
               style={{
                 width: `${volumes[track.id]}%`,
                 background: `linear-gradient(90deg, ${track.color}88, ${track.color})`,
-                boxShadow: `0 0 4px ${track.color}`,
+                boxShadow: 'none',
               }} />
           </div>
         </div>
@@ -1448,14 +1443,14 @@ export default function StudioPage() {
         className={`border-b relative cursor-pointer transition-all ${muted[track.id] ? 'opacity-20' : ''}`}
         style={{
           height: compact ? '48px' : '64px',
-          borderColor: '#0D0D20',
+          borderColor: '#101016',
           background: isActive ? `${track.color}05` : 'transparent',
         }}>
         <div className="absolute inset-y-2 inset-x-1 rounded overflow-hidden transition-all"
           style={{
             background: `linear-gradient(180deg, ${track.color}12, ${track.color}06)`,
             border: `1px solid ${track.color}${isActive ? '55' : '22'}`,
-            boxShadow: isActive ? `0 0 10px ${track.color}22` : 'none',
+            boxShadow: isActive ? 'none' : 'none',
           }}>
           <WaveformSVG color={track.color} glow={track.glow} height={compact ? 32 : 48} seed={TRACKS.indexOf(track)} peaks={waveformPeaks} />
         </div>
@@ -1477,7 +1472,7 @@ export default function StudioPage() {
           window.addEventListener('mouseup', up);
         }}>
         <svg width={size} height={size} viewBox="0 0 32 32">
-          <circle cx="16" cy="16" r="12" fill="#0A0A18" stroke={`${color}33`} strokeWidth="1.5" />
+          <circle cx="16" cy="16" r="12" fill="#0C0C11" stroke={`${color}33`} strokeWidth="1.5" />
           <circle cx="16" cy="16" r="10" fill={`${color}10`} />
           <line x1="16" y1="16"
             x2={16 + 8 * Math.sin((angle * Math.PI) / 180)}
@@ -1494,34 +1489,34 @@ export default function StudioPage() {
   const MixingBoard = () => (
     <div className="border-t shrink-0 overflow-x-scroll"
       style={{
-        background: 'linear-gradient(180deg, #02020C, #050514)',
+        background: 'linear-gradient(180deg, #050507, #0A0A0E)',
         borderColor: '#AE06ED33',
         boxShadow: '0 -2px 20px rgba(174,6,237,0.1)',
         scrollbarWidth: 'auto',
       }}>
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b shrink-0"
-        style={{ borderColor: '#0D0D20', background: '#030310' }}>
+        style={{ borderColor: '#101016', background: '#07070A' }}>
         <Cpu className="w-3 h-3" style={{ color: '#F28C28', filter: 'drop-shadow(0 0 3px #F28C28)' }} />
         <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#F28C28' }}>Mixing Board</span>
         <div className="ml-auto flex items-center gap-3">
           <button onClick={() => setEqOpen(o => !o)}
             className={`flex items-center gap-1 text-[8px] font-bold px-2 py-0.5 rounded border transition-all uppercase tracking-wider ${
-              eqOpen ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/10' : 'border-[#1a1a3a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
+              eqOpen ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/10' : 'border-[#22222C] text-[#9A9AA6] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
             }`}
-            style={{ boxShadow: eqOpen ? '0 0 8px rgba(0,255,209,0.3)' : 'none' }}>
+            style={{ boxShadow: eqOpen ? 'none' : 'none' }}>
             <SlidersHorizontal className="w-2.5 h-2.5" /> 12-Band EQ
           </button>
           <button onClick={() => setSolo({})}
-            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#007AFF] hover:border-[#007AFF]/50 transition-colors uppercase tracking-wider">
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#22222C] text-[#9A9AA6] hover:text-[#007AFF] hover:border-[#007AFF]/50 transition-colors uppercase tracking-wider">
             Clear Solo
           </button>
           <button onClick={() => setMuted({})}
-            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#F28C28] hover:border-[#F28C28]/50 transition-colors uppercase tracking-wider">
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#22222C] text-[#9A9AA6] hover:text-[#F28C28] hover:border-[#F28C28]/50 transition-colors uppercase tracking-wider">
             Unmute All
           </button>
           <button onClick={() => { setVolumes({}); setPan({}); setEq({}); }}
-            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#1a1a3a] text-[#9999CC] hover:text-[#FF2D78] hover:border-[#FF2D78]/50 transition-colors uppercase tracking-wider">
+            className="text-[8px] font-bold px-2 py-0.5 rounded border border-[#22222C] text-[#9A9AA6] hover:text-[#FF2D78] hover:border-[#FF2D78]/50 transition-colors uppercase tracking-wider">
             Reset Mix
           </button>
         </div>
@@ -1534,12 +1529,12 @@ export default function StudioPage() {
         <div className="border-b shrink-0 px-4 py-3"
           style={{
             borderColor: '#00FFD122',
-            background: 'radial-gradient(ellipse at top, #071a1a 0%, #030310 70%)',
+            background: 'radial-gradient(ellipse at top, #071a1a 0%, #07070A 70%)',
             boxShadow: 'inset 0 6px 20px rgba(0,255,209,0.06)',
           }}>
           {/* Presets row */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#00FFD1', textShadow: '0 0 6px rgba(0,255,209,0.5)' }}>
+            <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#00FFD1', textShadow: 'none'}}>
               Master EQ
             </span>
             <span className="text-[7px] font-mono" style={{ color: '#556' }}>±12 dB</span>
@@ -1549,9 +1544,9 @@ export default function StudioPage() {
                 return (
                   <button key={name} onClick={() => applyEqPreset(EQ_PRESETS[name])}
                     className={`text-[8px] font-bold px-2.5 py-1 rounded-full border transition-all uppercase tracking-wider ${
-                      active ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/15' : 'border-[#1a2a2a] text-[#9999CC] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
+                      active ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/15' : 'border-[#1a2a2a] text-[#9A9AA6] hover:text-[#00FFD1] hover:border-[#00FFD1]/50'
                     }`}
-                    style={{ boxShadow: active ? '0 0 8px rgba(0,255,209,0.35)' : 'none' }}>
+                    style={{ boxShadow: active ? 'none' : 'none' }}>
                     {name}
                   </button>
                 );
@@ -1559,8 +1554,8 @@ export default function StudioPage() {
             </div>
           </div>
           {/* Fader bank inside a rack-style panel */}
-          <div className="flex items-stretch justify-center gap-1.5 rounded-xl px-3 py-3 min-w-max mx-auto"
-            style={{ background: 'linear-gradient(180deg, #060613, #02020a)', border: '1px solid #10101f', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 24px rgba(0,0,0,0.6)' }}>
+          <div className="flex items-stretch justify-center gap-1.5 rounded-[4px] px-3 py-3 min-w-max mx-auto"
+            style={{ background: 'linear-gradient(180deg, #0A0A0E, #050507)', border: '1px solid #121219', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 24px rgba(0,0,0,0.6)' }}>
             {/* dB scale on the left */}
             <div className="flex flex-col justify-between items-end pr-1 py-0.5" style={{ height: '92px' }}>
               {['+12', '0', '-12'].map(v => (
@@ -1573,7 +1568,7 @@ export default function StudioPage() {
               return (
                 <div key={freq} className="flex flex-col items-center justify-end" style={{ width: '34px' }}>
                   <span className="text-[8px] font-mono font-bold mb-1 leading-none tabular-nums"
-                    style={{ color: gain === 0 ? '#556' : gain > 0 ? '#00FFD1' : '#FF2D78', textShadow: gain !== 0 ? `0 0 4px ${gain > 0 ? '#00FFD1' : '#FF2D78'}66` : 'none' }}>
+                    style={{ color: gain === 0 ? '#556' : gain > 0 ? '#00FFD1' : '#FF2D78', textShadow: 'none'}}>
                     {gain > 0 ? '+' : ''}{gain}
                   </span>
                   {/* Fader with center detent line */}
@@ -1590,7 +1585,7 @@ export default function StudioPage() {
                       style={{ writingMode: 'vertical-lr' as any, direction: 'rtl', width: '22px', height: '92px' }}
                     />
                   </div>
-                  <span className="text-[7px] font-mono mt-1.5 leading-none" style={{ color: '#7788aa' }}>{label}</span>
+                  <span className="text-[7px] font-mono mt-1.5 leading-none" style={{ color: '#6B6B78' }}>{label}</span>
                 </div>
               );
             })}
@@ -1613,15 +1608,15 @@ export default function StudioPage() {
                 width: '72px',
                 padding: '6px 4px',
                 background: isActive ? `${track.color}08` : 'transparent',
-                borderRight: '1px solid #0D0D20',
-                boxShadow: isActive ? `inset 0 0 12px ${track.color}11` : 'none',
+                borderRight: '1px solid #101016',
+                boxShadow: isActive ? 'none' : 'none',
               }}>
               {/* Track name */}
               <div className="w-full flex items-center justify-center gap-1 mb-0.5">
                 <div className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: track.color, boxShadow: isActive ? `0 0 5px ${track.color}` : 'none' }} />
+                  style={{ backgroundColor: track.color, boxShadow: isActive ? 'none' : 'none' }} />
                 <span className="text-[8px] font-black tracking-wider uppercase truncate"
-                  style={{ color: isActive ? track.color : '#334455' }}>{track.name}</span>
+                  style={{ color: isActive ? track.color : '#3A3A46' }}>{track.name}</span>
               </div>
 
               {/* EQ knobs: Bass / Mid / Treble */}
@@ -1634,7 +1629,7 @@ export default function StudioPage() {
                         cur[i] = val;
                         return { ...prev, [track.id]: cur };
                       })} />
-                    <span className="text-[6px] font-mono" style={{ color: '#8888BB' }}>
+                    <span className="text-[6px] font-mono" style={{ color: '#7A7A86' }}>
                       {i === 0 ? 'B' : i === 1 ? 'M' : 'T'}
                     </span>
                   </div>
@@ -1645,7 +1640,7 @@ export default function StudioPage() {
               <div className="flex flex-col items-center gap-0.5">
                 <Knob value={panVal} color="#AE06ED" size={22}
                   onChange={val => setPan(p => ({ ...p, [track.id]: val }))} />
-                <span className="text-[6px] font-mono" style={{ color: '#8888BB' }}>
+                <span className="text-[6px] font-mono" style={{ color: '#7A7A86' }}>
                   {panVal < 45 ? `L${Math.round((50-panVal)*2)}` : panVal > 55 ? `R${Math.round((panVal-50)*2)}` : 'C'}
                 </span>
               </div>
@@ -1670,8 +1665,8 @@ export default function StudioPage() {
                               height: '4px',
                               background: lvl * 12 > i
                                 ? i > 9 ? '#FF2D78' : i > 7 ? '#F28C28' : '#00FFD1'
-                                : '#0D0D20',
-                              boxShadow: lvl * 12 > i && i > 9 ? '0 0 3px #FF2D78' : 'none',
+                                : '#101016',
+                              boxShadow: lvl * 12 > i && i > 9 ? 'none' : 'none',
                             }} />
                         ))}
                       </div>
@@ -1682,13 +1677,13 @@ export default function StudioPage() {
                 {/* Fader */}
                 <div className="relative flex flex-col items-center h-full" style={{ width: '16px' }}>
                   <div className="flex-1 w-1 rounded-full mx-auto"
-                    style={{ background: '#0D0D1A', border: '1px solid #1a1a3a' }} />
+                    style={{ background: '#101016', border: '1px solid #22222C' }} />
                   <div
                     className="absolute w-4 h-3 rounded cursor-ns-resize"
                     style={{
                       bottom: `calc(${vol}% - 6px)`,
                       background: `linear-gradient(180deg, ${track.color}CC, ${track.color}66)`,
-                      boxShadow: `0 0 6px ${track.color}66`,
+                      boxShadow: 'none',
                       border: `1px solid ${track.color}`,
                     }}
                     onMouseDown={e => {
@@ -1709,16 +1704,16 @@ export default function StudioPage() {
               </div>
 
               {/* Volume % */}
-              <span className="text-[8px] font-mono" style={{ color: track.color, textShadow: isActive ? `0 0 4px ${track.color}` : 'none' }}>{vol}%</span>
+              <span className="text-[8px] font-mono" style={{ color: track.color, textShadow: 'none'}}>{vol}%</span>
 
               {/* M / S buttons */}
               <div className="flex gap-1">
                 <button onClick={e => { e.stopPropagation(); toggleMute(track.id); }}
                   className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
-                  style={{ background: muted[track.id] ? '#F28C2820' : 'transparent', borderColor: muted[track.id] ? '#F28C28' : '#1a1a3a', color: muted[track.id] ? '#F28C28' : '#8888BB' }}>M</button>
+                  style={{ background: muted[track.id] ? '#F28C2820' : 'transparent', borderColor: muted[track.id] ? '#F28C28' : '#22222C', color: muted[track.id] ? '#F28C28' : '#7A7A86' }}>M</button>
                 <button onClick={e => { e.stopPropagation(); toggleSolo(track.id); }}
                   className="text-[7px] font-black px-1 py-0.5 rounded border transition-all"
-                  style={{ background: solo[track.id] ? '#007AFF20' : 'transparent', borderColor: solo[track.id] ? '#007AFF' : '#1a1a3a', color: solo[track.id] ? '#007AFF' : '#8888BB' }}>S</button>
+                  style={{ background: solo[track.id] ? '#007AFF20' : 'transparent', borderColor: solo[track.id] ? '#007AFF' : '#22222C', color: solo[track.id] ? '#007AFF' : '#7A7A86' }}>S</button>
               </div>
             </div>
           );
@@ -1738,8 +1733,8 @@ export default function StudioPage() {
                     <div key={i} className="w-full rounded-sm transition-all duration-75"
                       style={{
                         height:'4px',
-                        background: lvl*12>i ? i>9?'#FF2D78':i>7?'#F28C28':'#AE06ED' : '#0D0D20',
-                        boxShadow: lvl*12>i&&i>9?'0 0 3px #FF2D78':'none',
+                        background: lvl*12>i ? i>9?'#FF2D78':i>7?'#F28C28':'#AE06ED' : '#101016',
+                        boxShadow: lvl*12>i&&i>9?'none':'none',
                       }} />
                   ))}
                 </div>
@@ -1748,12 +1743,12 @@ export default function StudioPage() {
 
             {/* Master fader */}
             <div className="relative flex flex-col items-center h-full ml-1" style={{width:'16px'}}>
-              <div className="flex-1 w-1 rounded-full mx-auto" style={{background:'#0D0D1A',border:'1px solid #1a1a3a'}} />
+              <div className="flex-1 w-1 rounded-full mx-auto" style={{background:'#101016',border:'1px solid #22222C'}} />
               <div className="absolute w-4 h-3 rounded cursor-ns-resize"
                 style={{
                   bottom:`calc(${masterVol}% - 6px)`,
                   background:'linear-gradient(180deg,#AE06EDCC,#AE06ED66)',
-                  boxShadow:'0 0 8px #AE06ED66',
+                  boxShadow:'none',
                   border:'1px solid #AE06ED',
                 }}
                 onMouseDown={e => {
@@ -1771,8 +1766,8 @@ export default function StudioPage() {
             </div>
           </div>
 
-          <span className="text-[8px] font-mono" style={{ color: '#AE06ED', textShadow: '0 0 4px #AE06ED' }}>{masterVol}%</span>
-          <span className="text-[6px] font-mono mt-1" style={{ color: '#8888BB' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
+          <span className="text-[8px] font-mono" style={{ color: '#AE06ED', textShadow: 'none'}}>{masterVol}%</span>
+          <span className="text-[6px] font-mono mt-1" style={{ color: '#7A7A86' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
         </div>
 
         {/* Filler — keeps the empty space after Master from being dead air.
@@ -1789,15 +1784,15 @@ export default function StudioPage() {
 
   /* ─────────────────────────────────────────────────────── */
   return (
-    <div className="h-[calc(100vh-9rem)] flex flex-col overflow-hidden relative"
-      style={{ background: 'linear-gradient(180deg, #020208 0%, #050512 50%, #020208 100%)' }}>
+    <div className="h-[calc(100dvh_-_var(--nav-h)_-_var(--player-h))] flex flex-col overflow-hidden relative"
+      style={{ background: 'linear-gradient(180deg, #050507 0%, #0A0A0E 50%, #050507 100%)' }}>
       <DotGrid />
       <ScanLines />
 
       {/* Top toolbar */}
       <div className="relative z-10 h-10 border-b flex items-center px-4 gap-4 shrink-0"
         style={{
-          background: 'linear-gradient(90deg, #050510, #0A0A1A 50%, #050510)',
+          background: 'linear-gradient(90deg, #0A0A0E, #0C0C11 50%, #0A0A0E)',
           borderColor: '#AE06ED22',
           boxShadow: '0 1px 0 #AE06ED11',
         }}>
@@ -1812,37 +1807,34 @@ export default function StudioPage() {
           onBlur={() => { if (!projectName.trim()) setProjectName('Untitled Project'); }}
           spellCheck={false}
           className="text-[11px] font-mono font-bold tracking-wider truncate bg-transparent border-none outline-none focus:underline"
-          style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD144', width: `${Math.max(9, projectName.length + 1)}ch` }}
+          style={{ color: '#00FFD1', textShadow: 'none', width: `${Math.max(9, projectName.length + 1)}ch` }}
         />
         <div className="ml-auto flex items-center gap-2">
           <Activity className="w-3.5 h-3.5" style={{ color: '#00FFD1', filter: 'drop-shadow(0 0 3px #00FFD1)' }} />
           <span className="text-[10px] font-mono tracking-wider hidden sm:inline"
-            style={{ color: '#00FFD1', textShadow: '0 0 6px #00FFD1' }}>ONLINE</span>
+            style={{ color: '#00FFD1', textShadow: 'none'}}>ONLINE</span>
         </div>
       </div>
 
       {/* ── MOBILE (< lg) ─────────────────────────────────── */}
       <div className="lg:hidden relative z-10 flex flex-col flex-1 overflow-hidden">
         {/* Tab bar */}
-        <div className="flex gap-1.5 p-1.5 border-b shrink-0"
-          style={{ background: '#050510', borderColor: '#AE06ED22' }}>
+        <div className="flex border-b border-line shrink-0 bg-ink-1" role="tablist">
           {(['timeline', 'ai', 'mix'] as const).map(tab => {
             const Icon = tab === 'ai' ? Sparkles : tab === 'mix' ? SlidersHorizontal : Clock3;
             const active = mobileTab === tab;
             return (
               <button key={tab} onClick={() => setMobileTab(tab)}
-                style={{
-                  minHeight: '44px',
-                  touchAction: 'manipulation',
-                  background: active ? 'linear-gradient(135deg, #AE06ED, #6A0572)' : '#15152a',
-                  boxShadow: active ? '0 0 14px #AE06ED88' : 'none',
-                  border: active ? '1px solid #D946EF' : '1px solid #2a2a45',
-                }}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-black uppercase tracking-[0.12em] transition-all">
-                <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: active ? '#fff' : '#9999bb' }} />
-                <span style={{ color: active ? '#fff' : '#9999bb' }}>
+                role="tab" aria-selected={active}
+                style={{ minHeight: '48px', touchAction: 'manipulation' }}
+                className={`relative flex-1 flex items-center justify-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.14em] border-r border-line last:border-r-0 transition-colors ${
+                  active ? 'bg-ink-3 text-melaos-orange' : 'text-fog'
+                }`}>
+                <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
+                <span>
                   {tab === 'ai' ? 'AI Generate' : tab === 'mix' ? 'Mixer' : 'Timeline'}
                 </span>
+                {active && <span className="absolute inset-x-0 bottom-0 h-[2px] bg-melaos-orange" />}
               </button>
             );
           })}
@@ -1853,10 +1845,10 @@ export default function StudioPage() {
             <div className="flex flex-col h-full">
               {/* Section markers */}
               <div className="h-7 border-b flex shrink-0 sticky top-0 z-10"
-                style={{ background: '#030310', borderColor: '#0D0D20' }}>
+                style={{ background: '#07070A', borderColor: '#101016' }}>
                 {SECTIONS.map((s, i) => (
                   <div key={i} className="flex-1 border-r flex items-center justify-center"
-                    style={{ borderColor: '#0D0D20' }}>
+                    style={{ borderColor: '#101016' }}>
                     <span className="text-[7px] font-black tracking-[0.2em] uppercase"
                       style={{ color: i % 2 === 0 ? '#D9A5FF' : '#7EC0FF' }}>{s}</span>
                   </div>
@@ -1865,11 +1857,11 @@ export default function StudioPage() {
               <BarRuler compact />
               {orderedTracks.map(track => (
                 <div key={track.id} className={`h-12 border-b relative flex items-center ${muted[track.id] ? 'opacity-20' : ''}`}
-                  style={{ borderColor: '#0D0D20' }}>
+                  style={{ borderColor: '#101016' }}>
                   <div className="w-16 shrink-0 flex items-center gap-1 px-2 h-full border-r"
-                    style={{ borderColor: '#0D0D20', background: '#030310' }}>
+                    style={{ borderColor: '#101016', background: '#07070A' }}>
                     <div className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: track.color, boxShadow: `0 0 4px ${track.color}` }} />
+                      style={{ backgroundColor: track.color, boxShadow: 'none' }} />
                     <span className="text-[9px] font-bold truncate tracking-wider"
                       style={{ color: track.color }}>{track.name}</span>
                   </div>
@@ -1884,7 +1876,7 @@ export default function StudioPage() {
                   </div>
                 </div>
               ))}
-              <div className="border-t shrink-0 px-2 py-1.5" style={{ background: '#020208', borderColor: '#0D0D20' }}>
+              <div className="border-t shrink-0 px-2 py-1.5" style={{ background: '#050507', borderColor: '#101016' }}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
                   <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
@@ -1912,10 +1904,10 @@ export default function StudioPage() {
 
         {/* Left sidebar — tracks + lyrics */}
         <div className="w-52 border-r flex flex-col shrink-0"
-          style={{ background: '#030310', borderColor: '#AE06ED22' }}>
+          style={{ background: '#07070A', borderColor: '#AE06ED22' }}>
           {/* Tracks header */}
           <div className="h-9 border-b flex items-center px-3 gap-2 shrink-0"
-            style={{ background: '#050510', borderColor: '#0D0D20' }}>
+            style={{ background: '#0A0A0E', borderColor: '#101016' }}>
             <Layers className="w-3 h-3" style={{ color: '#AE06ED' }} />
             <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#AE06ED' }}>Tracks</span>
           </div>
@@ -1926,9 +1918,9 @@ export default function StudioPage() {
           </div>
           {/* Lyrics editor */}
           <div className="flex-1 border-t flex flex-col min-h-0"
-            style={{ borderColor: '#AE06ED22', background: 'linear-gradient(180deg, #030310, #050512)' }}>
+            style={{ borderColor: '#AE06ED22', background: 'linear-gradient(180deg, #07070A, #0A0A0E)' }}>
             <div className="h-7 border-b flex items-center px-3 gap-2 shrink-0"
-              style={{ background: '#050510', borderColor: '#0D0D20' }}>
+              style={{ background: '#0A0A0E', borderColor: '#101016' }}>
               <Mic2 className="w-3 h-3" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 3px #AE06ED)' }} />
               <span className="text-[9px] font-black tracking-[0.2em] uppercase" style={{ color: '#AE06ED' }}>Lyrics</span>
               {lyricsFromAi && lyrics.trim() && (
@@ -1938,7 +1930,7 @@ export default function StudioPage() {
               )}
             </div>
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)}
-              style={{ fontSize: '11px', background: 'transparent', color: '#C4C4E8', letterSpacing: '0.03em', resize: 'none' }}
+              style={{ fontSize: '11px', background: 'transparent', color: '#C8C8D0', letterSpacing: '0.03em', resize: 'none' }}
               className="flex-1 font-mono p-2 focus:outline-none leading-relaxed min-h-0"
               spellCheck={false} />
           </div>
@@ -1948,10 +1940,10 @@ export default function StudioPage() {
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Section markers */}
           <div className="h-8 border-b flex shrink-0"
-            style={{ background: '#030310', borderColor: '#0D0D20' }}>
+            style={{ background: '#07070A', borderColor: '#101016' }}>
             {SECTIONS.map((s, i) => (
               <div key={i} className="flex-1 border-r flex items-center justify-center"
-                style={{ borderColor: '#0D0D20' }}>
+                style={{ borderColor: '#101016' }}>
                 <span className="text-[8px] font-black tracking-[0.2em] uppercase"
                   style={{ color: i % 2 === 0 ? '#D9A5FF' : '#7EC0FF' }}>{s}</span>
               </div>
@@ -1966,10 +1958,10 @@ export default function StudioPage() {
               style={{
                 left: `${playheadPct}%`,
                 background: 'linear-gradient(180deg, #FF2D78, #FF2D7888)',
-                boxShadow: '0 0 8px #FF2D78, 0 0 16px #FF2D7844',
+                boxShadow: 'none',
               }}>
               <div className="w-3 h-3 rounded-full absolute -top-1 -left-[5px]"
-                style={{ background: '#FF2D78', boxShadow: '0 0 8px #FF2D78' }} />
+                style={{ background: '#FF2D78', boxShadow: 'none' }} />
             </div>
 
             {orderedTracks.map(track => <TimelineLane key={track.id} track={track} />)}
@@ -1980,7 +1972,7 @@ export default function StudioPage() {
               this song's actual audio element. Anchored at the bottom of
               the timeline, above the transport bar. */}
           <div className="border-t shrink-0 px-2 py-1.5"
-            style={{ background: '#020208', borderColor: '#0D0D20' }}>
+            style={{ background: '#050507', borderColor: '#101016' }}>
             <div className="flex items-center gap-1.5 mb-1">
               <Activity className="w-2.5 h-2.5" style={{ color: '#FF2D78' }} />
               <span className="text-[8px] font-black tracking-[0.25em] uppercase" style={{ color: '#FF2D78' }}>Master Waveform</span>
@@ -1993,32 +1985,32 @@ export default function StudioPage() {
               toolbar, plus real zoom controls wired to the waveform.
               Anchored directly below the Master Waveform. */}
           <div className="hidden md:flex items-center gap-1 px-2 py-1 border-t shrink-0"
-            style={{ background: '#020208', borderColor: '#0D0D20' }}>
+            style={{ background: '#050507', borderColor: '#101016' }}>
             {EDIT_TOOLS.map(({ id, Icon, label }) => (
               <button key={id} onClick={() => setEditTool(id)} title={label}
                 style={{
                   minWidth: '28px', minHeight: '28px',
-                  boxShadow: editTool === id ? '0 0 10px #AE06ED88, inset 0 0 8px #AE06ED22' : 'none',
+                  boxShadow: editTool === id ? 'none' : 'none',
                 }}
-                className={`flex items-center justify-center rounded-md transition-all ${
+                className={`flex items-center justify-center rounded-xs transition-all ${
                   editTool === id
                     ? 'bg-[#AE06ED]/20 text-[#E2B8FF] border border-[#AE06ED]'
-                    : 'bg-white/[0.03] text-[#8FE3FF] hover:text-white hover:bg-[#00FFD1]/10 hover:border-[#00FFD1]/60 border border-[#1a1a3a]'
+                    : 'bg-white/[0.03] text-[#8FE3FF] hover:text-white hover:bg-[#00FFD1]/10 hover:border-[#00FFD1]/60 border border-[#22222C]'
                 }`}>
                 <Icon className="w-3.5 h-3.5" strokeWidth={2.25} />
               </button>
             ))}
-            <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
+            <div className="h-4 w-px mx-1" style={{ background: '#3A3A46' }} />
             <button onClick={handleZoomOut} title="Zoom out"
-              className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">−</button>
-            <span className="text-[11px] font-mono font-bold w-12 text-center" style={{ color: '#C4C4E8' }}>{zoomLevel}px/s</span>
+              className="w-6 h-6 flex items-center justify-center rounded text-[#C8C8D0] hover:text-white hover:bg-white/10 text-sm font-bold">−</button>
+            <span className="text-[11px] font-mono font-bold w-12 text-center" style={{ color: '#C8C8D0' }}>{zoomLevel}px/s</span>
             <button onClick={handleZoomIn} title="Zoom in"
-              className="w-6 h-6 flex items-center justify-center rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 text-sm font-bold">+</button>
-            <div className="h-4 w-px mx-1" style={{ background: '#3a3a5c' }} />
+              className="w-6 h-6 flex items-center justify-center rounded text-[#C8C8D0] hover:text-white hover:bg-white/10 text-sm font-bold">+</button>
+            <div className="h-4 w-px mx-1" style={{ background: '#3A3A46' }} />
             <button onClick={() => jumpToTransient(-1)} title="Previous transient (Shift+Tab)"
-              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">⏮ Tab</button>
+              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C8C8D0] hover:text-white hover:bg-white/10 border border-[#3A3A46]">⏮ Tab</button>
             <button onClick={() => jumpToTransient(1)} title="Next transient (Tab)"
-              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C4C4E0] hover:text-white hover:bg-white/10 border border-[#3a3a5c]">Tab ⏭</button>
+              className="text-[9px] font-mono font-bold px-1.5 h-6 rounded text-[#C8C8D0] hover:text-white hover:bg-white/10 border border-[#3A3A46]">Tab ⏭</button>
           </div>
 
           <TransportBar />
@@ -2029,16 +2021,16 @@ export default function StudioPage() {
         {panelOpen && (
           <div className="w-72 border-l flex flex-col shrink-0 overflow-y-auto"
             style={{
-              background: 'linear-gradient(180deg, #030310, #050512)',
+              background: 'linear-gradient(180deg, #07070A, #0A0A0E)',
               borderColor: '#AE06ED22',
               boxShadow: '-1px 0 0 #AE06ED11',
             }}>
             <div className="h-9 border-b flex items-center px-4 gap-2 shrink-0"
-              style={{ background: '#050510', borderColor: '#0D0D20' }}>
+              style={{ background: '#0A0A0E', borderColor: '#101016' }}>
               <Zap className="w-3.5 h-3.5" style={{ color: '#AE06ED', filter: 'drop-shadow(0 0 4px #AE06ED)' }} />
               <span className="text-[9px] font-black tracking-[0.25em] uppercase" style={{ color: '#AE06ED' }}>AI Generate</span>
               <div className="ml-auto flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00FFD1', boxShadow: '0 0 4px #00FFD1' }} />
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00FFD1', boxShadow: 'none' }} />
                 <span className="text-[8px] font-mono" style={{ color: '#00FFD1' }}>READY</span>
               </div>
             </div>

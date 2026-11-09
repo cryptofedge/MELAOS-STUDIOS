@@ -198,6 +198,15 @@ export default function AudioPlayer() {
     if (audioRef.current) audioRef.current.loop = isLooping;
   }, [isLooping]);
 
+  // Tell the layout the player is showing, so pages pad their bottom by its
+  // height (see --player-h in globals.css) and nothing hides behind it.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (currentSong) root.dataset.player = 'on';
+    else delete root.dataset.player;
+    return () => { delete root.dataset.player; };
+  }, [currentSong]);
+
   if (!currentSong) return null;
 
   const elapsed = Math.floor((progress / 100) * currentSong.duration);
@@ -210,114 +219,121 @@ export default function AudioPlayer() {
     }
   };
 
+  const seekFromEvent = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    seek(Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100)));
+  };
+  const iconBtn = 'touch-target text-fog transition-colors hoverable:hover:text-white';
+
+  const cover = (size: string) => (
+    <div className={`${size} shrink-0 overflow-hidden relative border border-line`} style={{ background: currentSong.coverGradient }}>
+      {currentSong.coverArt && (
+        <img src={currentSong.coverArt} alt={currentSong.title} className="absolute inset-0 w-full h-full object-cover" />
+      )}
+      {isPlaying && (
+        <div className="absolute inset-0 bg-black/45 flex items-end justify-center gap-[2px] pb-2">
+          {[3, 5, 4, 6, 3].map((h, i) => (
+            <div key={i} className="waveform-bar !w-[3px] !m-0 bg-melaos-orange" style={{ height: `${h * 2.5}px` }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const playButton = (large = false) => (
+    <button
+      onClick={() => setIsPlaying(!isPlaying)}
+      aria-label={isPlaying ? 'Pause' : 'Play'}
+      className={`btn btn-primary !px-0 ${large ? '!min-h-[44px] w-11' : '!min-h-[36px] w-10 [--chamfer:7px]'}`}
+    >
+      {isPlaying ? <Pause className="w-4 h-4 fill-current" strokeWidth={0} /> : <Play className="w-4 h-4 fill-current ml-0.5" strokeWidth={0} />}
+    </button>
+  );
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#111]/95 border-t border-[#222]"
-      style={{ WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' }}>
+    <div
+      className="fixed bottom-0 inset-x-0 z-50 bg-ink-0/90 border-t border-line pb-safe"
+      style={{ WebkitBackdropFilter: 'blur(14px) saturate(140%)', backdropFilter: 'blur(14px) saturate(140%)' }}
+    >
+      {/* Progress: a hairline along the top edge, with a taller invisible hit area */}
+      <div
+        className="absolute -top-[7px] inset-x-0 h-[14px] cursor-pointer group"
+        onClick={seekFromEvent}
+        role="slider"
+        aria-label="Seek"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+      >
+        <div className="absolute top-[6px] inset-x-0 h-[2px] bg-line-strong" />
+        <div className="absolute top-[6px] left-0 h-[2px] bg-melaos-orange transition-[width] duration-200" style={{ width: `${progress}%` }} />
+      </div>
 
-      {/* ── MOBILE layout (< md) ── */}
-      <div className="md:hidden px-4 py-2 flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden relative" style={{ background: currentSong.coverGradient }}>
-            {currentSong.coverArt && (
-              <img src={currentSong.coverArt} alt={currentSong.title} className="absolute inset-0 w-full h-full object-cover" />
-            )}
-            <div className="absolute inset-0 flex items-center justify-center opacity-60">
-              <div className="flex gap-0.5 items-end h-5">
-                {[3,5,4,6,3,5,4].map((h, i) => (
-                  <div key={i} className={`waveform-bar${isPlaying ? '' : ''}`}
-                    style={{ width: '4px', height: `${isPlaying ? h * 3 : 4}px`, backgroundColor: 'white', borderRadius: '2px', transition: 'height 0.3s' }} />
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* ── Phones and small tablets ── */}
+      <div className="md:hidden px-safe">
+        <div className="flex items-center gap-3 pt-2.5">
+          {cover("w-10 h-10")}
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-semibold truncate">{currentSong.title}</p>
-            <p className="text-gray-500 text-xs truncate">{currentSong.artist}</p>
+            <p className="text-white text-sm font-medium truncate">{currentSong.title}</p>
+            <p className="text-fog text-xs truncate">{currentSong.artist}</p>
           </div>
-          <button onClick={toggleLike}
-            style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-            className={`flex items-center justify-center shrink-0 transition-colors ${isLiked ? 'text-[#E91E8C]' : 'text-gray-600 hover:text-gray-400'}`}>
-            <Heart className="w-4 h-4" fill={isLiked ? 'currentColor' : 'none'} />
+          <button onClick={toggleLike} aria-label="Like" className={`touch-target -mr-2 transition-colors ${isLiked ? 'text-melaos-pink' : 'text-fog'}`}>
+            <Heart className="w-[18px] h-[18px]" strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600 w-8 text-right">{fmt(elapsed)}</span>
-          <div className="flex-1 h-1.5 bg-[#333] rounded-full cursor-pointer relative"
-            onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seek(((e.clientX - r.left) / r.width) * 100); }}>
-            <div className="h-full bg-[#F28C28] rounded-full transition-all" style={{ width: `${progress}%` }} />
+        <div className="flex items-center justify-between pb-1.5">
+          <span className="label tabular-nums w-12">{fmt(elapsed)}</span>
+          <div className="flex items-center gap-1">
+            <button onClick={playPrev} aria-label="Previous" className={iconBtn}><SkipBack className="w-[18px] h-[18px]" strokeWidth={1.75} /></button>
+            {playButton(true)}
+            <button onClick={playNext} aria-label="Next" className={iconBtn}><SkipForward className="w-[18px] h-[18px]" strokeWidth={1.75} /></button>
+            <button onClick={toggleLoop} aria-label="Loop" aria-pressed={isLooping} className={`touch-target transition-colors ${isLooping ? 'text-melaos-orange' : 'text-fog'}`}>
+              <Repeat className="w-4 h-4" strokeWidth={1.75} />
+            </button>
           </div>
-          <span className="text-xs text-gray-600 w-8">{currentSong.durationFormatted}</span>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 pb-1">
-          <button onClick={playPrev} style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-            className="flex items-center justify-center text-gray-500 hover:text-white transition-colors">
-            <SkipBack className="w-5 h-5" />
-          </button>
-          <button onClick={() => setIsPlaying(!isPlaying)}
-            style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-            className="w-11 h-11 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform">
-            {isPlaying ? <Pause className="w-5 h-5 text-black" /> : <Play className="w-5 h-5 text-black ml-0.5" />}
-          </button>
-          <button onClick={playNext} style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-            className="flex items-center justify-center text-gray-500 hover:text-white transition-colors">
-            <SkipForward className="w-5 h-5" />
-          </button>
-          <button onClick={toggleLoop} style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-            className={`flex items-center justify-center transition-colors ${isLooping ? 'text-[#F28C28]' : 'text-gray-600 hover:text-gray-400'}`}>
-            <Repeat className="w-4 h-4" />
-          </button>
+          <span className="label tabular-nums w-12 text-right">{currentSong.durationFormatted}</span>
         </div>
       </div>
 
-      {/* ── DESKTOP layout (md+) ── */}
-      <div className="hidden md:flex items-center px-6 h-20 gap-4">
-        <div className="flex items-center gap-3 w-64 shrink-0">
-          <div className="w-10 h-10 rounded-md shrink-0 overflow-hidden" style={{ background: currentSong.coverGradient }}>
-            {currentSong.coverArt && (
-              <img src={currentSong.coverArt} alt={currentSong.title} className="w-full h-full object-cover" />
-            )}
-          </div>
+      {/* ── Tablets in landscape and computers ── */}
+      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-6 px-6 h-[72px]">
+        <div className="flex items-center gap-3 min-w-0">
+          {cover("w-11 h-11")}
           <div className="min-w-0">
-            <p className="text-white text-sm font-semibold truncate">{currentSong.title}</p>
-            <p className="text-gray-500 text-xs truncate">{currentSong.artist}</p>
+            <p className="text-white text-sm font-medium truncate">{currentSong.title}</p>
+            <p className="text-fog text-xs truncate">{currentSong.artist}</p>
           </div>
-          <button onClick={toggleLike} className={`shrink-0 transition-colors ${isLiked ? 'text-[#E91E8C]' : 'text-gray-600 hover:text-gray-400'}`}>
-            <Heart className="w-4 h-4" fill={isLiked ? 'currentColor' : 'none'} />
+          <button onClick={toggleLike} aria-label="Like" className={`shrink-0 p-2 transition-colors ${isLiked ? 'text-melaos-pink' : 'text-fog hoverable:hover:text-white'}`}>
+            <Heart className="w-4 h-4" strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col items-center gap-1.5 max-w-lg mx-auto">
-          <div className="flex items-center gap-4">
-            <button onClick={playPrev} className="text-gray-500 hover:text-white transition-colors"><SkipBack className="w-4 h-4" /></button>
-            <button onClick={() => setIsPlaying(!isPlaying)}
-              className="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform">
-              {isPlaying ? <Pause className="w-4 h-4 text-black" /> : <Play className="w-4 h-4 text-black ml-0.5" />}
-            </button>
-            <button onClick={playNext} className="text-gray-500 hover:text-white transition-colors"><SkipForward className="w-4 h-4" /></button>
-            <button onClick={toggleLoop} className={`transition-colors ${isLooping ? 'text-[#F28C28]' : 'text-gray-600 hover:text-gray-400'}`}>
-              <Repeat className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex items-center gap-2 w-full">
-            <span className="text-xs text-gray-600 w-8 text-right">{fmt(elapsed)}</span>
-            <div className="flex-1 h-1 bg-[#333] rounded-full cursor-pointer relative group"
-              onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seek(((e.clientX - r.left) / r.width) * 100); }}>
-              <div className="h-full bg-[#F28C28] rounded-full transition-all" style={{ width: `${progress}%` }} />
-              <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ left: `calc(${progress}% - 6px)` }} />
-            </div>
-            <span className="text-xs text-gray-600 w-8">{currentSong.durationFormatted}</span>
-          </div>
+        <div className="flex items-center gap-4">
+          <span className="label tabular-nums w-10 text-right">{fmt(elapsed)}</span>
+          <button onClick={playPrev} aria-label="Previous" className="p-2 text-fog hoverable:hover:text-white transition-colors"><SkipBack className="w-4 h-4" strokeWidth={1.75} /></button>
+          {playButton()}
+          <button onClick={playNext} aria-label="Next" className="p-2 text-fog hoverable:hover:text-white transition-colors"><SkipForward className="w-4 h-4" strokeWidth={1.75} /></button>
+          <button onClick={toggleLoop} aria-label="Loop" aria-pressed={isLooping} className={`p-2 transition-colors ${isLooping ? 'text-melaos-orange' : 'text-fog hoverable:hover:text-white'}`}>
+            <Repeat className="w-4 h-4" strokeWidth={1.75} />
+          </button>
+          <span className="label tabular-nums w-10">{currentSong.durationFormatted}</span>
         </div>
 
-        <div className="flex items-center gap-2 w-32 shrink-0">
-          <Volume2 className="w-4 h-4 text-gray-500" />
-          <div className="flex-1 h-1 bg-[#333] rounded-full cursor-pointer"
-            onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setVolume(Math.round(((e.clientX - r.left) / r.width) * 100)); }}>
-            <div className="h-full bg-gray-400 rounded-full" style={{ width: `${volume}%` }} />
+        <div className="flex items-center gap-3 justify-end">
+          <Volume2 className="w-4 h-4 text-fog" strokeWidth={1.75} />
+          <div
+            className="w-28 h-[14px] cursor-pointer relative"
+            onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setVolume(Math.round(Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100)))); }}
+            role="slider"
+            aria-label="Volume"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={volume}
+          >
+            <div className="absolute top-[6px] inset-x-0 h-[2px] bg-line-strong" />
+            <div className="absolute top-[6px] left-0 h-[2px] bg-fog" style={{ width: `${volume}%` }} />
           </div>
+          <span className="label tabular-nums w-7 text-right">{volume}</span>
         </div>
       </div>
     </div>

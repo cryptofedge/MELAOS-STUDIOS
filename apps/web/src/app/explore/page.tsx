@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Play, Pause, Heart, MoreHorizontal, ChevronRight, Search, Plus } from 'lucide-react';
+import { Play, Pause, Heart, MoreHorizontal, ArrowRight, Search, Plus } from 'lucide-react';
 import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { useAudioStore } from '@/lib/store';
 import { GENRES } from '@/lib/genreProfiles';
@@ -20,7 +20,9 @@ const STAFF_PICKS: Song[] = [
   { id: 's7', title: 'Lucid Dreaming', artist: 'Varletine', artistId: 'sp7', coverColor: '#A855F7', coverGradient: 'linear-gradient(135deg,#7C3AED,#EC4899)', coverArt: '/covers/s7.jpg', duration: 234, durationFormatted: '3:54', plays: 410000, likes: 72000, genre: 'Electronic', mood: 'Euphoric', bpm: 124, isPublic: true, createdAt: '2026-06-28', tags: ['staffpick'] },
 ];
 
-function SongArtCard({ song, version }: { song: Song; version?: string }) {
+// One cell of a ruled strip or grid. The parent draws the hairlines; the
+// caller passes the width (rows) or the cell borders (grids).
+function SongArtCard({ song, version, className = '' }: { song: Song; version?: string; className?: string }) {
   const { setCurrentSong, currentSong, isPlaying, likedIds, toggleLikedSong } = useAudioStore();
   const [hovered, setHovered] = useState(false);
   const isActive = currentSong?.id === song.id && isPlaying;
@@ -29,70 +31,92 @@ function SongArtCard({ song, version }: { song: Song; version?: string }) {
 
   return (
     <div
-      className="group cursor-pointer shrink-0"
-      style={{ width: 150 }}
+      className={`group cursor-pointer bg-ink-0 p-2.5 sm:p-3 transition-colors hoverable:hover:bg-ink-1 ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => setCurrentSong(song)}
     >
       <div
-        className="rounded-2xl relative overflow-hidden mb-2"
-        style={{ aspectRatio: '1', background: song.coverGradient }}
+        className="relative aspect-square overflow-hidden bg-ink-2"
+        style={{ background: song.coverGradient }}
       >
         {song.coverArt && (
-          <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-[1.03]" />
         )}
-        {/* Overlay */}
-        <div className={`absolute inset-0 bg-black/40 flex items-end justify-between p-2 transition-opacity ${hovered || isActive ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Overlay: controls on a bottom scrim */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex items-end justify-between transition-opacity focus-within:opacity-100 ${hovered || isActive ? 'opacity-100' : 'opacity-0'}`}>
           <button
             onClick={e => { e.stopPropagation(); toggleLikedSong(song.id); }}
-            className={`p-1.5 rounded-full bg-black/40 transition-colors ${isLiked ? 'text-[#E91E8C]' : 'text-white hover:text-[#E91E8C]'}`}>
-            <Heart className="w-3.5 h-3.5" fill={isLiked ? 'currentColor' : 'none'} />
+            aria-label="Like"
+            aria-pressed={isLiked}
+            className={`w-11 h-11 flex items-center justify-center transition-colors ${isLiked ? 'text-melaos-pink' : 'text-white hoverable:hover:text-melaos-pink'}`}>
+            <Heart className="w-4 h-4" strokeWidth={1.75} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={e => e.stopPropagation()}
-            className="p-1.5 rounded-full bg-white text-black hover:scale-110 transition-transform">
-            {isActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+            aria-label={isActive ? 'Pause' : 'Play'}
+            className="btn btn-primary !w-11 !min-h-[44px] !px-0">
+            {isActive ? <Pause className="w-4 h-4 fill-current" strokeWidth={0} /> : <Play className="w-4 h-4 fill-current" strokeWidth={0} />}
           </button>
-          <button onClick={e => e.stopPropagation()} className="p-1.5 rounded-full bg-black/40 text-white">
-            <MoreHorizontal className="w-3.5 h-3.5" />
+          <button onClick={e => e.stopPropagation()} aria-label="More" className="w-11 h-11 flex items-center justify-center text-white transition-colors hoverable:hover:text-melaos-orange">
+            <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
           </button>
         </div>
         {/* Version badge */}
         {version && (
-          <div className="absolute top-2 left-2 bg-black/60 text-[#F28C28] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+          <div className="absolute top-2 left-2 rounded-xs bg-ink-0/80 px-1.5 py-0.5 font-mono text-[9.5px] tracking-[0.14em] uppercase text-melaos-orange">
             {version}
           </div>
         )}
         {/* Playing indicator */}
         {isActive && (
-          <div className="absolute bottom-2 left-2 flex gap-0.5 items-end">
+          <div className="absolute top-2 right-2 flex gap-0.5 items-end rounded-xs bg-ink-0/75 px-1.5 py-1">
             {[3,5,4,6,3].map((h, i) => (
               <div key={i} className="waveform-bar" style={{ height: `${h * 3}px`, backgroundColor: '#F28C28' }} />
             ))}
           </div>
         )}
       </div>
-      <p className="text-white text-xs font-semibold truncate">{song.title}</p>
-      <p className="text-gray-500 text-xs truncate">{song.artist}</p>
-      <p className="text-gray-600 text-[10px] mt-0.5">▶ {formatPlays(song.plays)} · ♥ {formatPlays(song.likes)}</p>
+      <p className="mt-3 text-white text-[13px] sm:text-sm font-medium truncate">{song.title}</p>
+      <p className="mt-0.5 text-fog text-xs truncate">{song.artist}</p>
+      <p className="mt-2 flex items-center gap-1.5 font-mono text-[10.5px] text-fog-dim tabular-nums">
+        <Play className="w-2.5 h-2.5 fill-current" strokeWidth={0} aria-hidden /> {formatPlays(song.plays)}
+        <span className="text-fog-faint" aria-hidden>·</span>
+        <Heart className="w-2.5 h-2.5" strokeWidth={1.75} aria-hidden /> {formatPlays(song.likes)}
+      </p>
     </div>
   );
 }
 
-function HorizontalRow({ title, songs, seeAll }: { title: string; songs: any[]; seeAll?: string }) {
+// Numbered row header: "01 — Title", hairline under it, optional action.
+function RowHead({ index, title, action }: { index: string; title: string; action?: ReactNode }) {
   return (
-    <section className="mb-10">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-white font-bold text-lg">{title}</h2>
-        {seeAll && (
-          <button className="text-gray-500 hover:text-white text-sm flex items-center gap-1 transition-colors">
-            See all <ChevronRight className="w-4 h-4" />
+    <div className="flex items-end justify-between gap-4 border-b border-line-soft pb-4 mb-5 sm:mb-6">
+      <div className="flex items-baseline gap-3 sm:gap-4 min-w-0">
+        <span className="label tabular-nums shrink-0" aria-hidden>{index} —</span>
+        <h2 className="display font-light text-white leading-tight text-[clamp(1.15rem,2.6vw,1.75rem)] min-w-0 break-words">{title}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function HorizontalRow({ index, title, songs, seeAll }: { index: string; title: string; songs: any[]; seeAll?: string }) {
+  return (
+    <section className="mb-12 sm:mb-16">
+      <RowHead
+        index={index}
+        title={title}
+        action={seeAll && (
+          <button className="btn btn-quiet !px-0 shrink-0">
+            See all <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
           </button>
         )}
-      </div>
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-        {songs.map(s => <SongArtCard key={s.id} song={s} />)}
+      />
+      <div className="-mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto snap-x snap-mandatory scroll-px-4 md:scroll-px-0 scrollbar-hide">
+        <div className="flex w-max gap-px bg-line-soft border border-line-soft empty:hidden">
+          {songs.map(s => <SongArtCard key={s.id} song={s} className="snap-start shrink-0 w-[160px] sm:w-[176px] lg:w-[188px]" />)}
+        </div>
       </div>
     </section>
   );
@@ -124,96 +148,107 @@ function ExploreContent() {
   const newRow = [...mockSongs].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0,6);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2">Explore</h1>
-          <p className="text-gray-500 text-sm sm:text-base">Discover the latest and trending music from Eclat Universe artists</p>
+    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-8 sm:pt-12 pb-16 sm:pb-24">
+      {/* Page header */}
+      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-line-soft pb-6 sm:pb-8">
+        <div className="flex-1 min-w-[16rem]">
+          <span className="block w-6 h-px bg-melaos-orange mb-5 sm:mb-6" aria-hidden />
+          <h1 className="display font-light text-white leading-none text-[clamp(2.25rem,6vw,3.75rem)]">Explore</h1>
+          <p className="mt-4 max-w-xl text-fog text-sm sm:text-base leading-relaxed">Discover the latest and trending music from Eclat Universe artists</p>
         </div>
         <a href="/studio"
-          className="hidden sm:flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform shrink-0">
-          <Plus className="w-4 h-4" /> Create
+          className="hidden sm:inline-flex btn btn-primary shrink-0">
+          <Plus className="w-4 h-4" strokeWidth={1.75} /> Create
         </a>
-      </div>
+      </header>
 
       {/* Inline search (mirrors navbar search, lets users refine on this page) */}
-      <div className="relative max-w-md mb-8">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <div className="relative max-w-md mt-6 sm:mt-8">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fog-dim" strokeWidth={1.75} />
         <input
           type="text"
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           placeholder="Search songs, artists..."
-          style={{ fontSize: '16px' }}
-          className="w-full bg-[#1A1A1A] border border-[#333] rounded-full py-2.5 pl-10 pr-4 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-[#F28C28] transition-colors"
+          className="field h-11 !py-0 pl-10 text-sm"
         />
       </div>
 
       {searchResults ? (
-        <section>
-          <h2 className="text-white font-bold text-lg mb-4">
-            {searchResults.length > 0 ? `Results for "${searchInput}"` : `No results for "${searchInput}"`}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {searchResults.map(song => <SongArtCard key={song.id} song={song} />)}
+        <section className="mt-10 sm:mt-14">
+          <RowHead
+            index="01"
+            title={searchResults.length > 0 ? `Results for "${searchInput}"` : `No results for "${searchInput}"`}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 border-l border-t border-line-soft empty:hidden">
+            {searchResults.map(song => <SongArtCard key={song.id} song={song} className="border-r border-b border-line-soft" />)}
           </div>
         </section>
       ) : (
-      <>
+      <div className="mt-10 sm:mt-14">
       {/* Staff Picks — always shown at top */}
-      <HorizontalRow title="⭐ Staff Picks" songs={STAFF_PICKS} seeAll="#" />
+      <HorizontalRow index="01" title="Staff Picks" songs={STAFF_PICKS} seeAll="#" />
 
-      {/* Tab bar */}
-      <div className="overflow-x-auto scrollbar-hide mb-6 border-b border-[#1A1A1A] pb-4">
-        <div className="flex gap-2 whitespace-nowrap">
-          {tabs.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              style={{ minHeight: '44px', touchAction: 'manipulation' }}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                activeTab === tab ? 'bg-[#F28C28] text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1A1A1A]'
-              }`}>
-              {tab}
-            </button>
-          ))}
+      <div className="mb-12 sm:mb-16">
+        {/* Tab bar */}
+        <div className="-mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto scrollbar-hide">
+          <div className="flex w-max min-w-full gap-6 sm:gap-8 border-b border-line-soft">
+            {tabs.map(tab => {
+              const active = activeTab === tab;
+              return (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  aria-pressed={active}
+                  className={`relative -mb-px h-11 min-w-touch font-mono text-[11px] tracking-[0.16em] uppercase whitespace-nowrap touch-manipulation transition-colors ${
+                    active ? 'text-white' : 'text-fog hoverable:hover:text-white'
+                  }`}>
+                  {tab}
+                  {active && <span className="absolute inset-x-0 bottom-0 h-px bg-melaos-orange" aria-hidden />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Genre pills */}
-      <div className="overflow-x-auto scrollbar-hide mb-8 pb-2">
-        <div className="flex gap-2 whitespace-nowrap">
-          {genres.map(genre => (
-            <button key={genre} onClick={() => setActiveGenre(genre)}
-              style={{ minHeight: '44px', touchAction: 'manipulation' }}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
-                activeGenre === genre
-                  ? 'border-[#F28C28] text-[#F28C28] bg-[#F28C28]/10'
-                  : 'border-[#333] text-gray-500 hover:border-[#555] hover:text-gray-300'
-              }`}>
-              {genre}
-            </button>
-          ))}
+        {/* Genre selector: a ruled strip; scrolls on phones and tablets, wraps on desktop */}
+        <div className="mt-5 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto snap-x scroll-px-4 md:scroll-px-0 scrollbar-hide">
+          <div className="flex w-max lg:w-auto lg:flex-wrap pl-px pt-px">
+            {genres.map(genre => {
+              const active = activeGenre === genre;
+              return (
+                <button key={genre} onClick={() => setActiveGenre(genre)}
+                  aria-pressed={active}
+                  className={`snap-start -ml-px -mt-px h-11 px-4 border font-mono text-[11px] tracking-[0.12em] uppercase whitespace-nowrap touch-manipulation transition-colors ${
+                    active
+                      ? 'relative z-[1] border-melaos-orange/70 bg-melaos-orange/10 text-melaos-orange'
+                      : 'border-line bg-ink-0 text-fog hoverable:hover:bg-ink-1 hoverable:hover:text-white'
+                  }`}>
+                  {genre}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Trending row */}
-      <HorizontalRow title="🔥 Trending This Week" songs={topRow} seeAll="#" />
+      <HorizontalRow index="02" title="Trending This Week" songs={topRow} seeAll="#" />
 
       {/* New releases */}
-      <HorizontalRow title="✨ Fresh Drops" songs={newRow} seeAll="#" />
+      <HorizontalRow index="03" title="Fresh Drops" songs={newRow} seeAll="#" />
 
       {/* Full grid */}
       <section>
-        <h2 className="text-white font-bold text-lg mb-4">All Tracks</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          {sorted.map(song => <SongArtCard key={song.id} song={song} />)}
+        <RowHead index="04" title="All Tracks" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 border-l border-t border-line-soft empty:hidden">
+          {sorted.map(song => <SongArtCard key={song.id} song={song} className="border-r border-b border-line-soft" />)}
         </div>
         {sorted.length === 0 && (
-          <div className="text-center py-20 text-gray-600">
-            <p className="text-lg">No songs found in this genre yet.</p>
+          <div className="border border-line-soft rule-grid py-20 px-6 text-center">
+            <p className="text-fog text-base">No songs found in this genre yet.</p>
           </div>
         )}
       </section>
-      </>
+      </div>
       )}
     </div>
   );

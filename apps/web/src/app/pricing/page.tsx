@@ -71,96 +71,109 @@ const tiers = [
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
 
+  // Segmented control, built like the ES/EN toggle in the top bar.
+  const segment = (active: boolean) =>
+    `flex-1 sm:flex-none min-h-touch px-4 sm:px-5 flex items-center justify-center gap-2 touch-manipulation transition-colors ${
+      active ? 'bg-ink-3 text-melaos-orange' : 'text-fog-dim hoverable:hover:text-white'
+    }`;
+
   return (
-    <div className="min-h-screen px-4 py-12 sm:py-16 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-10 sm:pt-16 pb-16 sm:pb-24">
       {/* Header */}
-      <div className="text-center mb-10 sm:mb-12">
-        <div className="flex justify-center mb-4">
-          <Link href="/studio"
-            className="hidden sm:inline-flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform">
-            <Plus className="w-4 h-4" /> Create
+      <header className="border-b border-line-soft pb-8 sm:pb-10">
+        <div className="flex items-center justify-between gap-4 min-h-touch">
+          <p className="label">01 — Plans</p>
+          <Link href="/studio" className="hidden sm:inline-flex btn btn-ghost">
+            <Plus className="w-4 h-4" strokeWidth={1.75} /> Create
           </Link>
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white mb-4">
-          Simple, <span className="gradient-text">honest</span> pricing
-        </h1>
-        <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto mb-8">
-          Start free, scale when you're ready. No hidden fees. Cancel anytime.
-        </p>
 
-        {/* Annual toggle */}
-        <div className="inline-flex items-center gap-2 bg-[#1A1A1A] border border-[#333] rounded-full p-1">
-          <button
-            onClick={() => setAnnual(false)}
-            style={{ minHeight: '44px', touchAction: 'manipulation' }}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? 'bg-[#F28C28] text-white' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setAnnual(true)}
-            style={{ minHeight: '44px', touchAction: 'manipulation' }}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${annual ? 'bg-[#F28C28] text-white' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            Annual <span className="text-xs font-normal opacity-80">save 20%</span>
-          </button>
+        <div className="mt-4 sm:mt-6 grid lg:grid-cols-12 gap-6 lg:gap-8 items-end">
+          <h1 className="lg:col-span-7 display font-light text-white leading-[1.02] text-[clamp(2.1rem,6.4vw,4rem)]">
+            Simple, <span className="font-medium text-melaos-orange">honest</span> pricing
+          </h1>
+          <div className="lg:col-span-5 flex flex-col items-start gap-6">
+            <p className="text-fog text-base sm:text-[17px] leading-relaxed max-w-[34rem]">
+              Start free, scale when you're ready. No hidden fees. Cancel anytime.
+            </p>
+
+            {/* Annual toggle */}
+            <div className="flex w-full sm:w-auto border border-line rounded-xs overflow-hidden font-mono text-[11px] tracking-[0.14em] uppercase">
+              <button
+                onClick={() => setAnnual(false)}
+                aria-pressed={!annual}
+                className={segment(!annual)}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                aria-pressed={annual}
+                className={`${segment(annual)} border-l border-line`}
+              >
+                Annual <span className={`text-[10px] tracking-[0.1em] ${annual ? 'text-melaos-orange/70' : 'text-fog-faint'}`}>save 20%</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Pricing cards — stacked on mobile, 3-col on md+ */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {tiers.map(tier => (
+      {/* Tier sheet: stacked on phones, three ruled columns from md up */}
+      <div className="mt-10 sm:mt-12 grid grid-cols-1 md:grid-cols-3 gap-px bg-line-soft border border-line-soft">
+        {tiers.map((tier, i) => (
           <div
             key={tier.name}
-            className={`relative rounded-2xl p-6 sm:p-7 flex flex-col transition-all flex-1 ${
-              tier.highlight
-                ? 'border-2 border-[#F28C28] bg-gradient-to-b from-[#F28C28]/10 to-[#1A1A1A] shadow-[0_0_40px_rgba(242,140,40,0.2)]'
-                : 'border border-[#333] bg-[#1A1A1A]'
-            }`}
+            className={`relative flex flex-col p-6 md:p-5 lg:p-8 ${tier.highlight ? 'bg-ink-1' : 'bg-ink-0'}`}
           >
-            {tier.badge && (
-              <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
-                tier.highlight ? 'bg-[#F28C28] text-white' : 'bg-[#333] text-gray-300'
-              }`}>
-                {tier.badge}
-              </div>
-            )}
+            {/* Highlighted tier: an orange rule laid over the column's top edge */}
+            {tier.highlight && <span className="absolute -top-px -inset-x-px h-[2px] bg-melaos-orange" aria-hidden />}
 
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-white mb-1">{tier.name}</h2>
-              <p className="text-gray-500 text-sm">{tier.description}</p>
+            <div className="flex items-center justify-between gap-3 h-4">
+              <span className="font-mono text-[11px] text-fog-dim tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+              {tier.badge && (
+                <span className={`label flex items-center gap-2 ${tier.highlight ? '!text-melaos-orange' : ''}`}>
+                  {tier.highlight && <span className="inline-block w-4 h-px bg-melaos-orange" aria-hidden />}
+                  {tier.badge}
+                </span>
+              )}
             </div>
 
-            <div className="mb-6">
-              <span className="text-5xl font-black text-white">
-                ${annual ? tier.price.annual : tier.price.monthly}
-              </span>
-              {tier.price.monthly > 0 && (
-                <span className="text-gray-500 text-sm ml-1">/mo</span>
-              )}
-              {annual && tier.price.monthly > 0 && (
-                <div className="text-xs text-[#F28C28] mt-1">
-                  Billed ${(annual ? tier.price.annual : tier.price.monthly) * 12}/year
-                </div>
-              )}
+            <div className="mt-8">
+              <h2 className="display font-light text-white text-2xl lg:text-[28px] leading-tight">{tier.name}</h2>
+              {/* Min heights keep the price rows level across the three columns */}
+              <p className="mt-2 text-fog text-sm leading-relaxed md:min-h-[68px] lg:min-h-[46px]">{tier.description}</p>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-line-soft">
+              <div className="flex items-baseline gap-2">
+                <span className="display font-light text-white leading-none tabular-nums text-[clamp(2.75rem,5vw,3.75rem)]">
+                  <span className="text-fog text-[0.5em] align-top mr-0.5">$</span>{annual ? tier.price.annual : tier.price.monthly}
+                </span>
+                {tier.price.monthly > 0 && (
+                  <span className="label">/mo</span>
+                )}
+              </div>
+              {/* Fixed-height line so the buttons below don't jump when billing changes */}
+              <div className="mt-3 h-4">
+                {annual && tier.price.monthly > 0 && (
+                  <div className="label !text-melaos-orange tabular-nums">
+                    Billed ${(annual ? tier.price.annual : tier.price.monthly) * 12}/year
+                  </div>
+                )}
+              </div>
             </div>
 
             <Link
               href={tier.ctaHref}
-              style={{ minHeight: '48px', touchAction: 'manipulation' }}
-              className={`w-full py-3 rounded-xl font-bold text-sm text-center flex items-center justify-center mb-6 transition-all hover:scale-105 ${
-                tier.highlight
-                  ? 'btn-orange text-white'
-                  : 'border border-[#333] text-gray-300 hover:border-[#555] hover:text-white'
-              }`}
+              className={`btn w-full mt-6 !min-h-[48px] !px-4 ${tier.highlight ? 'btn-primary' : 'btn-ghost'}`}
             >
               {tier.cta}
             </Link>
 
-            <ul className="space-y-3 flex-1">
+            <ul className="mt-8 flex-1 border-t border-line-soft divide-y divide-line-soft">
               {tier.features.map(f => (
-                <li key={f} className="flex items-start gap-2 text-sm text-gray-300">
-                  <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                <li key={f} className="flex items-start gap-3 py-3 text-sm leading-snug text-[#ECECF1]/90">
+                  <Check className="w-4 h-4 text-melaos-orange mt-px shrink-0" strokeWidth={1.75} />
                   {f}
                 </li>
               ))}
@@ -170,10 +183,10 @@ export default function PricingPage() {
       </div>
 
       {/* FAQ teaser */}
-      <div className="mt-12 sm:mt-16 text-center">
-        <p className="text-gray-500 text-sm">
+      <div className="mt-8 sm:mt-10">
+        <p className="text-fog text-sm sm:text-[15px] leading-relaxed max-w-[68ch]">
           All plans include access to MELAOS STUDIOS web DAW, community features, and public profile.{' '}
-          <Link href="/auth" className="text-[#F28C28] hover:underline">Start for free today.</Link>
+          <Link href="/auth" className="text-melaos-orange underline underline-offset-4 decoration-melaos-orange/40 hoverable:hover:decoration-melaos-orange">Start for free today.</Link>
         </p>
       </div>
     </div>

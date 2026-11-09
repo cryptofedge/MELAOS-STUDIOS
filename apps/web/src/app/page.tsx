@@ -1,17 +1,23 @@
 'use client';
 import Link from 'next/link';
-import { Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
-import GradientText from '@/components/GradientText';
+import dynamic from 'next/dynamic';
+import { ArrowRight, Play, Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import Emblem from '@/components/Emblem';
+import { GENRES } from '@/lib/genreProfiles';
+
+// Three.js only loads in the browser, after the page is already readable.
+const HeroScene = dynamic(() => import('@/components/HeroScene'), { ssr: false });
 
 const heroSongs = [
-  { title: 'Midnight Frequencies', artist: 'NovaSynth', gradient: 'from-blue-600 to-purple-800', coverArt: '/covers/1.jpg', delay: '0s' },
-  { title: 'Golden Hour Lagos', artist: 'AfroWave', gradient: 'from-orange-500 to-pink-600', coverArt: '/covers/2.jpg', delay: '1.3s' },
-  { title: 'Trap Cathedral', artist: 'DeepVault', gradient: 'from-gray-900 to-purple-900', coverArt: '/covers/6.jpg', delay: '2.6s' },
+  { title: 'Midnight Frequencies', artist: 'NovaSynth', coverArt: '/covers/1.jpg', genre: 'Electronic', bpm: 128 },
+  { title: 'Golden Hour Lagos', artist: 'AfroWave', coverArt: '/covers/2.jpg', genre: 'Afrobeats', bpm: 102 },
+  { title: 'Trap Cathedral', artist: 'DeepVault', coverArt: '/covers/6.jpg', genre: 'Trap', bpm: 145 },
 ];
 
 export default function HomePage() {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const es = lang === 'es';
 
   const features = [
     { icon: Music2, title: t('home.f1.title'), desc: t('home.f1.desc') },
@@ -26,115 +32,177 @@ export default function HomePage() {
 
   return (
     <div className="overflow-x-hidden">
-      {/* Hero */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 hero-gradient overflow-hidden">
-        {/* Ambient blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#F28C28]/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#7C3AED]/10 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#E91E8C]/8 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-4xl mx-auto w-full">
-          {/* Hero logo */}
-          <div className="flex justify-center mb-6">
-            <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-32 sm:h-40 w-auto max-w-[180px] sm:max-w-[240px] object-contain drop-shadow-2xl" />
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <section className="relative border-b border-line-soft">
+        <div className="mx-auto max-w-[1440px] grid lg:grid-cols-12 lg:min-h-[min(calc(100dvh-var(--nav-h)),880px)]">
+          {/* Stage: 3D ring with the M in the middle */}
+          <div className="relative order-first lg:order-last lg:col-span-7 h-[min(46dvh,400px)] sm:h-[min(60dvh,560px)] lg:h-auto overflow-hidden">
+            {/* Shown until WebGL draws, and instead of it where WebGL is unavailable */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_40%_at_50%_58%,rgba(242,140,40,0.18),transparent_70%)]" />
+            <HeroScene className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_75%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent,black_22%,black_88%,transparent),linear-gradient(to_bottom,black_80%,transparent)] lg:[mask-composite:intersect]" />
+            <div className="absolute left-1/2 top-[43%] -translate-x-1/2 -translate-y-1/2 w-[46%] sm:w-[38%] lg:w-[34%] max-w-[320px] animate-[heroFloat_6s_ease-in-out_infinite]">
+              <Emblem className="w-full drop-shadow-[0_10px_40px_rgba(233,30,140,0.25)]" />
+            </div>
+            {/* Readouts on the stage corners */}
+            <div className="absolute top-4 left-4 lg:left-10 flex items-center gap-2 label !text-fog">
+              <span className="live-dot" /> {es ? 'Señal en vivo' : 'Live signal'}
+            </div>
+            <div className="absolute bottom-4 right-4 lg:right-8 label tabular-nums text-right">
+              116 BPM · 4/4 · DEMBOW
+            </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 bg-[#1A1A1A]/80 border border-[#333] rounded-full px-4 py-1.5 mb-8 text-sm text-gray-400" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
-            <Sparkles className="w-3.5 h-3.5 text-[#F28C28]" />
-            {t('home.badge')}
-          </div>
+          {/* Copy */}
+          <div className="relative lg:col-span-5 flex flex-col justify-center px-safe md:px-8 lg:pl-10 xl:pl-16 lg:pr-4 pt-8 pb-12 lg:py-16">
+            <p className="flex items-center gap-2 label mb-6 lg:mb-8">
+              <span className="inline-block w-6 h-px bg-melaos-orange" />
+              {t('home.badge')}
+            </p>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 tracking-tight">
-            {t('home.title1')}<br />
-            <GradientText className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-none" animationSpeed={5}>
-              {t('home.title2')}
-            </GradientText>
-          </h1>
+            <h1 className="display font-light text-white leading-[0.98] text-[clamp(2.4rem,7.4vw,3.4rem)] lg:text-[clamp(2.8rem,4.4vw,4.6rem)]">
+              {t('home.title1')}{' '}
+              <span className="font-medium text-melaos-orange">{t('home.title2')}</span>
+            </h1>
 
-          <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed px-2">
-            {t('home.subtitle')}
-          </p>
+            <p className="mt-6 text-fog text-base sm:text-[17px] leading-relaxed max-w-[34rem]">
+              {t('home.subtitle')}
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Link
-              href="/studio"
-              className="btn-orange text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform inline-block w-full sm:w-auto text-center"
-            >
-              {t('home.cta.create')}
-            </Link>
-            <Link
-              href="/explore"
-              className="border border-[#333] text-gray-300 hover:text-white hover:border-[#555] font-semibold text-base sm:text-lg px-8 py-3 sm:py-4 rounded-full transition-all w-full sm:w-auto text-center"
-            >
-              {t('home.cta.explore')}
-            </Link>
-          </div>
+            <div className="mt-8 flex flex-col xs:flex-row gap-3">
+              <Link href="/studio" className="btn btn-primary !min-h-[52px] !px-7">
+                {t('home.cta.create')} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+              </Link>
+              <Link href="/explore" className="btn btn-ghost !min-h-[52px] !px-7">
+                {t('home.cta.explore')}
+              </Link>
+            </div>
+            <p className="mt-4 label normal-case tracking-normal !text-[12px]">{t('home.noCard')}</p>
 
-          <p className="text-gray-600 text-sm mt-4">{t('home.noCard')}</p>
-        </div>
-
-        {/* Floating song cards */}
-        <div className="relative z-10 mt-16 sm:mt-20 w-full max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4">
-          {heroSongs.map((song, i) => (
-            <div
-              key={i}
-              className={`float-card bg-[#1A1A1A] border border-[#333] rounded-2xl p-3 cursor-pointer hover:border-[#555] transition-all mx-auto w-full max-w-[200px] sm:max-w-none`}
-              style={{ animationDelay: song.delay }}
-            >
-              <div className={`h-32 rounded-xl bg-gradient-to-br ${song.gradient} mb-3 relative overflow-hidden`}>
-                <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1" />
-                  </div>
+            {/* Spec strip */}
+            <dl className="mt-10 grid grid-cols-3 border-t border-line-soft">
+              {[
+                [String(GENRES.length), es ? 'Géneros' : 'Genres'],
+                ['ES · EN', es ? 'Idiomas' : 'Languages'],
+                ['A&R', es ? 'Revisión en 72 h' : '72-hour review'],
+              ].map(([value, name], i) => (
+                <div key={name} className={`pt-4 ${i ? 'pl-4 border-l border-line-soft' : ''}`}>
+                  <dt className="label">{name}</dt>
+                  <dd className="mt-1.5 display text-lg sm:text-xl text-white tabular-nums">{value}</dd>
                 </div>
-              </div>
-              <p className="text-white text-sm font-semibold truncate">{song.title}</p>
-              <p className="text-gray-500 text-xs">{song.artist}</p>
-            </div>
-          ))}
+              ))}
+            </dl>
+          </div>
         </div>
       </section>
 
-      {/* Features grid */}
-      <section className="py-16 sm:py-24 px-4 max-w-7xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4">
-            {t('home.features.title1')}{' '}
-            <span className="gradient-text">{t('home.features.title2')}</span>
-          </h2>
-          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
-            {t('home.features.subtitle')}
-          </p>
+      {/* ── Genre ticker ────────────────────────────────────────────── */}
+      <div className="border-b border-line-soft overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]" aria-hidden>
+        <div className="flex w-max animate-ticker py-3.5">
+          {[0, 1].map(copy => (
+            <div key={copy} className="flex shrink-0">
+              {GENRES.map(g => (
+                <span key={`${copy}-${g}`} className="font-mono text-[11px] tracking-[0.2em] uppercase text-fog-dim px-6 flex items-center gap-6">
+                  {g}
+                  <span className="w-1 h-1 rotate-45 bg-melaos-orange/70" />
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {features.map(({ icon: Icon, title, desc }) => (
-            <div
-              key={title}
-              className="card-hover bg-[#1A1A1A] border border-[#333] rounded-2xl p-4 sm:p-5 cursor-default"
+      {/* ── 01 Listen ───────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1440px] px-safe md:px-8 py-16 sm:py-24">
+        <SectionHead index="01" label={es ? 'Escucha' : 'Listen'} title={t('home.cta.explore')} action={{ href: '/explore', text: es ? 'Ver todo' : 'See all' }} />
+        <div className="mt-10 flex md:grid md:grid-cols-3 gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          {heroSongs.map((song, i) => (
+            <Link
+              key={song.title}
+              href="/explore"
+              className="group snap-start shrink-0 w-[78%] xs:w-[68%] md:w-auto"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F28C28]/20 to-[#E91E8C]/20 flex items-center justify-center mb-3 sm:mb-4">
-                <Icon className="w-5 h-5 text-[#F28C28]" />
+              <div className="relative aspect-square overflow-hidden border border-line bg-ink-2">
+                <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-[1.03]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <span className="absolute top-3 left-3 label !text-white/80 tabular-nums">TRK {String(i + 1).padStart(2, '0')}</span>
+                <span className="absolute bottom-3 right-3 btn btn-primary !min-h-[40px] !px-3.5 opacity-100 md:opacity-0 hoverable:group-hover:opacity-100 transition-opacity" aria-hidden>
+                  <Play className="w-4 h-4 fill-current" strokeWidth={0} />
+                </span>
               </div>
-              <h3 className="text-white font-bold text-xs sm:text-sm md:text-base mb-2">{title}</h3>
-              <p className="text-gray-500 text-xs leading-relaxed hidden sm:block">{desc}</p>
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-white font-medium truncate">{song.title}</p>
+                  <p className="text-fog text-sm truncate">{song.artist}</p>
+                </div>
+                <p className="label shrink-0 text-right tabular-nums pt-1">{song.genre}<br />{song.bpm} BPM</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 02 Capabilities ─────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1440px] px-safe md:px-8 pb-16 sm:pb-24">
+        <SectionHead
+          index="02"
+          label={es ? 'Capacidades' : 'Capabilities'}
+          title={<>{t('home.features.title1')} <span className="text-melaos-orange">{t('home.features.title2')}</span></>}
+          sub={t('home.features.subtitle')}
+        />
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line-soft border border-line-soft">
+          {features.map(({ icon: Icon, title, desc }, i) => (
+            <div key={title} className="bg-ink-0 p-6 sm:p-7 transition-colors hoverable:hover:bg-ink-1">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] text-fog-dim tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                <Icon className="w-[18px] h-[18px] text-melaos-orange" strokeWidth={1.5} />
+              </div>
+              <h3 className="mt-8 text-white font-medium text-[15px] leading-snug">{title}</h3>
+              <p className="mt-2 text-fog text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA strip */}
-      <section className="py-16 sm:py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center bg-gradient-to-br from-[#1A1A1A] to-[#111] border border-[#333] rounded-3xl p-8 sm:p-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">{t('home.ready.title')}</h2>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base">{t('home.ready.subtitle')}</p>
-          <Link href="/studio" className="btn-orange text-white font-bold text-base px-8 py-3 rounded-full hover:scale-105 transition-transform inline-block">
-            {t('home.ready.cta')}
-          </Link>
+      {/* ── 03 Start ────────────────────────────────────────────────── */}
+      <section className="relative border-t border-line-soft overflow-hidden">
+        <div className="brand-rule absolute top-0 inset-x-0 opacity-70" />
+        <div className="absolute inset-0 rule-grid [mask-image:radial-gradient(ellipse_at_70%_50%,black,transparent_70%)]" />
+        <div className="relative mx-auto max-w-[1440px] px-safe md:px-8 py-16 sm:py-24 grid lg:grid-cols-12 gap-8 items-end">
+          <div className="lg:col-span-8">
+            <p className="label mb-5">03 — {es ? 'Empieza' : 'Start'}</p>
+            <h2 className="display font-light text-white text-[clamp(2rem,5vw,3.75rem)] leading-[1.02]">{t('home.ready.title')}</h2>
+            <p className="mt-5 text-fog max-w-xl">{t('home.ready.subtitle')}</p>
+          </div>
+          <div className="lg:col-span-4 lg:justify-self-end">
+            <Link href="/studio" className="btn btn-primary !min-h-[56px] !px-8 w-full sm:w-auto">
+              {t('home.ready.cta')} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+            </Link>
+          </div>
         </div>
       </section>
+    </div>
+  );
+}
 
+function SectionHead({ index, label, title, sub, action }: {
+  index: string;
+  label: string;
+  title: React.ReactNode;
+  sub?: string;
+  action?: { href: string; text: string };
+}) {
+  return (
+    <div className="grid lg:grid-cols-12 gap-4 lg:gap-8 items-end border-b border-line-soft pb-6">
+      <div className="lg:col-span-7">
+        <p className="label mb-4">{index} — {label}</p>
+        <h2 className="display font-light text-white text-[clamp(1.6rem,3.6vw,2.75rem)] leading-[1.05]">{title}</h2>
+      </div>
+      {sub && <p className="lg:col-span-5 text-fog leading-relaxed">{sub}</p>}
+      {action && (
+        <Link href={action.href} className="lg:col-span-5 justify-self-start lg:justify-self-end btn btn-quiet !px-0 gap-2">
+          {action.text} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+        </Link>
+      )}
     </div>
   );
 }
