@@ -24,18 +24,23 @@ const STAFF_PICKS: Song[] = [
 // Used in the carousels (the caller passes the width) and in the grids.
 // `rank` puts a "#1"-style chart tag on the cover.
 function SongArtCard({ song, version, rank, className = '' }: { song: Song; version?: string; rank?: number; className?: string }) {
-  const { setCurrentSong, currentSong, isPlaying, likedIds, toggleLikedSong } = useAudioStore();
+  const { setCurrentSong, setIsPlaying, currentSong, isPlaying, likedIds, toggleLikedSong } = useAudioStore();
   const [hovered, setHovered] = useState(false);
   const isActive = currentSong?.id === song.id && isPlaying;
   const isCurrent = currentSong?.id === song.id;
   const isLiked = likedIds.includes(song.id);
+
+  // Tapping the card plays it (or resumes it if it's the paused current song,
+  // instead of restarting it). The round button toggles play/pause.
+  const playCard = () => (isCurrent ? setIsPlaying(true) : setCurrentSong(song));
+  const togglePlay = () => (isCurrent ? setIsPlaying(!isPlaying) : setCurrentSong(song));
 
   return (
     <div
       className={`group cursor-pointer ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => setCurrentSong(song)}
+      onClick={playCard}
     >
       <div
         className="relative aspect-square overflow-hidden rounded-2xl bg-ink-2"
@@ -54,7 +59,7 @@ function SongArtCard({ song, version, rank, className = '' }: { song: Song; vers
             <Heart className="w-[18px] h-[18px]" strokeWidth={2} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
           <button
-            onClick={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); togglePlay(); }}
             aria-label={isActive ? 'Pause' : 'Play'}
             className="btn btn-primary !w-11 !min-h-[44px] !px-0 shadow-[0_6px_18px_rgba(0,0,0,0.35)]">
             {isActive ? <Pause className="w-4 h-4 fill-current" strokeWidth={0} /> : <Play className="w-4 h-4 fill-current" strokeWidth={0} />}
