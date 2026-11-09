@@ -153,10 +153,13 @@ export const GENRE_PROFILES: Record<string, GenreProfile> = {
   },
 };
 
-export function buildGenreTags(genre: string, mood: string, bpm: number): string {
+// `withLineage: false` leaves out the producer lineage, which names real
+// people. The MiniMax engine is prompted without real names.
+export function buildGenreTags(genre: string, mood: string, bpm: number, withLineage = true): string {
   const profile = GENRE_PROFILES[genre];
   if (!profile) return `${genre} music, ${mood.toLowerCase()} mood, ${bpm} BPM`;
-  return `${profile.label}, ${profile.descriptor}, ${profile.lineage}, ${mood.toLowerCase()} mood, ${bpm} BPM`;
+  const lineage = withLineage ? `${profile.lineage}, ` : '';
+  return `${profile.label}, ${profile.descriptor}, ${lineage}${mood.toLowerCase()} mood, ${bpm} BPM`;
 }
 
 export function genreArtStyle(genre: string): string {

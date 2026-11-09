@@ -37,6 +37,15 @@ export const GENERATE_LIMIT: Limit = {
   global: { max: envInt('GENERATE_LIMIT_PER_DAY', 100), windowMs: DAY },
 };
 
+// Songs on the MiniMax engine: $0.15 each on fal.ai, several times an
+// ACE-Step run, so it gets its own, tighter budget. The defaults cap MiniMax
+// at about $4.50 a day.
+export const MINIMAX_LIMIT: Limit = {
+  name: 'minimax',
+  perIp: { max: envInt('MINIMAX_LIMIT_PER_IP_HOUR', 3), windowMs: HOUR },
+  global: { max: envInt('MINIMAX_LIMIT_PER_DAY', 30), windowMs: DAY },
+};
+
 // Cover art: the image model is the most expensive call per request.
 export const COVER_ART_LIMIT: Limit = {
   name: 'cover-art',

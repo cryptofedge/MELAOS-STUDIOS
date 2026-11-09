@@ -245,6 +245,11 @@ export default function StudioPage() {
   // Influences the server actually applied — may have come from the prompt
   // rather than the picker, so it is worth showing back.
   const [usedInfluences, setUsedInfluences] = useState<string[]>([]);
+  // Song engine. ACE-Step unless the artist picks MiniMax, which is offered
+  // only when the server reports it is configured.
+  const [engine,       setEngine]       = useState<'ace-step' | 'minimax'>('ace-step');
+  const [engines,      setEngines]      = useState<string[]>([]);
+  const [usedEngine,   setUsedEngine]   = useState<string | null>(null);
   const [activeTrack,  setActiveTrack]  = useState<string | null>('t1');
   const [editTool,     setEditTool]     = useState<'zoom' | 'trim' | 'selector' | 'grabber' | 'scrub' | 'pencil'>('selector');
   const [pinnedTracks, setPinnedTracks] = useState<Record<string, boolean>>({});
@@ -426,6 +431,14 @@ export default function StudioPage() {
     setTimeMs(Math.floor(newTime * 1000));
   }, [waveformPeaks]);
 
+  // Ask the server which song engines it can run.
+  useEffect(() => {
+    fetch('/api/generate')
+      .then(r => r.json())
+      .then(j => setEngines(Array.isArray(j.engines) ? j.engines : []))
+      .catch(() => setEngines([]));
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
@@ -530,9 +543,10 @@ export default function StudioPage() {
       // one model for both instrumental and vocal tracks); fall back to the
       // client-side synth if it's unavailable, slow, or out of credit.
       let resolvedAudioUrl: string;
-      // Set when the server refuses because of a usage limit. That is shown
-      // as an error instead of falling back to the synth: the AI is not
-      // down, the artist just has to wait, and a synth loop would hide that.
+      // Set when the server refuses because of a usage limit, or when a
+      // MiniMax song fails. Shown as an error instead of falling back to the
+      // synth: a synth loop would hide why, and when comparing engines the
+      // artist needs to know MiniMax did not make the track.
       let limitMessage: string | null = null;
       try {
         const controller = new AbortController();
@@ -548,13 +562,16 @@ export default function StudioPage() {
             influence,
             duration: maxDuration,
             tier,
+            engine,
           }),
           signal: controller.signal,
         });
         clearTimeout(timeout);
-        if (res.status === 429) {
+        if (res.status === 429 || (engine === 'minimax' && !res.ok)) {
           const j = await res.json().catch(() => ({}));
-          limitMessage = j.error || 'Generation limit reached. Try again later.';
+          limitMessage = j.error || (res.status === 429
+            ? 'Generation limit reached. Try again later.'
+            : 'MiniMax could not make this song. Try again, or switch to ACE-Step.');
           throw new Error(limitMessage!);
         }
         if (!res.ok) throw new Error('AI generator unavailable');
@@ -564,12 +581,14 @@ export default function StudioPage() {
         // Show the words that were actually sung, and what steered the sound.
         if (json.lyrics) { setLyrics(json.lyrics); setLyricsFromAi(true); }
         setUsedInfluences(Array.isArray(json.influences) ? json.influences : []);
+        setUsedEngine(typeof json.engine === 'string' ? json.engine : 'ace-step');
       } catch {
         if (limitMessage) throw new Error(limitMessage);
         // The local synth cannot sing and never sees the prompt, so say so
         // rather than passing a generic loop off as the generated song.
         setSynthFallback(true);
         setUsedInfluences([]);
+        setUsedEngine(null);
         resolvedAudioUrl = await generateTrack(genre, mood, genBpm, vocalGender);
       }
 
@@ -638,7 +657,7 @@ export default function StudioPage() {
       setGenerating(false);
       setGenError(err.message || 'Generation failed');
     }
-  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, influence, instrumental, tier, maxDuration]);
+  }, [prompt, genre, mood, genBpm, vocalGender, lyrics, lyricsLang, influence, instrumental, tier, maxDuration, engine]);
 
   // Sync play/pause with real audio when available. The audio element is
   // routed through an AudioContext (for the analyser meters), and browsers
@@ -819,6 +838,30 @@ export default function StudioPage() {
                 : 'Or just name one in your description — "a bachata like Romeo Santos".'}
             </p>
           </div>
+
+          {/* Engine — only when the server can run MiniMax as well. */}
+          {engines.includes('minimax') && (
+            <div className="mt-3">
+              <label className="text-[10px] font-bold text-[#00FFD1] mb-1 block tracking-[0.15em] uppercase">
+                ◈ Engine
+              </label>
+              <select
+                value={engine} onChange={e => setEngine(e.target.value === 'minimax' ? 'minimax' : 'ace-step')}
+                style={{ fontSize: '13px', background: 'rgba(0,0,0,0.7)', boxShadow: '0 0 8px rgba(0,255,209,0.15)' }}
+                className="w-full border border-[#00FFD1]/40 rounded-lg px-3 py-1.5 text-sm text-[#E0E0FF] focus:outline-none focus:border-[#00FFD1] transition-all"
+              >
+                {engines.includes('ace-step') && (
+                  <option value="ace-step" style={{ background: '#0A0A14' }}>ACE-Step (standard)</option>
+                )}
+                <option value="minimax" style={{ background: '#0A0A14' }}>MiniMax 2.5 (beta)</option>
+              </select>
+              <p className="text-[10px] text-[#9999CC] mt-1">
+                {engine === 'minimax'
+                  ? 'MiniMax makes a full-length song from your lyrics. Fewer per day than ACE-Step.'
+                  : 'Try the same prompt on MiniMax to compare.'}
+              </p>
+            </div>
+          )}
 
           {/* Language of the sung lyrics. Also lives in the Lyrics tab, but it
               belongs here too — most people never open that tab. */}
@@ -1053,8 +1096,14 @@ export default function StudioPage() {
                   prompt, genre, mood,
                   lyrics: instrumental ? '[instrumental]' : lyrics,
                   influences: usedInfluences.join(', '),
+                  engine: usedEngine ?? 'local synth',
                 })} />
               </div>
+              {usedEngine && (
+                <p className="text-[9px] font-mono text-center tracking-wider text-[#9999CC]">
+                  ◈ Made with {usedEngine === 'minimax' ? 'MiniMax 2.5' : 'ACE-Step'}
+                </p>
+              )}
             </div>
           )}
         </div>
