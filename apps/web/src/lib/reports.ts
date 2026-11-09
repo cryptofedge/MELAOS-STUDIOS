@@ -14,7 +14,7 @@ export type ReportReason = typeof REPORT_REASONS[number];
 // What the report carries about the reported item. Text only: the audio and
 // image themselves are not sent.
 export const REPORT_CONTEXT_KEYS = [
-  'title', 'prompt', 'genre', 'mood', 'lyrics', 'influences', 'coverPrompt', 'message', 'reply',
+  'title', 'prompt', 'genre', 'mood', 'lyrics', 'influences', 'engine', 'coverPrompt', 'message', 'reply',
 ] as const;
 export type ReportContext = Partial<Record<typeof REPORT_CONTEXT_KEYS[number], string>>;
 

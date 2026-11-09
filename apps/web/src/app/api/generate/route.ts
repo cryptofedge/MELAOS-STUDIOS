@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildGenreTags } from '@/lib/genreProfiles';
 import { writeLyrics, songwriterAvailable } from '@/lib/songwriter';
 import { findInfluence, detectInfluences, type Influence } from '@/lib/artistInfluences';
-import { GENERATE_LIMIT, consume, clientIp, limitedResponse } from '@/lib/rateLimit';
+import { GENERATE_LIMIT, MINIMAX_LIMIT, consume, clientIp, limitedResponse } from '@/lib/rateLimit';
+import { runMinimax, minimaxConfigured } from '@/lib/minimax';
+
+// Two engines. ACE-Step is the default; MiniMax Music 2.5 is offered next to
+// it so the two can be compared on the same prompts. The studio only shows
+// the MiniMax option when FAL_KEY is set (see GET below).
+type Engine = 'ace-step' | 'minimax';
 
 // Seconds. Matches TIER_MAX_DURATION.free in the client store.
 const FREE_MAX_DURATION = 50;
@@ -46,6 +52,27 @@ function buildTags(
   const infTag = influences.length ? `${influences.map(i => i.tag).join(', ')}, ` : '';
 
   return (base ? `${base}, ${infTag}${enriched}${langTag}` : `${infTag}${enriched}${langTag}`).slice(0, 350);
+}
+
+// MiniMax gets the same ingredients, minus real people's names: the genre's
+// producer lineage is left out, and an influence named in the description is
+// removed from it, since its style description is already in the prompt.
+// MiniMax is also told the voice, which ACE-Step's tags never carried.
+function buildMinimaxPrompt(
+  prompt: string, genre: string, mood: string, bpm: number,
+  lyricsLanguage: string, vocals: string, influences: Influence[]
+) {
+  let base = prompt.trim();
+  for (const i of influences) {
+    const name = i.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    base = base.replace(new RegExp(name, 'gi'), '').replace(/\s{2,}/g, ' ').trim();
+  }
+  const voice = vocals === 'female' ? 'female vocals' : vocals === 'male' ? 'male vocals' : '';
+  const language = lyricsLanguage && lyricsLanguage !== 'English' ? `sung in ${lyricsLanguage}` : '';
+  return [base, ...influences.map(i => i.tag), buildGenreTags(genre, mood, bpm, false), voice, language]
+    .filter(Boolean)
+    .join(', ')
+    .slice(0, 2000);
 }
 
 // ACE-Step's lyrics field doubles as the vocals on/off switch: [instrumental]
@@ -131,18 +158,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  const engine: Engine = body.engine === 'minimax' ? 'minimax' : 'ace-step';
   const token = process.env.REPLICATE_API_TOKEN;
-  if (!token) {
+  const falKey = process.env.FAL_KEY;
+  if (engine === 'ace-step' && !token) {
     return NextResponse.json(
       { error: 'AI generation not configured — REPLICATE_API_TOKEN is missing.' },
       { status: 503 }
     );
   }
+  if (engine === 'minimax' && !falKey) {
+    return NextResponse.json(
+      { error: 'The MiniMax engine is not configured — FAL_KEY is missing.' },
+      { status: 503 }
+    );
+  }
 
   // Counted after the config check, so a missing token does not use up
-  // anyone's allowance.
-  const limit = consume(GENERATE_LIMIT, clientIp(req.headers));
-  if (!limit.ok) return limitedResponse(limit, 'song generation');
+  // anyone's allowance. Each engine has its own budget.
+  const limit = consume(engine === 'minimax' ? MINIMAX_LIMIT : GENERATE_LIMIT, clientIp(req.headers));
+  if (!limit.ok) return limitedResponse(limit, engine === 'minimax' ? 'MiniMax song' : 'song generation');
 
   // Everything here ends up in a paid model's input, so it is coerced to the
   // type the code expects and capped. An uncapped prompt goes straight to
@@ -165,14 +200,22 @@ export async function POST(req: NextRequest) {
   // request body, so anyone could send tier: 'premier' and get 4-minute songs
   // on our Replicate bill. Paid lengths come back when the tier is read from
   // a verified login instead of from the browser.
+  // MiniMax has no length input: the lyrics decide how long the song runs,
+  // and it costs the same flat price either way.
   const dur = Math.min(Math.max(Number(body.duration) || 30, 10), FREE_MAX_DURATION);
   const title = tags.substring(0, 50);
 
-  const result = await runReplicate(token, ACE_STEP_VERSION, {
-    tags,
-    lyrics: finalLyrics,
-    duration: dur,
-  });
+  const result = engine === 'minimax'
+    ? await runMinimax(falKey!, {
+        prompt: buildMinimaxPrompt(prompt, genre, mood, bpm, lyricsLanguage, vocals, influences),
+        lyrics: finalLyrics,
+        instrumental: finalLyrics === '[instrumental]',
+      })
+    : await runReplicate(token!, ACE_STEP_VERSION, {
+        tags,
+        lyrics: finalLyrics,
+        duration: dur,
+      });
 
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: result.status ?? 502 });
@@ -189,7 +232,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     audioUrl: `data:${mimeType};base64,${b64}`,
     title,
-    duration: dur,
+    duration: engine === 'ace-step' ? dur : undefined,
+    engine,
     // The words that were actually sung. Without this the studio's lyrics
     // panel stays empty and there is no way to read, edit or reuse what the
     // songwriter wrote. Omitted for instrumentals, which have none.
@@ -198,4 +242,13 @@ export async function POST(req: NextRequest) {
     // it was picked up from the prompt rather than chosen from the list.
     influences: influences.map(i => i.name),
   });
+}
+
+// GET — which engines this server can run, so the studio only offers the
+// ones that are configured. Says nothing about the keys themselves.
+export async function GET() {
+  const engines: Engine[] = [];
+  if (process.env.REPLICATE_API_TOKEN) engines.push('ace-step');
+  if (minimaxConfigured()) engines.push('minimax');
+  return NextResponse.json({ engines }, { headers: { 'Cache-Control': 'no-store' } });
 }

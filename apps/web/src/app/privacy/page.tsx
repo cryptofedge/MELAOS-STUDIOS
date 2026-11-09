@@ -78,6 +78,7 @@ function Spanish() {
         <p>Solo con estos proveedores, y solo para prestar el servicio:</p>
         <List>
           <li><strong className="text-white">Replicate</strong> (modelo ACE-Step): recibe las etiquetas de estilo y la letra para generar el audio. <A href="https://replicate.com/privacy">Política de privacidad de Replicate</A>.</li>
+          <li><strong className="text-white">fal.ai</strong> (modelo MiniMax Music, solo si eliges ese motor): recibe la descripción de estilo y la letra para generar el audio. <A href="https://fal.ai/legal/privacy-policy">Política de privacidad de fal.ai</A>.</li>
           <li><strong className="text-white">Google (API de Gemini)</strong>: recibe tu descripción para escribir letras, la descripción y la imagen de referencia para crear portadas, y tus mensajes al chat de Melao. Google los trata según los <A href="https://ai.google.dev/gemini-api/terms">términos de la API de Gemini</A> y su <A href="https://policies.google.com/privacy">política de privacidad</A>; según el plan de servicio, Google puede usar ese contenido para mejorar sus productos. No incluyas datos personales ni confidenciales en tus descripciones, letras, imágenes o mensajes.</li>
           <li><strong className="text-white">Render</strong>: aloja nuestro servidor. <A href="https://render.com/privacy">Política de privacidad de Render</A>.</li>
           <li><strong className="text-white">Nuestro canal de moderación</strong> (por ejemplo Discord o Slack): recibe los reportes de contenido para que el equipo los revise.</li>
@@ -87,7 +88,7 @@ function Spanish() {
       </Section>
 
       <Section title="Cuánto tiempo los conservamos">
-        <p>No guardamos lo que creas: la canción, la letra y la portada se envían a tu dispositivo, y si no las descargas se pierden al salir. Replicate y Google pueden conservar las solicitudes por un tiempo limitado según sus propias políticas. Los reportes se guardan en nuestro canal de moderación el tiempo necesario para atenderlos. Los datos de tu dispositivo se quedan allí hasta que borres los datos del sitio o de la app.</p>
+        <p>No guardamos lo que creas: la canción, la letra y la portada se envían a tu dispositivo, y si no las descargas se pierden al salir. Replicate, fal.ai y Google pueden conservar las solicitudes por un tiempo limitado según sus propias políticas. Los reportes se guardan en nuestro canal de moderación el tiempo necesario para atenderlos. Los datos de tu dispositivo se quedan allí hasta que borres los datos del sitio o de la app.</p>
       </Section>
 
       <Section title="Contenido generado por IA">
@@ -157,6 +158,7 @@ function English() {
         <p>Only these providers, and only to run the service:</p>
         <List>
           <li><strong className="text-white">Replicate</strong> (ACE-Step model): receives the style tags and lyrics to generate the audio. <A href="https://replicate.com/privacy">Replicate privacy policy</A>.</li>
+          <li><strong className="text-white">fal.ai</strong> (MiniMax Music model, only if you choose that engine): receives the style description and lyrics to generate the audio. <A href="https://fal.ai/legal/privacy-policy">fal.ai privacy policy</A>.</li>
           <li><strong className="text-white">Google (Gemini API)</strong>: receives your description to write lyrics, the description and reference image to create cover art, and your messages to Melao. Google handles them under the <A href="https://ai.google.dev/gemini-api/terms">Gemini API terms</A> and its <A href="https://policies.google.com/privacy">privacy policy</A>; depending on the service plan, Google may use that content to improve its products. Do not put personal or confidential information in your descriptions, lyrics, images or messages.</li>
           <li><strong className="text-white">Render</strong>: hosts our server. <A href="https://render.com/privacy">Render privacy policy</A>.</li>
           <li><strong className="text-white">Our moderation channel</strong> (for example Discord or Slack): receives content reports so the team can review them.</li>
@@ -166,7 +168,7 @@ function English() {
       </Section>
 
       <Section title="How long we keep it">
-        <p>We do not store what you create: songs, lyrics and cover art are sent to your device, and are gone when you leave unless you download them. Replicate and Google may keep requests for a limited time under their own policies. Reports stay in our moderation channel for as long as needed to handle them. Data on your device stays there until you clear the site’s or the app’s data.</p>
+        <p>We do not store what you create: songs, lyrics and cover art are sent to your device, and are gone when you leave unless you download them. Replicate, fal.ai and Google may keep requests for a limited time under their own policies. Reports stay in our moderation channel for as long as needed to handle them. Data on your device stays there until you clear the site’s or the app’s data.</p>
       </Section>
 
       <Section title="AI-generated content">
