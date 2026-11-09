@@ -1,11 +1,10 @@
 import type { Config } from 'tailwindcss';
 
-// MELAOS design system.
+// MELAOS design system, built for 13–27 year-olds (see DESIGN.md).
 //
-// Same brand colors as before, used with intent: orange is the one signal
-// color (actions, active state), pink and magenta carry the logo's gradient
-// in small doses, cyan is reserved for "live" readouts. Everything else is
-// a ramp of near-black inks and hairline rules.
+// Same brand colors: the logo's orange → pink → magenta gradient is the main
+// action color and the glow; cyan marks "live"; everything else is a ramp of
+// dark neutral surfaces so the cover art carries the color.
 const config: Config = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -13,13 +12,21 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    // Listed in full, smallest first: Tailwind emits breakpoints in this
+    // order, and a later one wins. Adding `xs` under `extend` appended it
+    // after `2xl`, so `xs:` classes overrode `md:`/`lg:` ones on wide screens.
+    screens: {
+      xs: '375px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+      // Hover styles only where a pointer can hover, so taps on phones
+      // and tablets never leave a control stuck in its hover state.
+      hoverable: { raw: '(hover: hover) and (pointer: fine)' },
+    },
     extend: {
-      screens: {
-        xs: '375px',
-        // Hover styles only where a pointer can hover, so taps on phones
-        // and tablets never leave a control stuck in its hover state.
-        hoverable: { raw: '(hover: hover) and (pointer: fine)' },
-      },
       colors: {
         melaos: {
           orange: '#F28C28',
@@ -35,21 +42,21 @@ const config: Config = {
           border: '#333333',
         },
         ink: {
-          0: '#050507',
-          1: '#0A0A0E',
-          2: '#101016',
-          3: '#17171F',
-          4: '#1F1F29',
+          0: '#08080A',
+          1: '#111114',
+          2: '#18181C',
+          3: '#202026',
+          4: '#2A2A31',
         },
         line: {
-          DEFAULT: '#22222C',
-          soft: '#17171F',
-          strong: '#33333F',
+          DEFAULT: 'rgba(255,255,255,0.09)',
+          soft: 'rgba(255,255,255,0.06)',
+          strong: 'rgba(255,255,255,0.16)',
         },
         fog: {
-          DEFAULT: '#9A9AA6',
-          dim: '#6B6B78',
-          faint: '#45454F',
+          DEFAULT: '#A1A1AD',
+          dim: '#8B8B97',
+          faint: '#5C5C68',
         },
       },
       fontFamily: {
@@ -58,10 +65,15 @@ const config: Config = {
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       letterSpacing: {
-        label: '0.18em',
+        label: '0.06em',
       },
       borderRadius: {
-        xs: '2px',
+        xs: '10px',
+        card: '18px',
+        panel: '22px',
+      },
+      backgroundImage: {
+        brand: 'linear-gradient(100deg, #F28C28 0%, #E91E8C 55%, #AE06ED 100%)',
       },
       minHeight: {
         touch: '44px',

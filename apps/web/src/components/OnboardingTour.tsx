@@ -74,7 +74,7 @@ export default function OnboardingTour() {
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/75 px-safe pb-safe"
       style={{ WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(6px)' }}
     >
-      <div className="hud w-full max-w-md bg-ink-1 border border-line-strong rounded-[4px] relative mb-3 sm:mb-0">
+      <div className="w-full max-w-md bg-ink-2 border border-line-strong rounded-[26px] overflow-hidden relative mb-3 sm:mb-0 shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
         <div className="brand-rule" />
         <div className="p-6 sm:p-7">
           <div className="flex items-start justify-between">
@@ -90,17 +90,17 @@ export default function OnboardingTour() {
           </div>
 
           <div className="mt-8 flex items-center justify-between">
-            <p className="label tabular-nums">{String(step + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')}</p>
+            <p className="text-[12px] font-semibold text-fog tabular-nums">{step + 1} / {STEPS.length}</p>
             <Icon className="w-5 h-5 text-melaos-orange" strokeWidth={1.5} />
           </div>
 
-          <h2 className="mt-4 display font-light text-white text-2xl leading-tight">{current.title}</h2>
+          <h2 className="mt-4 display text-white text-2xl leading-tight">{current.title}</h2>
           <p className="mt-3 text-fog text-sm leading-relaxed">{current.body}</p>
 
           {/* Progress */}
           <div className="mt-6 grid gap-1" style={{ gridTemplateColumns: `repeat(${STEPS.length}, 1fr)` }}>
             {STEPS.map((_, i) => (
-              <div key={i} className={`h-[2px] transition-colors ${i <= step ? 'bg-melaos-orange' : 'bg-line-strong'}`} />
+              <div key={i} className={`h-1 rounded-full transition-colors ${i <= step ? "bg-brand" : "bg-ink-4"}`} />
             ))}
           </div>
 

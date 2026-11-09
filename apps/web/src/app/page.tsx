@@ -1,23 +1,78 @@
 'use client';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import { ArrowRight, Play, Music2, Sparkles, Share2, SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import {
+  ArrowRight, Play, Pause, Plus, Dices, Mic, Globe, Music2, Sparkles, Share2,
+  SlidersHorizontal, Shield, LayoutGrid, Layers, Infinity as InfinityIcon, Heart,
+} from 'lucide-react';
 import { useT } from '@/lib/i18n';
-import Emblem from '@/components/Emblem';
+import { useAudioStore } from '@/lib/store';
+import { mockSongs, formatPlays, type Song } from '@/lib/mockData';
 import { GENRES } from '@/lib/genreProfiles';
 
-// Three.js only loads in the browser, after the page is already readable.
-const HeroScene = dynamic(() => import('@/components/HeroScene'), { ssr: false });
+// Quick ideas for the 🎲 button.
+const IDEAS = {
+  es: [
+    "Un dembow pa' la calle con 808s pesados y un coro pegajoso",
+    'Una bachata triste sobre un amor que se fue a Nueva York',
+    'Merengue típico para celebrar el viernes con los panas',
+    'Reggaeton romántico para dedicar en la madrugada',
+    'Un trap latino oscuro sobre salir del barrio',
+    'Afrobeats alegre para un verano en la playa',
+  ],
+  en: [
+    'A street dembow with heavy 808s and a catchy hook',
+    'A sad bachata about a love who moved to New York',
+    'Merengue típico to celebrate Friday with friends',
+    'A romantic reggaeton for late-night texts',
+    'A dark Latin trap about leaving the block',
+    'Feel-good Afrobeats for a summer at the beach',
+  ],
+};
 
-const heroSongs = [
-  { title: 'Midnight Frequencies', artist: 'NovaSynth', coverArt: '/covers/1.jpg', genre: 'Electronic', bpm: 128 },
-  { title: 'Golden Hour Lagos', artist: 'AfroWave', coverArt: '/covers/2.jpg', genre: 'Afrobeats', bpm: 102 },
-  { title: 'Trap Cathedral', artist: 'DeepVault', coverArt: '/covers/6.jpg', genre: 'Trap', bpm: 145 },
-];
+const VOICES = ['male', 'female', 'none'] as const;
+const FEATURED_GENRES = ['Dembow', 'Bachata', 'Reggaeton', 'Merengue', 'Latin Trap', 'Afrobeats', 'Salsa'];
 
 export default function HomePage() {
   const { t, lang } = useT();
   const es = lang === 'es';
+  const router = useRouter();
+  const { setCurrentSong, currentSong, isPlaying } = useAudioStore();
+
+  const [prompt, setPrompt] = useState('');
+  const [genre, setGenre] = useState<string | null>(null);
+  const [voice, setVoice] = useState<(typeof VOICES)[number]>('male');
+  const [songLang, setSongLang] = useState<'Spanish' | 'English'>(es ? 'Spanish' : 'English');
+
+  const voiceLabel = voice === 'male' ? (es ? 'Hombre' : 'Male') : voice === 'female' ? (es ? 'Mujer' : 'Female') : (es ? 'Instrumental' : 'Instrumental');
+
+  const rollIdea = () => {
+    const list = IDEAS[es ? 'es' : 'en'];
+    let next = list[Math.floor(Math.random() * list.length)];
+    if (next === prompt) next = list[(list.indexOf(next) + 1) % list.length];
+    setPrompt(next);
+  };
+
+  // Hands the idea to the studio, which fills its own fields from the URL.
+  const create = () => {
+    const q = new URLSearchParams();
+    if (prompt.trim()) q.set('prompt', prompt.trim());
+    if (genre) q.set('genre', genre);
+    q.set('vocals', voice);
+    q.set('lang', songLang);
+    router.push(`/studio?${q.toString()}`);
+  };
+
+  const byPlays = [...mockSongs].sort((a, b) => b.plays - a.plays);
+  const byNew = [...mockSongs].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const byLikes = [...mockSongs].sort((a, b) => b.likes - a.likes);
+
+  const charts = [
+    { title: es ? 'Top de hoy' : 'Top today', tag: '🔥 HOT', tagCls: 'tag-orange', songs: byPlays.slice(0, 4) },
+    { title: es ? 'Recién salidos' : 'Fresh drops', tag: es ? 'NUEVO' : 'NEW', tagCls: 'tag-pink', songs: byNew.slice(0, 4) },
+    { title: es ? 'Más gustados' : 'Most liked', tag: 'TRENDING', tagCls: 'tag-cyan', songs: byLikes.slice(0, 4) },
+  ];
 
   const features = [
     { icon: Music2, title: t('home.f1.title'), desc: t('home.f1.desc') },
@@ -27,182 +82,166 @@ export default function HomePage() {
     { icon: Shield, title: t('home.f5.title'), desc: t('home.f5.desc') },
     { icon: LayoutGrid, title: t('home.f6.title'), desc: t('home.f6.desc') },
     { icon: Layers, title: t('home.f7.title'), desc: t('home.f7.desc') },
-    { icon: Infinity, title: t('home.f8.title'), desc: t('home.f8.desc') },
+    { icon: InfinityIcon, title: t('home.f8.title'), desc: t('home.f8.desc') },
   ];
 
+  const playing = (s: Song) => currentSong?.id === s.id && isPlaying;
+
   return (
-    <div className="overflow-x-hidden">
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative border-b border-line-soft">
-        <div className="mx-auto max-w-[1440px] grid lg:grid-cols-12 lg:min-h-[min(calc(100dvh-var(--nav-h)),880px)]">
-          {/* Stage: 3D ring with the M in the middle */}
-          <div className="relative order-first lg:order-last lg:col-span-7 h-[min(46dvh,400px)] sm:h-[min(60dvh,560px)] lg:h-auto overflow-hidden">
-            {/* Shown until WebGL draws, and instead of it where WebGL is unavailable */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_40%_at_50%_58%,rgba(242,140,40,0.18),transparent_70%)]" />
-            <HeroScene className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_75%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent,black_22%,black_88%,transparent),linear-gradient(to_bottom,black_80%,transparent)] lg:[mask-composite:intersect]" />
-            <div className="absolute left-1/2 top-[43%] -translate-x-1/2 -translate-y-1/2 w-[46%] sm:w-[38%] lg:w-[34%] max-w-[320px] animate-[heroFloat_6s_ease-in-out_infinite]">
-              <Emblem className="w-full drop-shadow-[0_10px_40px_rgba(233,30,140,0.25)]" />
-            </div>
-            {/* Readouts on the stage corners */}
-            <div className="absolute top-4 left-4 lg:left-10 flex items-center gap-2 label !text-fog">
-              <span className="live-dot" /> {es ? 'Señal en vivo' : 'Live signal'}
-            </div>
-            <div className="absolute bottom-4 right-4 lg:right-8 label tabular-nums text-right">
-              116 BPM · 4/4 · DEMBOW
+    <div className="relative">
+      {/* ── Hero: make a song right here ─────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        <div className="brand-glow left-1/2 -translate-x-1/2 -top-40 w-[min(1000px,140vw)] h-[520px] opacity-90" />
+        <div className="relative mx-auto max-w-[820px] px-safe pt-8 sm:pt-14 pb-2 sm:pb-8 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-[12px] font-semibold text-white/90">
+            <Sparkles className="w-3.5 h-3.5 text-melaos-orange" /> {t('home.badge')}
+          </span>
+
+          <h1 className="display mt-5 text-[2.35rem] leading-[1.02] sm:text-6xl lg:text-[4.2rem]">
+            {t('home.title1')}{' '}
+            <span className="text-brand">{t('home.title2')}</span>
+          </h1>
+          <p className="mt-4 text-fog text-[15px] sm:text-[17px] max-w-xl mx-auto">{t('home.subtitle')}</p>
+
+          {/* Prompt box */}
+          <div className="mt-7 glass rounded-[26px] p-3 sm:p-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+            <textarea
+              value={prompt}
+              onChange={e => setPrompt(e.target.value.slice(0, 500))}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) create(); }}
+              rows={2}
+              placeholder={es ? "Un dembow pa' la calle con 808s y coro pegajoso..." : 'A street dembow with 808s and a catchy hook...'}
+              aria-label={es ? 'Describe tu canción' : 'Describe your song'}
+              className="w-full resize-none bg-transparent px-2 pt-1 text-[16px] sm:text-[17px] text-white placeholder:text-fog-dim focus:outline-none"
+            />
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <Link href="/studio" className="w-10 h-10 rounded-full border border-line-strong flex items-center justify-center text-white/90 hoverable:hover:bg-white/10" aria-label={es ? 'Abrir el estudio' : 'Open the studio'}>
+                <Plus className="w-5 h-5" />
+              </Link>
+              <button onClick={() => setVoice(v => VOICES[(VOICES.indexOf(v) + 1) % VOICES.length])} className="chip">
+                <Mic className="w-3.5 h-3.5" /> {es ? 'Voz' : 'Voice'}: {voiceLabel}
+              </button>
+              <button onClick={() => setSongLang(l => (l === 'Spanish' ? 'English' : 'Spanish'))} className="chip hidden xs:inline-flex">
+                <Globe className="w-3.5 h-3.5" /> {songLang === 'Spanish' ? 'Español' : 'English'}
+              </button>
+              <button onClick={rollIdea} className="w-10 h-10 rounded-full border border-line-strong flex items-center justify-center text-white/90 hoverable:hover:bg-white/10" aria-label={es ? 'Idea al azar' : 'Random idea'} title={es ? 'Idea al azar' : 'Random idea'}>
+                <Dices className="w-[18px] h-[18px]" />
+              </button>
+              <button onClick={create} className="btn btn-primary ml-auto !min-h-[44px] !px-6 text-[15px]">
+                <Music2 className="w-4 h-4" /> {t('nav.create')}
+              </button>
             </div>
           </div>
 
-          {/* Copy */}
-          <div className="relative lg:col-span-5 flex flex-col justify-center px-safe md:px-8 lg:pl-10 xl:pl-16 lg:pr-4 pt-8 pb-12 lg:py-16">
-            <p className="flex items-center gap-2 label mb-6 lg:mb-8">
-              <span className="inline-block w-6 h-px bg-melaos-orange" />
-              {t('home.badge')}
-            </p>
-
-            <h1 className="display font-light text-white leading-[0.98] text-[clamp(2.4rem,7.4vw,3.4rem)] lg:text-[clamp(2.8rem,4.4vw,4.6rem)]">
-              {t('home.title1')}{' '}
-              <span className="font-medium text-melaos-orange">{t('home.title2')}</span>
-            </h1>
-
-            <p className="mt-6 text-fog text-base sm:text-[17px] leading-relaxed max-w-[34rem]">
-              {t('home.subtitle')}
-            </p>
-
-            <div className="mt-8 flex flex-col xs:flex-row gap-3">
-              <Link href="/studio" className="btn btn-primary !min-h-[52px] !px-7">
-                {t('home.cta.create')} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
-              </Link>
-              <Link href="/explore" className="btn btn-ghost !min-h-[52px] !px-7">
-                {t('home.cta.explore')}
-              </Link>
-            </div>
-            <p className="mt-4 label normal-case tracking-normal !text-[12px]">{t('home.noCard')}</p>
-
-            {/* Spec strip */}
-            <dl className="mt-10 grid grid-cols-3 border-t border-line-soft">
-              {[
-                [String(GENRES.length), es ? 'Géneros' : 'Genres'],
-                ['ES · EN', es ? 'Idiomas' : 'Languages'],
-                ['A&R', es ? 'Revisión en 72 h' : '72-hour review'],
-              ].map(([value, name], i) => (
-                <div key={name} className={`pt-4 ${i ? 'pl-4 border-l border-line-soft' : ''}`}>
-                  <dt className="label">{name}</dt>
-                  <dd className="mt-1.5 display text-lg sm:text-xl text-white tabular-nums">{value}</dd>
-                </div>
-              ))}
-            </dl>
+          {/* Genre chips */}
+          <div className="mt-4 flex sm:flex-wrap sm:justify-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {FEATURED_GENRES.filter(g => (GENRES as readonly string[]).includes(g)).map(g => (
+              <button key={g} onClick={() => setGenre(cur => (cur === g ? null : g))} className={`chip shrink-0 ${genre === g ? 'chip-on' : ''}`} aria-pressed={genre === g}>
+                {g}
+              </button>
+            ))}
+            <Link href="/studio" className="chip shrink-0">+ {GENRES.length - FEATURED_GENRES.length}</Link>
           </div>
+          <p className="mt-4 text-[12.5px] text-fog-dim">{t('home.noCard')}</p>
         </div>
       </section>
 
-      {/* ── Genre ticker ────────────────────────────────────────────── */}
-      <div className="border-b border-line-soft overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]" aria-hidden>
-        <div className="flex w-max animate-ticker py-3.5">
-          {[0, 1].map(copy => (
-            <div key={copy} className="flex shrink-0">
-              {GENRES.map(g => (
-                <span key={`${copy}-${g}`} className="font-mono text-[11px] tracking-[0.2em] uppercase text-fog-dim px-6 flex items-center gap-6">
-                  {g}
-                  <span className="w-1 h-1 rotate-45 bg-melaos-orange/70" />
-                </span>
+      <div className="mx-auto max-w-[1280px] px-safe md:px-8 pb-6">
+        {/* ── Trending charts ───────────────────────────────────────── */}
+        <SectionHead title={es ? 'Tendencias' : 'Trending'} href="/explore" more={es ? 'Ver todo' : 'See all'} />
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {charts.map(chart => (
+            <div key={chart.title} className="panel p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-bold text-[15px] text-white">{chart.title}</h3>
+                <span className={`tag ${chart.tagCls}`}>{chart.tag}</span>
+              </div>
+              {chart.songs.map((s, i) => (
+                <button
+                  key={s.id}
+                  onClick={() => setCurrentSong(s)}
+                  className="w-full grid grid-cols-[18px_48px_1fr_auto] items-center gap-3 py-2 text-left rounded-xl transition-colors hoverable:hover:bg-white/5 -mx-1 px-1"
+                >
+                  <span className="text-[13px] font-bold text-fog-dim tabular-nums text-center">{i + 1}</span>
+                  <span className="relative w-12 h-12 rounded-[10px] overflow-hidden bg-ink-3">
+                    {s.coverArt && <img src={s.coverArt} alt="" className="w-full h-full object-cover" />}
+                    {playing(s) && <span className="absolute inset-0 bg-black/50 flex items-center justify-center"><Pause className="w-4 h-4 fill-white text-white" /></span>}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[13.5px] font-semibold text-white truncate">{s.title}</span>
+                    <span className="flex items-center gap-1 text-[11.5px] text-fog truncate">
+                      <Play className="w-3 h-3 fill-current" strokeWidth={0} /> {formatPlays(s.plays)} · {s.artist}
+                    </span>
+                  </span>
+                  <span className="text-[11px] text-fog-dim flex items-center gap-1"><Heart className="w-3 h-3" /> {formatPlays(s.likes)}</span>
+                </button>
               ))}
             </div>
           ))}
         </div>
+
+        {/* ── Most played ──────────────────────────────────────────── */}
+        <SectionHead title={es ? 'Lo más escuchado' : 'Most played'} href="/explore" more={es ? 'Ver todo' : 'See all'} />
+        <div className="mt-4 flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 md:scroll-px-0 pb-1">
+          {byPlays.slice(0, 8).map((s, i) => (
+            <button key={s.id} onClick={() => setCurrentSong(s)} className="group snap-start shrink-0 w-[148px] sm:w-[180px] text-left">
+              <span className="relative block aspect-square rounded-2xl overflow-hidden bg-ink-3">
+                {s.coverArt && <img src={s.coverArt} alt="" className="w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-105" />}
+                {i < 3 && <span className="absolute left-2 top-2 tag tag-white">#{i + 1}</span>}
+                <span className={`absolute right-2 bottom-2 w-10 h-10 rounded-full bg-brand flex items-center justify-center shadow-lg transition-opacity ${playing(s) ? 'opacity-100' : 'opacity-100 lg:opacity-0 hoverable:group-hover:opacity-100'}`}>
+                  {playing(s) ? <Pause className="w-4 h-4 fill-white text-white" /> : <Play className="w-4 h-4 fill-white text-white ml-0.5" />}
+                </span>
+              </span>
+              <span className="block mt-2 text-[13.5px] font-semibold text-white truncate">{s.title}</span>
+              <span className="flex items-center gap-1 text-[12px] text-fog truncate">
+                <Play className="w-3 h-3 fill-current" strokeWidth={0} /> {formatPlays(s.plays)} · {s.genre}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* ── Everything you need ─────────────────────────────────── */}
+        <div className="mt-14 sm:mt-20 text-center max-w-2xl mx-auto">
+          <h2 className="display text-[1.9rem] sm:text-4xl leading-[1.08]">
+            {t('home.features.title1')} <span className="text-brand">{t('home.features.title2')}</span>
+          </h2>
+          <p className="mt-3 text-fog">{t('home.features.subtitle')}</p>
+        </div>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="panel p-5 transition-colors hoverable:hover:bg-ink-3">
+              <span className="w-11 h-11 rounded-2xl bg-brand flex items-center justify-center">
+                <Icon className="w-5 h-5 text-white" />
+              </span>
+              <h3 className="mt-4 font-semibold text-white text-[15px] leading-snug">{title}</h3>
+              <p className="mt-1.5 text-fog text-[13.5px] leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Start ──────────────────────────────────────────────── */}
+        <section className="relative mt-14 sm:mt-20 mb-6 overflow-hidden rounded-[28px] bg-ink-2 border border-line-soft">
+          <div className="brand-glow -right-24 -top-24 w-[520px] h-[360px] opacity-80" />
+          <div className="relative px-6 py-10 sm:px-12 sm:py-14 flex flex-col lg:flex-row lg:items-center gap-6">
+            <div className="flex-1">
+              <h2 className="display text-[1.9rem] sm:text-4xl leading-[1.08]">{t('home.ready.title')}</h2>
+              <p className="mt-3 text-white/75 max-w-xl">{t('home.ready.subtitle')}</p>
+            </div>
+            <Link href="/studio" className="btn btn-primary !min-h-[54px] !px-8 text-[15px] self-start lg:self-auto">
+              {t('home.ready.cta')} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </section>
       </div>
-
-      {/* ── 01 Listen ───────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1440px] px-safe md:px-8 py-16 sm:py-24">
-        <SectionHead index="01" label={es ? 'Escucha' : 'Listen'} title={t('home.cta.explore')} action={{ href: '/explore', text: es ? 'Ver todo' : 'See all' }} />
-        <div className="mt-10 flex md:grid md:grid-cols-3 gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-px-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-          {heroSongs.map((song, i) => (
-            <Link
-              key={song.title}
-              href="/explore"
-              className="group snap-start shrink-0 w-[78%] xs:w-[68%] md:w-auto"
-            >
-              <div className="relative aspect-square overflow-hidden border border-line bg-ink-2">
-                <img src={song.coverArt} alt={song.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hoverable:group-hover:scale-[1.03]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                <span className="absolute top-3 left-3 label !text-white/80 tabular-nums">TRK {String(i + 1).padStart(2, '0')}</span>
-                <span className="absolute bottom-3 right-3 btn btn-primary !min-h-[40px] !px-3.5 opacity-100 md:opacity-0 hoverable:group-hover:opacity-100 transition-opacity" aria-hidden>
-                  <Play className="w-4 h-4 fill-current" strokeWidth={0} />
-                </span>
-              </div>
-              <div className="mt-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-white font-medium truncate">{song.title}</p>
-                  <p className="text-fog text-sm truncate">{song.artist}</p>
-                </div>
-                <p className="label shrink-0 text-right tabular-nums pt-1">{song.genre}<br />{song.bpm} BPM</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 02 Capabilities ─────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1440px] px-safe md:px-8 pb-16 sm:pb-24">
-        <SectionHead
-          index="02"
-          label={es ? 'Capacidades' : 'Capabilities'}
-          title={<>{t('home.features.title1')} <span className="text-melaos-orange">{t('home.features.title2')}</span></>}
-          sub={t('home.features.subtitle')}
-        />
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line-soft border border-line-soft">
-          {features.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title} className="bg-ink-0 p-6 sm:p-7 transition-colors hoverable:hover:bg-ink-1">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[11px] text-fog-dim tabular-nums">{String(i + 1).padStart(2, '0')}</span>
-                <Icon className="w-[18px] h-[18px] text-melaos-orange" strokeWidth={1.5} />
-              </div>
-              <h3 className="mt-8 text-white font-medium text-[15px] leading-snug">{title}</h3>
-              <p className="mt-2 text-fog text-sm leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 03 Start ────────────────────────────────────────────────── */}
-      <section className="relative border-t border-line-soft overflow-hidden">
-        <div className="brand-rule absolute top-0 inset-x-0 opacity-70" />
-        <div className="absolute inset-0 rule-grid [mask-image:radial-gradient(ellipse_at_70%_50%,black,transparent_70%)]" />
-        <div className="relative mx-auto max-w-[1440px] px-safe md:px-8 py-16 sm:py-24 grid lg:grid-cols-12 gap-8 items-end">
-          <div className="lg:col-span-8">
-            <p className="label mb-5">03 — {es ? 'Empieza' : 'Start'}</p>
-            <h2 className="display font-light text-white text-[clamp(2rem,5vw,3.75rem)] leading-[1.02]">{t('home.ready.title')}</h2>
-            <p className="mt-5 text-fog max-w-xl">{t('home.ready.subtitle')}</p>
-          </div>
-          <div className="lg:col-span-4 lg:justify-self-end">
-            <Link href="/studio" className="btn btn-primary !min-h-[56px] !px-8 w-full sm:w-auto">
-              {t('home.ready.cta')} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
 
-function SectionHead({ index, label, title, sub, action }: {
-  index: string;
-  label: string;
-  title: React.ReactNode;
-  sub?: string;
-  action?: { href: string; text: string };
-}) {
+function SectionHead({ title, href, more }: { title: string; href: string; more: string }) {
   return (
-    <div className="grid lg:grid-cols-12 gap-4 lg:gap-8 items-end border-b border-line-soft pb-6">
-      <div className="lg:col-span-7">
-        <p className="label mb-4">{index} — {label}</p>
-        <h2 className="display font-light text-white text-[clamp(1.6rem,3.6vw,2.75rem)] leading-[1.05]">{title}</h2>
-      </div>
-      {sub && <p className="lg:col-span-5 text-fog leading-relaxed">{sub}</p>}
-      {action && (
-        <Link href={action.href} className="lg:col-span-5 justify-self-start lg:justify-self-end btn btn-quiet !px-0 gap-2">
-          {action.text} <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
-        </Link>
-      )}
+    <div className="mt-8 sm:mt-12 flex items-center justify-between gap-4">
+      <h2 className="display text-xl sm:text-2xl">{title}</h2>
+      <Link href={href} className="btn btn-ghost !min-h-[34px] !px-3.5 text-[12.5px]">{more}</Link>
     </div>
   );
 }

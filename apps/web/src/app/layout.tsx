@@ -1,14 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-// Fonts ship inside the app (Fontsource packages), so neither the build nor
-// a visitor's device ever has to reach Google Fonts. Each file covers one
-// script; browsers download only the ones a page actually uses.
-import '@fontsource-variable/unbounded';
-import '@fontsource/ibm-plex-sans/300.css';
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/500.css';
-import '@fontsource/ibm-plex-sans/600.css';
-import '@fontsource/ibm-plex-mono/400.css';
-import '@fontsource/ibm-plex-mono/500.css';
+// The font ships inside the app (Fontsource), so neither the build nor a
+// visitor's device ever has to reach Google Fonts. Sora is variable: one
+// file per script covers every weight.
+import '@fontsource-variable/sora';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -23,7 +17,7 @@ export const viewport: Viewport = {
   // Draw under the notch / Dynamic Island / Android cutout and the home
   // indicator; the layout pads itself with the safe-area insets instead.
   viewportFit: 'cover',
-  themeColor: '#050507',
+  themeColor: '#08080A',
   colorScheme: 'dark',
 };
 
@@ -69,16 +63,22 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="bg-ink-0 text-[#ECECF1] font-sans antialiased">
+      <body className="bg-ink-0 text-[#F4F4F6] font-sans antialiased">
+        {/* Phones/tablets: top bar + bottom tab bar. Computers: side menu. */}
         <Navbar />
-        <main className="min-h-dvh-safe" style={{ paddingTop: 'var(--nav-h)', paddingBottom: 'var(--player-h)' }}>
-          {children}
-          <Footer />
+        <main
+          className="min-h-dvh-safe"
+          style={{ paddingTop: 'var(--nav-h)', paddingBottom: 'var(--chrome-bottom)', paddingLeft: 'var(--side-w)' }}
+        >
+          {/* On computers the page sits on a rounded panel beside the menu. */}
+          <div className="relative overflow-clip lg:my-2.5 lg:mr-2.5 lg:rounded-panel lg:bg-ink-1 lg:min-h-[calc(100dvh_-_20px_-_var(--chrome-bottom))]">
+            {children}
+            <Footer />
+          </div>
         </main>
         <AudioPlayer />
         <MelaoAgent />
         <OnboardingTour />
-        <div className="grain" aria-hidden />
       </body>
     </html>
   );

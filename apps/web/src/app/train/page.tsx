@@ -80,45 +80,49 @@ export default function TrainPage() {
   }
 
   const inputCls = 'field h-12';
-  const areaCls = 'field min-h-[96px] resize-y leading-relaxed';
-  const iconCls = 'w-4 h-4 text-melaos-orange';
+  const areaCls = 'field min-h-[104px] resize-y leading-relaxed';
 
   return (
-    <div className="mx-auto max-w-[1200px] px-safe md:px-8 py-10 sm:py-14">
-      {/* ── Header ───────────────────────────────────────────────────── */}
-      <header className="grid lg:grid-cols-12 gap-4 lg:gap-8 items-end border-b border-line-soft pb-6 mb-8 sm:mb-10">
-        <div className="lg:col-span-6">
-          <span className="block w-6 h-px bg-melaos-orange mb-5" aria-hidden />
-          <div className="flex items-center gap-3">
-            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-melaos-orange shrink-0" strokeWidth={1.5} />
-            <h1 className="display font-light text-white leading-[1.02] text-[clamp(1.8rem,5vw,3rem)]">TRAIN MELAO</h1>
-          </div>
+    <div className="mx-auto max-w-[1100px] px-safe md:px-8 py-6 sm:py-10">
+      {/* ── Header: centered over the lock card, left-aligned over the tools ── */}
+      <header className={`mb-6 sm:mb-8 ${unlocked ? '' : 'text-center'}`}>
+        <div className={`flex items-center gap-3 sm:gap-4 ${unlocked ? '' : 'justify-center'}`}>
+          <span className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-brand flex items-center justify-center shadow-[0_10px_30px_rgba(233,30,140,0.3)]">
+            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2} />
+          </span>
+          <h1 className="display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl">TRAIN <span className="text-brand">MELAO</span></h1>
         </div>
-        <p className="lg:col-span-6 text-fog text-sm sm:text-[15px] leading-relaxed">
+        <p className={`mt-4 text-fog text-sm sm:text-base leading-relaxed max-w-2xl ${unlocked ? '' : 'mx-auto'}`}>
           Teach the bot your knowledge — when someone asks <em>this</em>, Melao answers <em>that</em>.
           English y español. Tu conocimiento, tu bot.
         </p>
       </header>
 
       {!unlocked ? (
-        <div className="panel hud p-6 sm:p-7 max-w-md">
-          <div className="flex items-center gap-2 mb-5 label !text-melaos-orange">
-            <Lock className="w-3.5 h-3.5" strokeWidth={1.75} /> Trainer Access
+        <div className="relative max-w-md mx-auto sm:mt-10">
+          <div className="brand-glow inset-x-0 -top-10 h-56 opacity-30" aria-hidden />
+          <div className="relative panel-raised rounded-panel p-6 sm:p-8">
+            <div className="flex flex-col items-center text-center mb-6">
+              <span className="w-14 h-14 rounded-full bg-melaos-orange/15 text-melaos-orange flex items-center justify-center">
+                <Lock className="w-6 h-6" strokeWidth={2} />
+              </span>
+              <h2 className="mt-4 display text-white text-xl sm:text-2xl">Trainer Access</h2>
+            </div>
+            <input type="password" value={trainKey} onChange={e => setTrainKey(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && unlock()}
+              placeholder="Training key / Clave de entrenamiento" className={inputCls} />
+            <button onClick={unlock}
+              className="btn btn-primary mt-3 w-full !min-h-[48px]">
+              Enter the Lab
+            </button>
+            {status && <p className="text-melaos-hot text-sm text-center mt-3">{status}</p>}
           </div>
-          <input type="password" value={trainKey} onChange={e => setTrainKey(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && unlock()}
-            placeholder="Training key / Clave de entrenamiento" className={inputCls} />
-          <button onClick={unlock}
-            className="btn btn-primary mt-3 w-full !min-h-[48px]">
-            Enter the Lab
-          </button>
-          {status && <p className="text-melaos-hot font-mono text-xs mt-3">{status}</p>}
         </div>
       ) : (
-        <div className="grid lg:grid-cols-12 gap-px bg-line-soft border border-line-soft">
-          {/* 01 Add teaching */}
-          <section className="lg:col-span-7 bg-ink-0 p-5 sm:p-7">
-            <SectionHead index="01" icon={<Plus className={iconCls} strokeWidth={1.75} />} title="New Teaching / Nueva Enseñanza" />
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12 items-start">
+          {/* Add teaching */}
+          <section className="lg:col-span-7 panel p-5 sm:p-6">
+            <SectionHead icon={<Plus className="w-[18px] h-[18px] text-melaos-orange" strokeWidth={2.25} />} title="New Teaching / Nueva Enseñanza" />
             <div className="space-y-3">
               <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Topic — e.g. Reggaeton drums" className={inputCls} />
               <input value={keywords} onChange={e => setKeywords(e.target.value)}
@@ -132,48 +136,48 @@ export default function TrainPage() {
                   className="btn btn-primary !min-h-[48px] !px-7">
                   Teach Melao
                 </button>
-                {status && <p className="text-melaos-cyan font-mono text-xs">{status}</p>}
+                {status && <p className="text-melaos-cyan text-sm">{status}</p>}
               </div>
             </div>
           </section>
 
-          {/* 02 Test the bot */}
-          <section className="lg:col-span-5 bg-ink-0 p-5 sm:p-7">
-            <SectionHead index="02" icon={<Send className={iconCls} strokeWidth={1.75} />} title="Test Melao / Pruébalo" live />
+          {/* Test the bot */}
+          <section className="lg:col-span-5 panel p-5 sm:p-6">
+            <SectionHead icon={<Send className="w-[18px] h-[18px] text-melaos-pink" strokeWidth={2} />} title="Test Melao / Pruébalo" live />
             <div className="flex gap-2">
               <input value={testMsg} onChange={e => setTestMsg(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && testBot()}
-                placeholder="Ask Melao something..." className={inputCls} />
-              <button onClick={testBot} className="btn btn-ghost shrink-0 !min-h-[48px]">Ask</button>
+                placeholder="Ask Melao something..." className={`${inputCls} min-w-0`} />
+              <button onClick={testBot} className="btn btn-ghost shrink-0 !min-h-[48px] !px-5">Ask</button>
             </div>
-            {testReply && <p className="mt-4 border-l-2 border-melaos-orange/70 bg-ink-1 pl-4 pr-3 py-3 text-sm text-[#ECECF1] leading-relaxed">{testReply}</p>}
+            {testReply && <p className="mt-4 rounded-2xl rounded-tl-md bg-ink-3 px-4 py-3 text-sm text-[#F4F4F6] leading-relaxed">{testReply}</p>}
           </section>
 
-          {/* 03 Live teachings */}
-          <section className="lg:col-span-12 bg-ink-0 p-5 sm:p-7">
+          {/* Live teachings */}
+          <section className="lg:col-span-12 panel p-5 sm:p-6">
             <SectionHead
-              index="03"
               title={<>Melao&apos;s Teachings <span className="text-fog tabular-nums">({entries.length})</span></>}
               action={
                 <button onClick={exportTeachings} disabled={!entries.length}
-                  className="btn btn-quiet !px-2 -mr-2 disabled:!opacity-30">
-                  <Download className="w-4 h-4" strokeWidth={1.5} /> Export
+                  className="btn btn-ghost shrink-0 !px-4 text-[13px]">
+                  <Download className="w-4 h-4" strokeWidth={2} /> Export
                 </button>
               }
             />
-            {entries.length === 0 && <p className="text-fog-dim text-sm">Nothing yet — teach him something above.</p>}
+            {entries.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-line-strong px-4 py-8 text-center text-fog text-sm">Nothing yet — teach him something above.</p>
+            )}
             {entries.length > 0 && (
-              <div className="border-t border-line-soft">
-                {entries.map((e, i) => (
-                  <div key={e.id} className="py-4 border-b border-line-soft flex items-start justify-between gap-3 sm:gap-4">
-                    <span className="hidden xs:block w-6 shrink-0 pt-0.5 font-mono text-[11px] text-fog-dim tabular-nums" aria-hidden>{String(i + 1).padStart(2, '0')}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-white text-sm font-medium">{e.topic}</p>
-                      <p className="mt-1 font-mono text-[11px] tracking-[0.04em] text-melaos-orange break-words">{e.keywords.join(' · ')}</p>
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {entries.map(e => (
+                  <div key={e.id} className="rounded-2xl bg-ink-3 pl-4 pr-1.5 py-3.5 flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-white text-[15px] font-semibold">{e.topic}</p>
+                      <p className="mt-1 text-[13px] font-medium text-melaos-orange break-words">{e.keywords.join(' · ')}</p>
                       <p className="mt-2 text-fog text-sm leading-relaxed line-clamp-2">{e.answer || e.answerEs}</p>
                     </div>
-                    <button onClick={() => removeTeaching(e.id)} className="touch-target -mr-3 -mt-2.5 shrink-0 text-fog-dim hoverable:hover:text-melaos-hot transition-colors" aria-label="Delete teaching">
-                      <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                    <button onClick={() => removeTeaching(e.id)} className="touch-target shrink-0 rounded-full text-fog transition-colors hoverable:hover:text-melaos-hot hoverable:hover:bg-white/[0.06]" aria-label="Delete teaching">
+                      <Trash2 className="w-4 h-4" strokeWidth={2} />
                     </button>
                   </div>
                 ))}
@@ -181,7 +185,7 @@ export default function TrainPage() {
             )}
             <p className="text-fog-dim text-xs mt-5 leading-relaxed max-w-3xl">
               Live teachings reset when the site redeploys — Export them and Fellito merges them into
-              Melao&apos;s permanent brain (<span className="font-mono text-fog">apps/web/brain/MEMORY.md</span>). Permanent brain topics currently loaded: {brainTopics.join(', ')}.
+              Melao&apos;s permanent brain (<span className="rounded-md bg-ink-3 px-1.5 py-0.5 font-mono text-[11px] text-fog">apps/web/brain/MEMORY.md</span>). Permanent brain topics currently loaded: {brainTopics.join(', ')}.
             </p>
           </section>
         </div>
@@ -190,23 +194,22 @@ export default function TrainPage() {
   );
 }
 
-function SectionHead({ index, icon, title, action, live }: {
-  index: string;
+function SectionHead({ icon, title, action, live }: {
   icon?: React.ReactNode;
   title: React.ReactNode;
   action?: React.ReactNode;
   live?: boolean;
 }) {
   return (
-    <div className="flex items-end justify-between gap-4 border-b border-line-soft pb-4 mb-5">
-      <div className="min-w-0">
-        <p className="label mb-2.5 flex items-center gap-2.5 tabular-nums" aria-hidden>
-          <span>{index}</span>
-          <span className="w-5 h-px bg-line-strong" />
-          {icon}
-          {live && <span className="live-dot" />}
-        </p>
-        <h2 className="display font-light text-white text-lg sm:text-xl leading-snug">{title}</h2>
+    <div className="flex items-center justify-between gap-3 mb-5">
+      <div className="flex items-center gap-3 min-w-0">
+        {icon && (
+          <span className="relative w-10 h-10 shrink-0 rounded-full bg-ink-3 flex items-center justify-center" aria-hidden>
+            {icon}
+            {live && <span className="live-dot absolute top-0.5 right-0.5 ring-2 ring-ink-2" />}
+          </span>
+        )}
+        <h2 className="display text-white text-lg sm:text-xl leading-snug min-w-0">{title}</h2>
       </div>
       {action}
     </div>
