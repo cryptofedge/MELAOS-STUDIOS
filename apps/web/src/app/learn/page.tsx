@@ -70,73 +70,83 @@ const LESSONS: Lesson[] = [
   },
 ];
 
+// Reading styles for the lesson HTML (injected below). Body copy in fog at
+// 16–17px with relaxed leading; the "law-box" notes become ruled callouts
+// with an orange left edge.
+const LESSON_PROSE = [
+  'text-fog text-base sm:text-[17px] leading-relaxed',
+  '[&_p]:mb-5',
+  '[&_strong]:text-white [&_strong]:font-medium',
+  '[&_a]:text-melaos-orange [&_a]:underline [&_a]:underline-offset-4',
+  '[&_.law-box]:my-6 [&_.law-box]:bg-ink-1 [&_.law-box]:border [&_.law-box]:border-line [&_.law-box]:border-l-2 [&_.law-box]:border-l-melaos-orange',
+  '[&_.law-box]:px-4 sm:[&_.law-box]:px-5 [&_.law-box]:py-4 sm:[&_.law-box]:py-5',
+  '[&_.law-box]:text-[15px] sm:[&_.law-box]:text-base [&_.law-box]:leading-relaxed [&_.law-box]:text-[#ECECF1]/85',
+  '[&>*:first-child]:!mt-0 [&>*:last-child]:!mb-0',
+].join(' ');
+
 export default function LearnPage() {
   const [openId, setOpenId] = useState<string | null>('ai_music');
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
-            📚 Learn
-          </h1>
-          <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-            Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
-            this is what you need to know to actually own and get paid for what you make.
-          </p>
-        </div>
-        <Link href="/studio"
-          className="hidden sm:flex items-center gap-2 btn-orange text-white text-sm font-semibold px-4 py-2 rounded-full hover:scale-105 transition-transform shrink-0">
-          <Plus className="w-4 h-4" /> Create
-        </Link>
-      </div>
+    <div className="mx-auto max-w-[1440px] px-safe md:px-8 pt-10 sm:pt-16 pb-16 sm:pb-24">
+      <div className="grid lg:grid-cols-12 gap-10 lg:gap-8">
+        {/* Intro: stacked on phones and tablets, a sticky left rail on desktop */}
+        <header className="lg:col-span-4 lg:self-start lg:sticky lg:top-[calc(var(--nav-h)+2.5rem)] lg:border-t lg:border-line-soft lg:pt-6">
+          <div>
+            <p className="label mb-4">01 — Lessons</p>
+            <h1 className="display font-light text-white leading-[1] text-[clamp(2.4rem,7vw,4rem)]">
+              Learn
+            </h1>
+            <p className="mt-5 text-fog text-base sm:text-[17px] leading-relaxed max-w-[34rem]">
+              Real laws, real rights, real money. MELAOS STUDIOS makes it easy to create —
+              this is what you need to know to actually own and get paid for what you make.
+            </p>
+          </div>
+          <Link href="/studio"
+            className="hidden sm:inline-flex mt-8 btn btn-primary">
+            <Plus className="w-4 h-4" strokeWidth={1.75} /> Create
+          </Link>
+        </header>
 
-      <div className="space-y-3">
-        {LESSONS.map(lesson => {
-          const open = openId === lesson.id;
-          return (
-            <div
-              key={lesson.id}
-              className="bg-[#1A1A1A] border border-[#2a2a2a] rounded-2xl overflow-hidden"
-            >
-              <button
-                onClick={() => setOpenId(open ? null : lesson.id)}
-                style={{ minHeight: '56px', touchAction: 'manipulation' }}
-                className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-[#222] transition-colors"
+        {/* Lessons: a ruled index; each row opens into the reading column */}
+        <div className="lg:col-span-8 border-t border-line-soft">
+          {LESSONS.map((lesson, i) => {
+            const open = openId === lesson.id;
+            return (
+              <div
+                key={lesson.id}
+                className="border-b border-line-soft"
               >
-                <span className="text-2xl shrink-0">{lesson.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-semibold text-sm">{lesson.title}</p>
-                  <p className="text-[#F28C28] text-xs font-medium mt-0.5">{lesson.tag}</p>
-                </div>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-500 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {open && (
-                <div
-                  className="lesson-body px-4 pb-5 pt-1 text-gray-300 text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: lesson.body }}
-                />
-              )}
-            </div>
-          );
-        })}
+                <button
+                  onClick={() => setOpenId(open ? null : lesson.id)}
+                  aria-expanded={open}
+                  className="group w-full min-h-[56px] flex items-start gap-4 sm:gap-6 py-5 sm:py-6 text-left touch-manipulation"
+                >
+                  <span className={`w-6 shrink-0 pt-[7px] font-mono text-[11px] tabular-nums transition-colors ${open ? 'text-melaos-orange' : 'text-fog-dim hoverable:group-hover:text-white'}`}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block display font-light text-white text-[17px] sm:text-[22px] leading-snug">{lesson.title}</span>
+                    <span className="block mt-2.5 label !text-melaos-orange">{lesson.tag}</span>
+                  </span>
+                  <ChevronDown
+                    className={`w-[18px] h-[18px] mt-1 shrink-0 transition-[transform,color] ${open ? 'rotate-180 text-melaos-orange' : 'text-fog-dim hoverable:group-hover:text-white'}`}
+                    strokeWidth={1.5}
+                  />
+                </button>
+                {open && (
+                  <div className="pb-10 sm:pl-12">
+                    <div
+                      className={`lesson-body max-w-[68ch] ${LESSON_PROSE}`}
+                      dangerouslySetInnerHTML={{ __html: lesson.body }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-
-      <style>{`
-        .lesson-body p { margin-bottom: 12px; }
-        .lesson-body strong { color: #fff; }
-        .law-box {
-          background: #111;
-          border: 1px solid #2a2a2a;
-          border-radius: 12px;
-          padding: 14px;
-          margin: 12px 0;
-          font-size: 13px;
-          color: #ccc;
-        }
-      `}</style>
     </div>
   );
 }

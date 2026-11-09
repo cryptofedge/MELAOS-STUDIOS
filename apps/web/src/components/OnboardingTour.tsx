@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Emblem from '@/components/Emblem';
 import { Sparkles, Compass, Mic2, Library, BookOpen, X } from 'lucide-react';
 
 const STORAGE_KEY = 'melaos_onboarded_v1';
@@ -69,62 +70,54 @@ export default function OnboardingTour() {
   const isLast = step === STEPS.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/70" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-sm bg-[#15151f] border border-[#333] rounded-2xl p-6 relative shadow-2xl">
-        <button
-          onClick={finish}
-          style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
-          className="absolute top-3 right-3 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
-          aria-label="Skip tour"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <img src="/melaos-logo-3.png" alt="MELAOS STUDIOS" className="h-10 w-auto mb-4" />
-
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-          style={{ background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-
-        <h2 className="text-white font-black text-lg mb-2">{current.title}</h2>
-        <p className="text-gray-400 text-sm leading-relaxed mb-6">{current.body}</p>
-
-        {/* Progress dots */}
-        <div className="flex items-center gap-1.5 mb-6">
-          {STEPS.map((_, i) => (
-            <div key={i}
-              className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-[#F28C28]' : 'w-1.5 bg-[#333]'}`}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={finish}
-            style={{ minHeight: '44px', touchAction: 'manipulation' }}
-            className="text-gray-500 hover:text-gray-300 text-sm font-medium px-3 transition-colors"
-          >
-            Skip
-          </button>
-          <div className="flex-1" />
-          {current.cta && (
-            <Link
-              href={current.cta.href}
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/75 px-safe pb-safe"
+      style={{ WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(6px)' }}
+    >
+      <div className="hud w-full max-w-md bg-ink-1 border border-line-strong rounded-[4px] relative mb-3 sm:mb-0">
+        <div className="brand-rule" />
+        <div className="p-6 sm:p-7">
+          <div className="flex items-start justify-between">
+            <Emblem variant="wordmark" alt="MELAOS STUDIOS" className="h-6 w-auto" />
+            <button
               onClick={finish}
-              style={{ minHeight: '44px', touchAction: 'manipulation' }}
-              className="flex items-center px-4 rounded-full text-sm font-semibold border border-[#333] text-gray-300 hover:border-[#555] hover:text-white transition-colors"
+              style={{ touchAction: 'manipulation' }}
+              className="touch-target -mt-3 -mr-3 text-fog hoverable:hover:text-white transition-colors"
+              aria-label="Skip tour"
             >
-              {current.cta.label}
-            </Link>
-          )}
-          <button
-            onClick={() => (isLast ? finish() : setStep(s => s + 1))}
-            style={{ minHeight: '44px', touchAction: 'manipulation' }}
-            className="btn-orange text-white text-sm font-bold px-5 rounded-full hover:scale-105 transition-transform"
-          >
-            {isLast ? 'Got it' : 'Next'}
-          </button>
+              <X className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+          </div>
+
+          <div className="mt-8 flex items-center justify-between">
+            <p className="label tabular-nums">{String(step + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')}</p>
+            <Icon className="w-5 h-5 text-melaos-orange" strokeWidth={1.5} />
+          </div>
+
+          <h2 className="mt-4 display font-light text-white text-2xl leading-tight">{current.title}</h2>
+          <p className="mt-3 text-fog text-sm leading-relaxed">{current.body}</p>
+
+          {/* Progress */}
+          <div className="mt-6 grid gap-1" style={{ gridTemplateColumns: `repeat(${STEPS.length}, 1fr)` }}>
+            {STEPS.map((_, i) => (
+              <div key={i} className={`h-[2px] transition-colors ${i <= step ? 'bg-melaos-orange' : 'bg-line-strong'}`} />
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-center gap-2">
+            <button onClick={finish} style={{ touchAction: 'manipulation' }} className="btn btn-quiet !px-2">
+              Skip
+            </button>
+            <div className="flex-1" />
+            {current.cta && (
+              <Link href={current.cta.href} onClick={finish} className="btn btn-ghost">
+                {current.cta.label}
+              </Link>
+            )}
+            <button onClick={() => (isLast ? finish() : setStep(s => s + 1))} className="btn btn-primary">
+              {isLast ? 'Got it' : 'Next'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

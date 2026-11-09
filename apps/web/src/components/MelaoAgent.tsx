@@ -1,8 +1,10 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Music2, Sparkles, GripHorizontal, Mic, Volume2, VolumeX } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { X, Send, GripHorizontal, Mic, Volume2, VolumeX } from 'lucide-react';
 import { useAudioStore } from '@/lib/store';
 import ReportButton from '@/components/ReportButton';
+import Emblem from '@/components/Emblem';
 
 interface Message {
   role: 'user' | 'melao';
@@ -239,6 +241,22 @@ export default function MelaoAgent() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
+  // In the studio the bottom-right corner holds the Generate button and the
+  // bottom edge holds the transport bar, so the trigger starts bottom-left,
+  // above the transport.
+  const pathname = usePathname();
+  const inStudio = pathname?.startsWith('/studio');
+  const corner = inStudio
+    ? { left: 'max(1rem, var(--safe-left))', bottom: 'calc(var(--player-h) + 76px)' }
+    : { right: 'max(1rem, var(--safe-right))', bottom: 'calc(var(--player-h) + 16px)' };
+
+  // Avatar: the official M mark, cropped from the logo.
+  const avatar = (size: string) => (
+    <div className={`${size} shrink-0 flex items-center justify-center bg-ink-0 border border-line`}>
+      <Emblem className="w-[78%]" />
+    </div>
+  );
+
   return (
     <>
       {/* Floating trigger button — draggable; click (no drag) toggles the panel */}
@@ -248,20 +266,20 @@ export default function MelaoAgent() {
         onPointerUp={onBtnPointerUp}
         onPointerLeave={() => { btnDragging.current = false; }}
         style={{
-          background: 'linear-gradient(135deg, #F28C28, #E91E8C)',
           minWidth: '56px',
           minHeight: '56px',
           touchAction: 'none',
           cursor: 'grab',
-          ...(btnPos ? { left: btnPos.x, top: btnPos.y, right: 'auto', bottom: 'auto' } : {}),
+          clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+          ...(btnPos
+            ? { left: btnPos.x, top: btnPos.y, right: 'auto', bottom: 'auto' }
+            : corner),
         }}
-        className={`fixed z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 active:cursor-grabbing ${
-          btnPos ? '' : `right-4 ${currentSong ? 'bottom-40 sm:bottom-24' : 'bottom-24'}`
-        }`}
+        className="fixed z-50 w-14 h-14 flex items-center justify-center bg-ink-1 border border-line-strong transition-colors hoverable:hover:border-melaos-orange active:cursor-grabbing"
         aria-label="Chat with Melao"
       >
-        <Music2 className="w-6 h-6 text-white" />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-[#0A0A0A]" />
+        <Emblem className="w-10" />
+        <span className="absolute top-1.5 right-1.5 live-dot" />
       </button>
 
       {/* Draggable chat panel */}
@@ -271,90 +289,75 @@ export default function MelaoAgent() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
-          className="fixed z-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#333]"
+          className="fixed z-50 flex flex-col overflow-hidden bg-ink-1 border border-line-strong rounded-[4px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
           style={isMobile ? {
-            left: 8,
-            right: 8,
-            bottom: 88,
-            height: 'min(65dvh, 480px)',
-            background: '#111',
+            left: 'max(8px, var(--safe-left))',
+            right: 'max(8px, var(--safe-right))',
+            bottom: 'calc(var(--player-h) + 84px)',
+            height: 'min(62dvh, 480px)',
             touchAction: 'none',
           } : {
             width: PANEL_W,
             height: PANEL_H,
-            background: '#111',
             left: pos.x,
             top: pos.y,
             touchAction: 'none',
           }}
         >
+          <div className="brand-rule shrink-0" />
           {/* Drag handle header */}
           <div
             onPointerDown={onPointerDown}
-            className="flex items-center gap-3 px-4 py-3 border-b border-[#222] shrink-0 cursor-grab active:cursor-grabbing select-none"
-            style={{ background: 'linear-gradient(135deg, #1a0a00, #1a001a)' }}
+            className="flex items-center gap-3 px-3 py-2.5 border-b border-line shrink-0 cursor-grab active:cursor-grabbing select-none bg-ink-0"
           >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }}>
-              M
-            </div>
+            {avatar('w-9 h-9')}
             <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-sm leading-none">Melao</p>
-              <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block" />
+              <p className="display text-white text-sm leading-none">Melao</p>
+              <p className="label mt-1.5 flex items-center gap-1.5 !text-[9.5px]">
+                <span className="live-dot !w-[5px] !h-[5px]" />
                 Eclat Universe · FEDGE 2.O
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                 onPointerDown={e => e.stopPropagation()}
                 onClick={() => setLang(l => l === 'en' ? 'es' : 'en')}
-                style={{ minHeight: '24px', touchAction: 'manipulation' }}
-                className="text-[10px] font-black px-2 py-0.5 rounded-full border border-[#333] text-orange-400 hover:border-orange-400 transition-colors tracking-wider"
+                style={{ touchAction: 'manipulation' }}
+                className="h-7 px-2 border border-line rounded-xs font-mono text-[10px] tracking-[0.14em] text-melaos-orange hoverable:hover:border-melaos-orange transition-colors"
                 title={lang === 'en' ? 'Cambiar a español' : 'Switch to English'}
                 aria-label="Toggle language"
               >
                 {lang === 'en' ? 'EN' : 'ES'}
               </button>
-              <GripHorizontal className="w-4 h-4 text-gray-600" />
-              <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+              <GripHorizontal className="w-4 h-4 text-fog-faint mx-1 hidden sm:block" strokeWidth={1.75} />
               <button
                 onPointerDown={e => e.stopPropagation()}
                 onClick={() => setOpen(false)}
-                style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
-                className="flex items-center justify-center text-gray-500 hover:text-white transition-colors"
+                style={{ touchAction: 'manipulation' }}
+                className="touch-target !min-w-[36px] !min-h-[36px] text-fog hoverable:hover:text-white transition-colors"
                 aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.75} />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
+          <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 min-h-0">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {m.role === 'melao' && (
-                  <div className="w-6 h-6 rounded-full flex-shrink-0 mr-2 mt-0.5 flex items-center justify-center text-white text-xs font-bold"
-                    style={{ background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }}>
-                    M
-                  </div>
-                )}
-                <div className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-snug
-                  ${m.role === 'user'
-                    ? 'text-white rounded-tr-sm'
-                    : 'text-gray-100 rounded-tl-sm border border-[#2a2a2a]'
-                  }`}
-                  style={m.role === 'user'
-                    ? { background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }
-                    : { background: '#1a1a1a' }
-                  }>
+              <div key={i} className={`flex items-end gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {m.role === 'melao' && avatar('w-6 h-6')}
+                <div className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed rounded-[3px] ${
+                  m.role === 'user'
+                    ? 'bg-melaos-orange text-[#0A0A0E]'
+                    : 'bg-ink-2 border border-line text-[#ECECF1]'
+                }`}>
                   {m.text}
                 </div>
                 {/* Report a reply (Play's AI-content rule); not the canned greeting */}
                 {m.role === 'melao' && i > 0 && (
                   <ReportButton iconOnly kind="chat"
-                    className="self-end ml-1 p-1 text-gray-600 hover:text-[#FF2D78] transition-colors"
+                    className="self-end p-1 text-fog-faint hoverable:hover:text-melaos-hot transition-colors"
                     getContext={() => ({
                       reply: m.text,
                       message: messages[i - 1]?.role === 'user' ? messages[i - 1].text : '',
@@ -363,14 +366,11 @@ export default function MelaoAgent() {
               </div>
             ))}
             {typing && (
-              <div className="flex justify-start">
-                <div className="w-6 h-6 rounded-full flex-shrink-0 mr-2 mt-0.5 flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: 'linear-gradient(135deg, #F28C28, #E91E8C)' }}>
-                  M
-                </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-2 rounded-2xl rounded-tl-sm flex gap-1 items-center">
+              <div className="flex items-end gap-2 justify-start">
+                {avatar('w-6 h-6')}
+                <div className="bg-ink-2 border border-line px-3 py-2.5 rounded-[3px] flex gap-1.5 items-center">
                   {[0, 150, 300].map(d => (
-                    <span key={d} className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce"
+                    <span key={d} className="w-1.5 h-1.5 bg-melaos-orange animate-bounce"
                       style={{ animationDelay: `${d}ms` }} />
                   ))}
                 </div>
@@ -380,50 +380,45 @@ export default function MelaoAgent() {
           </div>
 
           {/* Input */}
-          <div className="px-3 py-2 border-t border-[#222] flex items-center gap-2 shrink-0">
+          <div className="p-2 border-t border-line flex items-center gap-1.5 shrink-0 bg-ink-0">
             <button
               onClick={() => setVoiceReplies(v => !v)}
-              style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
-              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
-                voiceReplies ? 'border-[#00FFD1] text-[#00FFD1] bg-[#00FFD1]/10' : 'border-[#333] text-gray-500 hover:text-white'
+              style={{ touchAction: 'manipulation' }}
+              className={`w-10 h-10 flex items-center justify-center border rounded-xs transition-colors shrink-0 ${
+                voiceReplies ? 'border-melaos-cyan text-melaos-cyan' : 'border-line text-fog hoverable:hover:text-white'
               }`}
               title={voiceReplies ? 'Melao voice: ON' : 'Melao voice: OFF'}
               aria-label="Toggle spoken replies"
+              aria-pressed={voiceReplies}
             >
-              {voiceReplies ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {voiceReplies ? <Volume2 className="w-4 h-4" strokeWidth={1.75} /> : <VolumeX className="w-4 h-4" strokeWidth={1.75} />}
             </button>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder={listening ? (lang === 'es' ? 'Escuchando...' : 'Listening...') : (lang === 'es' ? 'Háblale a Melao...' : 'Talk to Melao...')}
-              style={{ fontSize: '16px' }}
-              className="flex-1 min-w-0 bg-[#1a1a1a] text-white text-sm rounded-full px-4 py-2 outline-none border border-[#333] focus:border-orange-500 placeholder-gray-600 transition-colors"
+              className="field flex-1 min-w-0 h-10 !py-0 text-sm"
             />
             <button
               onClick={toggleListening}
-              style={{ minWidth: '36px', minHeight: '36px', touchAction: 'manipulation' }}
-              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
-                listening ? 'border-[#FF2D78] text-[#FF2D78] bg-[#FF2D78]/15 animate-pulse' : 'border-[#333] text-gray-500 hover:text-white'
+              style={{ touchAction: 'manipulation' }}
+              className={`w-10 h-10 flex items-center justify-center border rounded-xs transition-colors shrink-0 ${
+                listening ? 'border-melaos-hot text-melaos-hot bg-melaos-hot/10 animate-pulse' : 'border-line text-fog hoverable:hover:text-white'
               }`}
               title={listening ? 'Stop listening' : 'Speak to Melao'}
               aria-label="Speak to Melao"
+              aria-pressed={listening}
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-4 h-4" strokeWidth={1.75} />
             </button>
             <button
               onClick={send}
               disabled={!input.trim()}
-              style={{
-                background: 'linear-gradient(135deg, #F28C28, #E91E8C)',
-                minWidth: '36px',
-                minHeight: '36px',
-                touchAction: 'manipulation',
-              }}
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30 hover:scale-110 active:scale-95 flex-shrink-0"
+              className="btn btn-primary !min-h-[40px] w-10 !px-0 shrink-0 [--chamfer:7px]"
               aria-label="Send message"
             >
-              <Send className="w-3.5 h-3.5 text-white" />
+              <Send className="w-4 h-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>

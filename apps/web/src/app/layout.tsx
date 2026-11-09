@@ -1,4 +1,14 @@
 import type { Metadata, Viewport } from 'next';
+// Fonts ship inside the app (Fontsource packages), so neither the build nor
+// a visitor's device ever has to reach Google Fonts. Each file covers one
+// script; browsers download only the ones a page actually uses.
+import '@fontsource-variable/unbounded';
+import '@fontsource/ibm-plex-sans/300.css';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -10,7 +20,11 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0A0A0A',
+  // Draw under the notch / Dynamic Island / Android cutout and the home
+  // indicator; the layout pads itself with the safe-area insets instead.
+  viewportFit: 'cover',
+  themeColor: '#050507',
+  colorScheme: 'dark',
 };
 
 export const metadata: Metadata = {
@@ -55,15 +69,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="bg-[#0A0A0A] text-white font-sans antialiased">
+      <body className="bg-ink-0 text-[#ECECF1] font-sans antialiased">
         <Navbar />
-        <main className="pt-16 pb-20 min-h-screen">
+        <main className="min-h-dvh-safe" style={{ paddingTop: 'var(--nav-h)', paddingBottom: 'var(--player-h)' }}>
           {children}
           <Footer />
         </main>
         <AudioPlayer />
         <MelaoAgent />
         <OnboardingTour />
+        <div className="grain" aria-hidden />
       </body>
     </html>
   );

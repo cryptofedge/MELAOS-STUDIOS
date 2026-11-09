@@ -123,7 +123,7 @@ export default function ReportButton({ kind, getContext, className, iconOnly }: 
 
   const dialog = open && (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4"
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/75 p-0 sm:p-4"
       // React events bubble out of portals to the parent tree; stop them so a
       // click here never reaches the panel or modal the button sits in.
       onClick={e => { e.stopPropagation(); setOpen(false); }}
@@ -131,55 +131,55 @@ export default function ReportButton({ kind, getContext, className, iconOnly }: 
       <div
         role="dialog" aria-modal="true" aria-labelledby={titleId}
         onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md bg-[#111] border border-[#2a2a2a] rounded-t-2xl sm:rounded-2xl p-5 text-left max-h-[90vh] overflow-y-auto"
+        className="w-full sm:max-w-md bg-ink-1 border border-line-strong rounded-t-[4px] sm:rounded-[4px] p-5 sm:p-6 text-left max-h-[90dvh] overflow-y-auto"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <h2 id={titleId} className="text-base font-bold text-white flex items-center gap-2">
-            <Flag className="w-4 h-4 text-[#FF2D78]" /> {tx.title}
+          <h2 id={titleId} className="display font-light text-lg text-white flex items-center gap-2.5">
+            <Flag className="w-4 h-4 text-melaos-hot" strokeWidth={1.75} /> {tx.title}
           </h2>
           <button onClick={() => setOpen(false)} aria-label={tx.close}
-            className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10">
-            <X className="w-4 h-4" />
+            className="touch-target -mr-2 text-fog hoverable:hover:text-white">
+            <X className="w-4 h-4" strokeWidth={1.75} />
           </button>
         </div>
 
         {status === 'sent' ? (
           <>
-            <p className="text-sm text-gray-200 my-4">{tx.thanks}</p>
+            <p className="text-sm text-[#ECECF1] my-4 leading-relaxed">{tx.thanks}</p>
             <button onClick={() => setOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-[#F28C28] text-black text-sm font-bold">
+              className="btn btn-primary w-full">
               {tx.close}
             </button>
           </>
         ) : (
           <>
-            <p className="text-xs text-gray-400 mb-4">{tx.intro(tx.what[kind])}</p>
-            <fieldset className="flex flex-col gap-1.5 mb-4">
+            <p className="text-sm text-fog mb-4 leading-relaxed">{tx.intro(tx.what[kind])}</p>
+            <fieldset className="flex flex-col gap-px bg-line border border-line mb-5">
               {REPORT_REASONS.map((r, i) => (
                 <label key={r}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer text-sm transition-colors ${
-                    reason === r ? 'border-[#FF2D78] bg-[#FF2D78]/10 text-white' : 'border-[#2a2a2a] text-gray-300 hover:border-[#444]'
+                  className={`flex items-center gap-3 px-3 min-h-[44px] cursor-pointer text-sm transition-colors ${
+                    reason === r ? 'bg-melaos-hot/10 text-white shadow-[inset_2px_0_0_#FF2D78]' : 'bg-ink-1 text-fog hoverable:hover:bg-ink-2 hoverable:hover:text-white'
                   }`}>
                   <input type="radio" name={`${titleId}-reason`} value={r} checked={reason === r}
                     onChange={() => { setReason(r); setError(null); }}
-                    autoFocus={i === 0} className="accent-[#FF2D78]" />
+                    autoFocus={i === 0} className="w-3.5 h-3.5 border border-line-strong rounded-full checked:bg-melaos-hot checked:border-melaos-hot shrink-0" />
                   {tx.reasons[r]}
                 </label>
               ))}
             </fieldset>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">{tx.details}</label>
+            <label className="block label mb-2">{tx.details}</label>
             <textarea value={details} onChange={e => setDetails(e.target.value.slice(0, REPORT_DETAILS_MAX))}
               rows={3} placeholder={tx.detailsPlaceholder}
-              className="w-full bg-black border border-[#2a2a2a] rounded-xl p-3 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:border-[#FF2D78] resize-none mb-3" />
-            {error && <p className="text-xs text-[#FF2D78] mb-3" role="alert">{error}</p>}
+              className="field text-sm resize-none mb-3" />
+            {error && <p className="text-xs text-melaos-hot mb-3" role="alert">{error}</p>}
             <div className="flex gap-2">
               <button onClick={() => setOpen(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#333] text-gray-300 text-sm font-semibold hover:bg-white/5">
+                className="btn btn-ghost flex-1">
                 {tx.cancel}
               </button>
               <button onClick={submit} disabled={status === 'sending'}
-                className="flex-1 py-2.5 rounded-xl bg-[#FF2D78] text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
+                className="btn flex-1 bg-melaos-hot text-white rounded-xs disabled:opacity-60">
                 {status === 'sending' ? <><Loader2 className="w-4 h-4 animate-spin" /> {tx.sending}</> : tx.send}
               </button>
             </div>
@@ -193,8 +193,8 @@ export default function ReportButton({ kind, getContext, className, iconOnly }: 
     <>
       <button type="button" onClick={openDialog}
         aria-label={iconOnly ? tx.button : undefined} title={tx.button}
-        className={className ?? 'inline-flex items-center justify-center gap-1 text-[10px] font-mono tracking-wider text-[#9999CC] hover:text-[#FF2D78] transition-colors'}>
-        <Flag className="w-3 h-3" />
+        className={className ?? 'inline-flex items-center justify-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-fog-dim hoverable:hover:text-melaos-hot transition-colors'}>
+        <Flag className="w-3 h-3" strokeWidth={1.75} />
         {!iconOnly && <span>{tx.button}</span>}
       </button>
       {dialog && typeof document !== 'undefined' && createPortal(dialog, document.body)}
