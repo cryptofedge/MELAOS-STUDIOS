@@ -13,6 +13,7 @@ import { GENRES as GENRE_LIST, MOODS as MOOD_LIST, genreArtStyle } from '@/lib/g
 import { influenceGroups, findInfluence } from '@/lib/artistInfluences';
 import StudioWaveform from '@/components/StudioWaveform';
 import ReportButton from '@/components/ReportButton';
+import Emblem from '@/components/Emblem';
 import type WaveSurfer from 'wavesurfer.js';
 
 const TRACKS = [
@@ -1788,12 +1789,17 @@ export default function StudioPage() {
           <span className="text-[6px] font-mono mt-1" style={{ color: '#7A7A86' }}>–{Math.round((100-masterVol)*0.6)}dB</span>
         </div>
 
-        {/* Filler — keeps the empty space after Master from being dead air.
-            Fixed width (not flex-1) so the channel-strip row has a real
-            content width and can actually overflow/scroll on narrower
-            viewports instead of always stretching to fill the container. */}
-        <div className="shrink-0 w-[420px] h-full flex items-center justify-center px-6">
-          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="w-auto h-2/3 max-w-[420px] object-contain opacity-90 select-none pointer-events-none"
+        {/* Logo in the space after Master. It takes only the room that's left
+            (container-type keeps it out of the row's content width, so the
+            strips still scroll on narrow screens) and scales to fit, so it is
+            never cropped: the full wordmark when there's room, the M emblem
+            when the gap is narrow (see .mixer-logo-* in globals.css). */}
+        <div className="mixer-logo-slot flex-1 min-w-0 flex items-center justify-center px-4">
+          <Emblem variant="wordmark" alt="MELAOS STUDIOS"
+            className="mixer-logo-word w-full max-w-[380px] opacity-90 pointer-events-none"
+            style={{ mixBlendMode: 'screen' }} />
+          <Emblem variant="mark" alt="MELAOS STUDIOS"
+            className="mixer-logo-mark w-full max-w-[130px] opacity-90 pointer-events-none"
             style={{ mixBlendMode: 'screen' }} />
         </div>
       </div>
@@ -1815,8 +1821,7 @@ export default function StudioPage() {
           boxShadow: '0 1px 0 #AE06ED11',
         }}>
         <div className="flex items-center gap-2">
-          <img src="/melaos-logo-2.png" alt="MELAOS STUDIOS" className="h-7 w-auto"
-            style={{ filter: 'drop-shadow(0 0 6px #AE06ED88)' }} />
+          <Emblem variant="wordmark" alt="MELAOS STUDIOS" className="h-5 w-auto" />
         </div>
         <div className="w-px h-4 shrink-0" style={{ background: '#AE06ED33' }} />
         <input

@@ -488,6 +488,15 @@ html[data-route='studio'] .side-item { justify-content: center; padding: 4px; }
 }
 
 /* Respect "reduce motion" on iOS, Android, macOS and Windows. */
+/* Studio mixer logo: fits the space after Master, never cropped */
+.mixer-logo-slot { container-type: inline-size; }
+.mixer-logo-mark { display: none; }
+@container (max-width: 219px) {
+  .mixer-logo-word { display: none; }
+  .mixer-logo-mark { display: block; }
+}
+@container (max-width: 44px) { .mixer-logo-mark { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
